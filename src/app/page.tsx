@@ -1,17 +1,22 @@
-"use client";
-import React, { useState } from "react";
-import { G, INIT_WO, INIT_NOTIFS } from "./data";
-import { LoginScreen, Dashboard, AssetsScreen } from "./screens1";
-import { PlansScreen, WorkOrdersScreen, NotificationsScreen, ReportsScreen } from "./screens2";
+'use client';
+import React, { useState } from 'react';
+import { G, INIT_WO, INIT_NOTIFS } from '@/app/data';
+import { LoginScreen, Dashboard, AssetsScreen } from '@/app/screens1';
+import {
+  PlansScreen,
+  WorkOrdersScreen,
+  NotificationsScreen,
+  ReportsScreen,
+} from '@/app/screens2';
+import { cn } from '@/lib/cn';
 
-// ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Panel de Control", icon: "▦" },
-  { id: "assets", label: "Activos", icon: "⬡" },
-  { id: "plans", label: "Planes PM", icon: "◎" },
-  { id: "workorders", label: "Ordenes de Trabajo", icon: "☰" },
-  { id: "notifications", label: "Notificaciones", icon: "◉" },
-  { id: "reports", label: "Reportes y KPIs", icon: "↗" },
+  { id: 'dashboard', label: 'Panel de Control', icon: '▦' },
+  { id: 'assets', label: 'Activos', icon: '⬡' },
+  { id: 'plans', label: 'Planes PM', icon: '◎' },
+  { id: 'workorders', label: 'Ordenes de Trabajo', icon: '☰' },
+  { id: 'notifications', label: 'Notificaciones', icon: '◉' },
+  { id: 'reports', label: 'Reportes y KPIs', icon: '↗' },
 ];
 
 interface SidebarProps {
@@ -23,52 +28,80 @@ interface SidebarProps {
 
 function Sidebar({ screen, setScreen, unreadCount, onLogout }: SidebarProps) {
   return (
-    <div style={{ width: 240, background: "#07101f", borderRight: "1px solid #1e3a5f", display: "flex", flexDirection: "column", flexShrink: 0, height: "100%" }}>
-      <div style={{ padding: "20px 18px", borderBottom: "1px solid #1e3a5f" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, background: "#f59e0b", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <div className='flex h-full w-60 flex-shrink-0 flex-col border-r border-slate-700 bg-slate-900'>
+      <div className='border-b border-slate-700 p-5'>
+        <div className='flex items-center gap-2.5'>
+          <div className='flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-amber-500'>
+            <svg width='18' height='18' viewBox='0 0 24 24' fill='none'>
+              <path
+                d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'
+                stroke='#000'
+                strokeWidth='2.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+              />
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 900, color: "#f1f5f9", letterSpacing: "-0.01em", lineHeight: 1 }}>APEX</div>
-            <div style={{ fontSize: 10, color: "#334155", letterSpacing: "0.09em", lineHeight: 1.6, textTransform: "uppercase" }}>Maintenance</div>
+            <div className='text-base leading-none font-black tracking-tight text-slate-100'>
+              APEX
+            </div>
+            <div className='text-xs leading-relaxed tracking-widest text-slate-600 uppercase'>
+              Maintenance
+            </div>
           </div>
         </div>
       </div>
 
-      <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto" }}>
-        {NAV_ITEMS.map(item => {
+      <nav className='flex-1 overflow-y-auto p-2.5'>
+        {NAV_ITEMS.map((item) => {
           const active = screen === item.id;
           return (
-            <button key={item.id} onClick={() => setScreen(item.id)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 7, border: "none", background: active ? "#f59e0b22" : "transparent", color: active ? "#f59e0b" : "#64748b", cursor: "pointer", textAlign: "left", fontSize: 13, fontWeight: active ? 700 : 500, marginBottom: 2, transition: "all 0.15s", position: "relative", fontFamily: "inherit" }}
-              onMouseEnter={e => { if (!active) { e.currentTarget.style.background = "#0f2040"; e.currentTarget.style.color = "#94a3b8"; } }}
-              onMouseLeave={e => { e.currentTarget.style.background = active ? "#f59e0b22" : "transparent"; e.currentTarget.style.color = active ? "#f59e0b" : "#64748b"; }}>
-              {active && <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 22, background: "#f59e0b", borderRadius: "0 3px 3px 0" }} />}
-              <span style={{ fontSize: 14, width: 18, textAlign: "center", lineHeight: 1, flexShrink: 0 }}>{item.icon}</span>
-              <span style={{ flex: 1 }}>{item.label}</span>
-              {item.id === "notifications" && unreadCount > 0 && (
-                <span style={{ background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 10, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>{unreadCount}</span>
+            <button
+              key={item.id}
+              onClick={() => setScreen(item.id)}
+              className={cn(
+                'font-inherit relative mb-0.5 flex w-full cursor-pointer items-center gap-2.5 rounded-md border-none px-3 py-2 text-left text-sm font-medium transition-all',
+                active
+                  ? 'bg-amber-500/15 font-bold text-amber-500'
+                  : 'bg-transparent text-slate-500 hover:bg-slate-800 hover:text-slate-400',
+              )}
+            >
+              {active && (
+                <div className='absolute top-1/2 left-0 h-5.5 w-0.5 -translate-y-1/2 rounded-r-sm bg-amber-500' />
+              )}
+              <span className='w-4.5 flex-shrink-0 text-center text-sm leading-none'>
+                {item.icon}
+              </span>
+              <span className='flex-1'>{item.label}</span>
+              {item.id === 'notifications' && unreadCount > 0 && (
+                <span className='flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white'>
+                  {unreadCount}
+                </span>
               )}
             </button>
           );
         })}
       </nav>
 
-      <div style={{ padding: "14px 16px", borderTop: "1px solid #1e3a5f" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-          <div style={{ width: 34, height: 34, background: "#1e3a5f", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#94a3b8", flexShrink: 0 }}>SM</div>
+      <div className='border-t border-slate-700 p-3.5'>
+        <div className='mb-2.5 flex items-center gap-2.5'>
+          <div className='flex h-8.5 w-8.5 flex-shrink-0 items-center justify-center rounded-full bg-slate-700 text-xs font-bold text-slate-400'>
+            SM
+          </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0", lineHeight: 1 }}>Supervisor M.</div>
-            <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>Supervisor · Demo</div>
+            <div className='text-sm leading-none font-bold text-slate-200'>
+              Supervisor M.
+            </div>
+            <div className='mt-0.5 text-xs text-slate-500'>
+              Supervisor · Demo
+            </div>
           </div>
         </div>
-        <button onClick={onLogout}
-          style={{ width: "100%", background: "none", border: "1px solid #1e3a5f", color: "#475569", fontSize: 12, padding: "7px", borderRadius: 5, cursor: "pointer", transition: "all 0.15s", fontFamily: "inherit" }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = "#ef4444"; e.currentTarget.style.color = "#ef4444"; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "#1e3a5f"; e.currentTarget.style.color = "#475569"; }}>
+        <button
+          onClick={onLogout}
+          className='font-inherit w-full cursor-pointer rounded border border-slate-700 bg-transparent py-1.5 text-xs text-slate-500 transition-all hover:border-red-500 hover:text-red-500'
+        >
           Cerrar sesion
         </button>
       </div>
@@ -76,19 +109,27 @@ function Sidebar({ screen, setScreen, unreadCount, onLogout }: SidebarProps) {
   );
 }
 
-// ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreen] = useState("login");
+  const [screen, setScreen] = useState('login');
   const [wo, setWo] = useState(INIT_WO);
   const [notifs, setNotifs] = useState(INIT_NOTIFS);
+  const [mounted, setMounted] = useState(false);
 
-  const unreadCount = notifs.filter(n => !n.leida).length;
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  if (screen === "login") {
+  const unreadCount = notifs.filter((n) => !n.leida).length;
+
+  if (!mounted) {
+    return null;
+  }
+
+  if (screen === 'login') {
     return (
       <>
         <style>{G}</style>
-        <LoginScreen onLogin={() => setScreen("dashboard")} />
+        <LoginScreen onLogin={() => setScreen('dashboard')} />
       </>
     );
   }
@@ -96,20 +137,24 @@ export default function App() {
   return (
     <>
       <style>{G}</style>
-      <div style={{ display: "flex", height: "100vh", background: "#060e20", overflow: "hidden" }}>
+      <div className='flex h-screen overflow-hidden bg-slate-950'>
         <Sidebar
           screen={screen}
           setScreen={setScreen}
           unreadCount={unreadCount}
-          onLogout={() => setScreen("login")}
+          onLogout={() => setScreen('login')}
         />
-        <main style={{ flex: 1, overflow: "auto", minWidth: 0 }}>
-          {screen === "dashboard" && <Dashboard wo={wo} />}
-          {screen === "assets" && <AssetsScreen wo={wo} />}
-          {screen === "plans" && <PlansScreen />}
-          {screen === "workorders" && <WorkOrdersScreen wo={wo} setWo={setWo} />}
-          {screen === "notifications" && <NotificationsScreen notifs={notifs} setNotifs={setNotifs} />}
-          {screen === "reports" && <ReportsScreen wo={wo} />}
+        <main className='min-w-0 flex-1 overflow-auto'>
+          {screen === 'dashboard' && <Dashboard wo={wo} />}
+          {screen === 'assets' && <AssetsScreen wo={wo} />}
+          {screen === 'plans' && <PlansScreen />}
+          {screen === 'workorders' && (
+            <WorkOrdersScreen wo={wo} setWo={setWo} />
+          )}
+          {screen === 'notifications' && (
+            <NotificationsScreen notifs={notifs} setNotifs={setNotifs} />
+          )}
+          {screen === 'reports' && <ReportsScreen wo={wo} />}
         </main>
       </div>
     </>
