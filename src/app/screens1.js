@@ -28,7 +28,7 @@ export function LoginScreen({ onLogin }) {
     }
 
     return (
-        <div style={{ minHeight: "100vh", background: "#060e20", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+        <div suppressHydrationWarning style={{ minHeight: "100vh", background: "#060e20", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(30,58,95,0.15) 1px,transparent 1px),linear-gradient(90deg,rgba(30,58,95,0.15) 1px,transparent 1px)", backgroundSize: "44px 44px", pointerEvents: "none" }} />
             <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, background: "radial-gradient(circle,rgba(245,158,11,0.06) 0%,transparent 65%)", pointerEvents: "none" }} />
 

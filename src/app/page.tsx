@@ -14,7 +14,14 @@ const NAV_ITEMS = [
   { id: "reports", label: "Reportes y KPIs", icon: "↗" },
 ];
 
-function Sidebar({ screen, setScreen, unreadCount, onLogout }) {
+interface SidebarProps {
+  screen: string;
+  setScreen: (screen: string) => void;
+  unreadCount: number;
+  onLogout: () => void;
+}
+
+function Sidebar({ screen, setScreen, unreadCount, onLogout }: SidebarProps) {
   return (
     <div style={{ width: 240, background: "#07101f", borderRight: "1px solid #1e3a5f", display: "flex", flexDirection: "column", flexShrink: 0, height: "100%" }}>
       <div style={{ padding: "20px 18px", borderBottom: "1px solid #1e3a5f" }}>
