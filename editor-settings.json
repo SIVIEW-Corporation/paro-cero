@@ -1,0 +1,93 @@
+{
+  // ==============================
+  // Workbench e Interfaz
+  // ==============================
+  "workbench.startupEditor": "none", // No muestra el editor de bienvenida al abrir VS Code.
+  "workbench.sideBar.location": "right", // Barra lateral a la derecha para evitar movimientos al colapsar código.
+  "workbench.colorTheme": "Default Dark+",
+  "breadcrumbs.enabled": true, // Muestra la ruta del archivo en la cabecera.
+  "editor.accessibilitySupport": "off", // Desactiva optimizaciones para lectores de pantalla.
+  // ==============================
+  // Editor: Comportamiento y Visualización
+  // ==============================
+  "editor.wordWrap": "on", // Ajusta las líneas largas para que sean visibles sin scroll horizontal.
+  "editor.stickyScroll.enabled": true, // Mantiene visible la cabecera de la función/clase al hacer scroll.
+  "editor.linkedEditing": true, // Renombra etiquetas de apertura y cierre HTML simultáneamente.
+  "editor.guides.bracketPairs": true, // Guías visuales para identificar bloques de código.
+  "editor.bracketPairColorization.independentColorPoolPerBracketType": true, // Colores únicos para distinguir tipos de paréntesis.
+  "editor.quickSuggestions": {
+    "strings": true, // Habilita sugerencias dentro de cadenas de texto.
+  },
+  "editor.folding": true,
+  "editor.foldingStrategy": "auto",
+  // ==============================
+  // Fuentes y Tipografía
+  // ==============================
+  "editor.fontFamily": "Cascadia Code PL",
+  "editor.fontLigatures": true, // Une caracteres (ej. => o !=) en un solo símbolo.
+  // ==============================
+  // Minimapa y Cursor
+  // ==============================
+  "editor.minimap.enabled": false,
+  "editor.minimap.side": "right",
+  "editor.minimap.scale": 1,
+  "editor.minimap.maxColumn": 90,
+  "editor.cursorSmoothCaretAnimation": "on", // Movimiento fluido del cursor al escribir.
+  "editor.cursorBlinking": "phase", // Efecto de desvanecimiento suave del cursor.
+  // ==============================
+  // Terminal Integrada
+  // ==============================
+  "terminal.integrated.fontFamily": "Cascadia Code PL",
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.cursorStyle": "line",
+  // ==============================
+  // Archivos y Formato General
+  // ==============================
+  "files.eol": "\n", // Fuerza saltos de línea LF (estándar Unix/Linux) para compatibilidad.
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit", // Ejecuta correcciones de ESLint al guardar.
+  },
+  // ==============================
+  // Lenguajes y Herramientas (ESLint, Tailwind, Python)
+  // ==============================
+  "python.languageServer": "Default",
+  "reactSnippets.settings.importReactOnTop": false, // Evita importar React en versiones nuevas (v17+).
+  // Configuración de ESLint
+  "eslint.useFlatConfig": false,
+  "eslint.debug": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+  ],
+  // Configuración de Tailwind CSS
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript",
+  },
+  // Prettier por defecto para lenguajes web
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "security.workspace.trust.untrustedFiles": "open",
+  "git.confirmSync": false,
+  "explorer.confirmPasteNative": false,
+  "explorer.confirmDelete": false,
+}

@@ -4,25 +4,51 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "setup:skills": "./skills/setup.sh",
+    "format:fix": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "build": "npm run lint && next build",
+    "build:local": "npm run format:check && npm run build"
   },
   "dependencies": {
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "recharts": "^3.8.0"
+    "recharts": "^3.8.0",
+    "react-dropzone": "14.3.8",
+    "sonner": "2.0.7",
+    "zod": "4.3.4",
+    "zustand": "5.0.9",
+    "@tanstack/react-form": "1.27.7",
+    "@tanstack/react-form-nextjs": "1.28.0",
+    "@tanstack/react-query": "5.90.16",
+    "@tanstack/react-table": "8.21.3",
+    "@tanstack/react-virtual": "3.13.17",
+    "cmdk": "^1.1.1",
+    "jsonwebtoken": "9.0.3",
+    "lucide-react": "0.562.0",
+    "motion": "12.31.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@faker-js/faker": "10.2.0",
+    "@next/eslint-plugin-next": "16.1.1",
+    "@tailwindcss/postcss": "4",
+    "@types/jsonwebtoken": "9.0.10",
+    "@types/node": "20",
+    "@types/react": "19",
+    "@types/react-dom": "19",
     "babel-plugin-react-compiler": "1.0.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "eslint": "9",
+    "eslint-config-next": "16.1.1",
+    "eslint-config-prettier": "10.1.8",
+    "postcss": "8.5.6",
+    "prettier": "3.7.4",
+    "prettier-plugin-tailwindcss": "0.7.2",
+    "tailwindcss": "4",
+    "typescript": "5",
+    "typescript-eslint": "8.51.0"
   }
 }
