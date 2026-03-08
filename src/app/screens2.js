@@ -1,0 +1,384 @@
+"use client";
+import React, { useState } from "react";
+import {
+    AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+} from "recharts";
+
+import {
+    ASSETS, PLANS, complianceData, downtimeData, tipoData, topFallas,
+    STC, STL, PRC, PRL, CRC, NTC, NTL, NTI, TT
+} from "./data";
+
+import {
+    Badge, KpiCard, Td, PageHeader, Card, CardTitle, RowData, BtnPrimary, BtnGhost, BtnBack, DataTable, Modal, Field, ModalFooter
+} from "./ui";
+
+// ─── PLANS ────────────────────────────────────────────────────────────────────
+export function PlansScreen() {
+    const [selected, setSelected] = useState(null);
+    const [checked, setChecked] = useState({});
+    const [showCreate, setShowCreate] = useState(false);
+    const toggle = key => setChecked(c => ({ ...c, [key]: !c[key] }));
+
+    if (selected) {
+        const asset = ASSETS.find(a => a.id === selected.assetId);
+        const done = selected.items.filter((_, i) => checked[selected.id + "-" + i]).length;
+        const pct = Math.round((done / selected.items.length) * 100);
+        return (
+            <div style={{ padding: "28px 32px", overflowY: "auto", height: "100%" }}>
+                <BtnBack onClick={() => setSelected(null)} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, paddingBottom: 20, borderBottom: "1px solid #1e3a5f" }}>
+                    <div>
+                        <div style={{ fontSize: 11, fontFamily: "monospace", color: "#f59e0b", marginBottom: 5 }}>{selected.id}</div>
+                        <h1 style={{ fontSize: 20, fontWeight: 800, color: "#f1f5f9", letterSpacing: "-0.02em" }}>{selected.name}</h1>
+                        {asset && <p style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>Activo: {asset.name} · <span style={{ fontFamily: "monospace", fontSize: 12 }}>{asset.code}</span></p>}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                        <Badge label={selected.activo ? "Activo" : "Inactivo"} color={selected.activo ? "#22c55e" : "#64748b"} />
+                        <Badge label={PRL[selected.prioridad]} color={PRC[selected.prioridad]} />
+                    </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                    <Card>
+                        <CardTitle>Parametros del Plan</CardTitle>
+                        <RowData label="Frecuencia" value={"Cada " + selected.freq + " " + selected.unit} />
+                        <RowData label="Prioridad" value={<Badge label={PRL[selected.prioridad]} color={PRC[selected.prioridad]} />} />
+                        <RowData label="Duracion estimada" value={selected.duracion + " horas"} />
+                        <RowData label="Total actividades" value={selected.items.length + " items"} />
+                        <RowData label="Estado" value={<Badge label={selected.activo ? "Activo" : "Inactivo"} color={selected.activo ? "#22c55e" : "#64748b"} />} />
+                    </Card>
+                    <Card>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                            <CardTitle>Checklist de Actividades</CardTitle>
+                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                <div style={{ width: 80, height: 6, background: "#1e3a5f", borderRadius: 3, overflow: "hidden" }}>
+                                    <div style={{ height: "100%", width: pct + "%", background: pct === 100 ? "#22c55e" : "#f59e0b", borderRadius: 3, transition: "width 0.3s" }} />
+                                </div>
+                                <span style={{ fontSize: 11, fontFamily: "monospace", color: pct === 100 ? "#22c55e" : "#f59e0b", fontWeight: 700 }}>{pct}%</span>
+                            </div>
+                        </div>
+                        {selected.items.map((item, i) => {
+                            const k = selected.id + "-" + i;
+                            return (
+                                <div key={i} onClick={() => toggle(k)}
+                                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid #0d1f38", cursor: "pointer" }}>
+                                    <div style={{ width: 18, height: 18, border: `2px solid ${checked[k] ? "#22c55e" : "#1e3a5f"}`, borderRadius: 4, flexShrink: 0, background: checked[k] ? "#22c55e22" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                                        {checked[k] && <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 700 }}>v</span>}
+                                    </div>
+                                    <span style={{ fontSize: 13, color: checked[k] ? "#475569" : "#cbd5e1", textDecoration: checked[k] ? "line-through" : "none", transition: "all 0.15s" }}>{item}</span>
+                                </div>
+                            );
+                        })}
+                    </Card>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ padding: "28px 32px", overflowY: "auto", height: "100%" }}>
+            <PageHeader
+                title="Planes de Mantenimiento"
+                sub={PLANS.length + " planes configurados"}
+                action={<BtnPrimary onClick={() => setShowCreate(true)}>+ Nuevo Plan</BtnPrimary>}
+            />
+            <Card style={{ padding: 0, overflow: "hidden" }}>
+                <DataTable head={["ID", "Plan", "Activo", "Frecuencia", "Duracion", "Prioridad", "Estado", ""]}>
+                    {PLANS.map(p => {
+                        const asset = ASSETS.find(a => a.id === p.assetId);
+                        return (
+                            <tr key={p.id} style={{ cursor: "pointer" }}
+                                onMouseEnter={e => e.currentTarget.style.background = "#0f2040"}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                <Td mono>{p.id}</Td>
+                                <Td bold>{p.name}</Td>
+                                <Td>{asset ? asset.name : "-"}</Td>
+                                <Td mono>Cada {p.freq} {p.unit}</Td>
+                                <Td mono>{p.duracion}h</Td>
+                                <Td><Badge label={PRL[p.prioridad]} color={PRC[p.prioridad]} /></Td>
+                                <Td><Badge label={p.activo ? "Activo" : "Inactivo"} color={p.activo ? "#22c55e" : "#64748b"} /></Td>
+                                <Td><BtnGhost onClick={() => setSelected(p)}>Ver detalle</BtnGhost></Td>
+                            </tr>
+                        );
+                    })}
+                </DataTable>
+            </Card>
+
+            {showCreate && (
+                <Modal title="Crear Nuevo Plan de Mantenimiento" onClose={() => setShowCreate(false)}>
+                    <Field label="Nombre del Plan"><input placeholder="Ej: PM Semanal - Bomba #3" /></Field>
+                    <Field label="Activo Asociado"><select>{ASSETS.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select></Field>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <Field label="Frecuencia (valor)"><input type="number" defaultValue={1} /></Field>
+                        <Field label="Unidad"><select><option>dias</option><option>semanas</option><option>meses</option><option>anios</option><option>horas</option></select></Field>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <Field label="Duracion estimada (h)"><input type="number" defaultValue={2} /></Field>
+                        <Field label="Prioridad"><select><option>baja</option><option>media</option><option>alta</option><option>critico</option></select></Field>
+                    </div>
+                    <ModalFooter onCancel={() => setShowCreate(false)} onConfirm={() => setShowCreate(false)} confirmLabel="Crear Plan" />
+                </Modal>
+            )}
+        </div>
+    );
+}
+
+// ─── WORK ORDERS ──────────────────────────────────────────────────────────────
+export function WorkOrdersScreen({ wo, setWo }) {
+    const [selected, setSelected] = useState(null);
+    const [filterStatus, setFilter] = useState("");
+    const [showCreate, setShowCreate] = useState(false);
+
+    const statusCounts = {};
+    wo.forEach(w => { statusCounts[w.status] = (statusCounts[w.status] || 0) + 1; });
+    const filtered = wo.filter(w => !filterStatus || w.status === filterStatus);
+
+    const changeStatus = (id, s) => {
+        setWo(prev => prev.map(w => w.id === id ? { ...w, status: s } : w));
+    };
+
+    if (selected) {
+        const asset = ASSETS.find(a => a.id === selected.assetId);
+        const curWo = wo.find(w => w.id === selected.id) || selected;
+        return (
+            <div style={{ padding: "28px 32px", overflowY: "auto", height: "100%" }}>
+                <BtnBack onClick={() => setSelected(null)} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, paddingBottom: 20, borderBottom: "1px solid #1e3a5f" }}>
+                    <div>
+                        <div style={{ fontSize: 11, fontFamily: "monospace", color: "#f59e0b", marginBottom: 5, letterSpacing: "0.05em" }}>{curWo.folio}</div>
+                        <h1 style={{ fontSize: 20, fontWeight: 800, color: "#f1f5f9", letterSpacing: "-0.02em" }}>{curWo.titulo}</h1>
+                        {asset && <p style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>{asset.name} · <span style={{ fontFamily: "monospace", fontSize: 12 }}>{asset.code}</span></p>}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                        <Badge label={STL[curWo.status]} color={STC[curWo.status]} />
+                        <Badge label={PRL[curWo.prioridad]} color={PRC[curWo.prioridad]} />
+                        <Badge label={curWo.tipo === "preventivo" ? "Preventivo" : "Correctivo"} color={curWo.tipo === "preventivo" ? "#3b82f6" : "#ef4444"} />
+                    </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+                    <Card>
+                        <CardTitle>Datos de la Orden</CardTitle>
+                        <RowData label="Asignado a" value={curWo.asignado} />
+                        <RowData label="Fecha de creacion" value={curWo.fechaCreacion} />
+                        <RowData label="Fecha de vencimiento" value={curWo.fechaVen} />
+                        <RowData label="Fecha de cierre" value={curWo.fechaCierre || "—"} />
+                        <RowData label="Tiempo de paro" value={curWo.downtime ? curWo.downtime + " min" : "0 min"} />
+                    </Card>
+                    <Card>
+                        <CardTitle>Observaciones y Analisis</CardTitle>
+                        {curWo.obs && <div style={{ marginBottom: 14 }}><div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Observaciones</div><p style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.6 }}>{curWo.obs}</p></div>}
+                        {curWo.causa && <div style={{ marginBottom: 14 }}><div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Causa Raiz</div><p style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.6 }}>{curWo.causa}</p></div>}
+                        {curWo.accion && <div><div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Accion Tomada</div><p style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.6 }}>{curWo.accion}</p></div>}
+                        {!curWo.obs && !curWo.causa && !curWo.accion && <p style={{ fontSize: 13, color: "#475569" }}>Sin observaciones registradas.</p>}
+                    </Card>
+                </div>
+
+                <Card>
+                    <CardTitle>Cambiar Estado de la OT</CardTitle>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {["pendiente", "asignado", "en_progreso", "pausado", "completado", "cancelado"].map(s => (
+                            <button key={s} onClick={() => changeStatus(curWo.id, s)}
+                                style={{ background: curWo.status === s ? STC[s] + "33" : "#060e20", border: `1.5px solid ${curWo.status === s ? STC[s] : "#1e3a5f"}`, color: curWo.status === s ? STC[s] : "#64748b", fontSize: 12, fontWeight: 700, padding: "7px 16px", borderRadius: 6, cursor: "pointer", transition: "all 0.15s", fontFamily: "inherit" }}>
+                                {STL[s]}
+                            </button>
+                        ))}
+                    </div>
+                </Card>
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ padding: "28px 32px", overflowY: "auto", height: "100%" }}>
+            <PageHeader
+                title="Ordenes de Trabajo"
+                sub={wo.length + " ordenes registradas"}
+                action={<BtnPrimary onClick={() => setShowCreate(true)}>+ Nueva OT</BtnPrimary>}
+            />
+
+            <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+                <button onClick={() => setFilter("")}
+                    style={{ background: !filterStatus ? "#f59e0b22" : "#0d1627", border: `1.5px solid ${!filterStatus ? "#f59e0b" : "#1e3a5f"}`, color: !filterStatus ? "#f59e0b" : "#64748b", fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 5, cursor: "pointer", fontFamily: "inherit" }}>
+                    Todas ({wo.length})
+                </button>
+                {Object.entries(statusCounts).map(([s, n]) => (
+                    <button key={s} onClick={() => setFilter(s)}
+                        style={{ background: filterStatus === s ? STC[s] + "22" : "#0d1627", border: `1.5px solid ${filterStatus === s ? STC[s] : "#1e3a5f"}`, color: filterStatus === s ? STC[s] : "#64748b", fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 5, cursor: "pointer", fontFamily: "inherit" }}>
+                        {STL[s]} ({n})
+                    </button>
+                ))}
+            </div>
+
+            <Card style={{ padding: 0, overflow: "hidden" }}>
+                <DataTable head={["Folio", "Titulo", "Tipo", "Asignado", "Vencimiento", "Prioridad", "Status", ""]}>
+                    {filtered.map(w => (
+                        <tr key={w.id} style={{ cursor: "pointer" }}
+                            onMouseEnter={e => e.currentTarget.style.background = "#0f2040"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <Td mono>{w.folio}</Td>
+                            <Td bold>{w.titulo}</Td>
+                            <Td><Badge label={w.tipo === "preventivo" ? "Preventivo" : "Correctivo"} color={w.tipo === "preventivo" ? "#3b82f6" : "#ef4444"} /></Td>
+                            <Td>{w.asignado}</Td>
+                            <Td mono>{w.fechaVen}</Td>
+                            <Td><Badge label={PRL[w.prioridad]} color={PRC[w.prioridad]} /></Td>
+                            <Td><Badge label={STL[w.status]} color={STC[w.status]} /></Td>
+                            <Td><BtnGhost onClick={() => setSelected(w)}>Ver detalle</BtnGhost></Td>
+                        </tr>
+                    ))}
+                </DataTable>
+            </Card>
+
+            {showCreate && (
+                <Modal title="Nueva Orden de Trabajo" onClose={() => setShowCreate(false)}>
+                    <Field label="Titulo de la Orden"><input placeholder="Ej: Revision preventiva bomba #3" /></Field>
+                    <Field label="Activo"><select>{ASSETS.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select></Field>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <Field label="Tipo"><select><option>preventivo</option><option>correctivo</option></select></Field>
+                        <Field label="Prioridad"><select><option>baja</option><option>media</option><option>alta</option><option>critico</option></select></Field>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <Field label="Asignado a"><select><option>Carlos Mendez</option><option>Luis Ramirez</option><option>Maria Gonzalez</option><option>Pedro Sanchez</option></select></Field>
+                        <Field label="Fecha de Vencimiento"><input type="date" /></Field>
+                    </div>
+                    <Field label="Observaciones"><textarea placeholder="Describe el trabajo a realizar..." /></Field>
+                    <ModalFooter onCancel={() => setShowCreate(false)} onConfirm={() => setShowCreate(false)} confirmLabel="Crear OT" />
+                </Modal>
+            )}
+        </div>
+    );
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+export function NotificationsScreen({ notifs, setNotifs }) {
+    const unread = notifs.filter(n => !n.leida).length;
+    const markRead = id => setNotifs(ns => ns.map(n => n.id === id ? { ...n, leida: true } : n));
+    const markAll = () => setNotifs(ns => ns.map(n => ({ ...n, leida: true })));
+
+    return (
+        <div style={{ padding: "28px 32px", overflowY: "auto", height: "100%" }}>
+            <PageHeader
+                title="Notificaciones"
+                sub={unread > 0 ? unread + " sin leer" : "Todo al dia ✓"}
+                action={unread > 0 ? <BtnGhost onClick={markAll}>Marcar todas como leidas</BtnGhost> : null}
+            />
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 860 }}>
+                {notifs.map(n => (
+                    <div key={n.id} onClick={() => markRead(n.id)}
+                        style={{ background: "#0d1627", border: `1px solid ${n.leida ? "#1e3a5f" : NTC[n.tipo] + "55"}`, borderLeft: `4px solid ${n.leida ? "#1e3a5f44" : NTC[n.tipo]}`, borderRadius: 8, padding: "16px 22px", cursor: "pointer", opacity: n.leida ? 0.5 : 1, transition: "all 0.2s" }}
+                        onMouseEnter={e => { if (!n.leida) e.currentTarget.style.background = "#0f2040"; }}
+                        onMouseLeave={e => e.currentTarget.style.background = "#0d1627"}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                            <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                                <span style={{ fontSize: 20, lineHeight: 1, marginTop: 1 }}>{NTI[n.tipo]}</span>
+                                <div>
+                                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 5 }}>
+                                        <span style={{ fontSize: 14, fontWeight: 700, color: n.leida ? "#94a3b8" : "#f1f5f9" }}>{n.titulo}</span>
+                                        {!n.leida && <span style={{ width: 7, height: 7, background: NTC[n.tipo], borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />}
+                                    </div>
+                                    <p style={{ fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>{n.msg}</p>
+                                </div>
+                            </div>
+                            <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 20 }}>
+                                <Badge label={NTL[n.tipo]} color={NTC[n.tipo]} />
+                                <div style={{ fontSize: 11, color: "#475569", marginTop: 6, fontFamily: "monospace" }}>{n.fecha}</div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ─── REPORTS ──────────────────────────────────────────────────────────────────
+export function ReportsScreen({ wo }) {
+    const totalDown = wo.reduce((s, w) => s + (w.downtime || 0), 0);
+    const correctivos = wo.filter(w => w.tipo === "correctivo").length;
+    const pct = Math.round((correctivos / wo.length) * 100);
+
+    return (
+        <div style={{ padding: "28px 32px", overflowY: "auto", height: "100%" }}>
+            <PageHeader title="Reportes y KPIs" sub="Indicadores de desempeno · Marzo 2026" />
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
+                <KpiCard label="Cumplimiento PM" value="68%" sub="Meta: 90% · Deficit: -22pp" color="#3b82f6" icon="📊" />
+                <KpiCard label="MTTR Promedio" value="3.2h" sub="Mean time to repair" color="#22c55e" icon="🔧" />
+                <KpiCard label="Paro Acumulado" value={Math.round(totalDown / 60) + "h"} sub={"Horas · Marzo 2026"} color="#ef4444" icon="⏱" />
+                <KpiCard label="% Correctivo" value={pct + "%"} sub="Meta: menos de 30%" color="#f97316" icon="🔴" />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+                <Card>
+                    <CardTitle>Cumplimiento PM — Ultimos 6 Meses (%)</CardTitle>
+                    <ResponsiveContainer width="100%" height={210}>
+                        <AreaChart data={complianceData}>
+                            <defs>
+                                <linearGradient id="cg2" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" />
+                            <XAxis dataKey="mes" tick={{ fill: "#475569", fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: "#475569", fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} />
+                            <Tooltip contentStyle={TT} />
+                            <Area type="monotone" dataKey="val" stroke="#3b82f6" fill="url(#cg2)" strokeWidth={2.5} name="Cumplimiento %" />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </Card>
+                <Card>
+                    <CardTitle>Horas de Paro por Mes</CardTitle>
+                    <ResponsiveContainer width="100%" height={210}>
+                        <BarChart data={downtimeData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" />
+                            <XAxis dataKey="mes" tick={{ fill: "#475569", fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: "#475569", fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <Tooltip contentStyle={TT} />
+                            <Bar dataKey="hrs" fill="#ef4444" radius={[4, 4, 0, 0]} name="Horas paro" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </Card>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <Card>
+                    <CardTitle>Ranking de Fallas por Activo</CardTitle>
+                    <DataTable head={["#", "Activo", "Fallas", "Paro (h)"]}>
+                        {topFallas.map((f, i) => (
+                            <tr key={i}>
+                                <Td mono>{i + 1}</Td>
+                                <Td bold={i < 2}>{f.asset}</Td>
+                                <Td><span style={{ fontFamily: "monospace", fontWeight: 700, color: "#ef4444" }}>{f.count}</span></Td>
+                                <Td><span style={{ fontFamily: "monospace", color: "#f97316" }}>{f.down}</span></Td>
+                            </tr>
+                        ))}
+                    </DataTable>
+                </Card>
+                <Card>
+                    <CardTitle>Preventivo vs. Correctivo</CardTitle>
+                    <ResponsiveContainer width="100%" height={185}>
+                        <PieChart>
+                            <Pie data={tipoData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} paddingAngle={4}
+                                label={({ name, percent }) => name + " " + (percent * 100).toFixed(0) + "%"}
+                                labelLine={{ stroke: "#1e3a5f" }}>
+                                {tipoData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                            </Pie>
+                            <Tooltip contentStyle={TT} />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    <div style={{ display: "flex", justifyContent: "center", gap: 28, marginTop: 10 }}>
+                        {tipoData.map(d => (
+                            <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                                <div style={{ width: 10, height: 10, background: d.color, borderRadius: 3 }} />
+                                <span style={{ fontSize: 13, color: "#94a3b8" }}>{d.name}: <strong style={{ color: "#e2e8f0" }}>{d.value}</strong></span>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+            </div>
+        </div>
+    );
+}
