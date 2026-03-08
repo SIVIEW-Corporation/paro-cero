@@ -23,53 +23,54 @@ export const G = `
 `;
 
 export const ASSETS = [
-  { id:"A001", code:"EQP-001", name:"Compresor Atlas Copco GA55",      area:"Planta de Utilidades",  status:"activo",       criticidad:"alta",  fabricante:"Atlas Copco",    modelo:"GA55",    serie:"ATC-2021-001", instalacion:"2021-03-15" },
-  { id:"A002", code:"EQP-002", name:"Banda Transportadora #1",         area:"Linea de Empaque A",    status:"activo",       criticidad:"media", fabricante:"Intralox",       modelo:"CT-500",  serie:"INT-2020-042", instalacion:"2020-06-20" },
-  { id:"A003", code:"EQP-003", name:"Caldera Cleaver Brooks 200BHP",   area:"Planta de Utilidades",  status:"mantenimiento",criticidad:"alta",  fabricante:"Cleaver Brooks", modelo:"200BHP",  serie:"CB-2019-007",  instalacion:"2019-11-01" },
-  { id:"A004", code:"EQP-004", name:"Torre de Enfriamiento Evapco",    area:"Planta de Utilidades",  status:"activo",       criticidad:"media", fabricante:"Evapco",         modelo:"LSTE-24", serie:"EVP-2022-003", instalacion:"2022-01-10" },
-  { id:"A005", code:"EQP-005", name:"Grua Puente 5T",                  area:"Taller Central",        status:"detenido",     criticidad:"alta",  fabricante:"Demag",          modelo:"GP-5000", serie:"DMG-2018-011", instalacion:"2018-05-22" },
-  { id:"A006", code:"EQP-006", name:"Selladora de Cajas Wexxar",       area:"Linea de Empaque A",    status:"activo",       criticidad:"baja",  fabricante:"Wexxar",         modelo:"SC-400",  serie:"WEX-2023-001", instalacion:"2023-02-14" },
-  { id:"A007", code:"EQP-007", name:"A/C Almacen Principal",           area:"Almacen Principal",     status:"activo",       criticidad:"baja",  fabricante:"Carrier",        modelo:"HVAC-5T", serie:"CAR-2021-088", instalacion:"2021-08-30" },
+  { id: "A001", code: "EQP-001", name: "Compresor Atlas Copco GA55", area: "Planta de Utilidades", status: "activo", criticidad: "alta", fabricante: "Atlas Copco", modelo: "GA55", serie: "ATC-2021-001", instalacion: "2021-03-15" },
+  { id: "A002", code: "EQP-002", name: "Banda Transportadora #1", area: "Linea de Empaque A", status: "activo", criticidad: "media", fabricante: "Intralox", modelo: "CT-500", serie: "INT-2020-042", instalacion: "2020-06-20" },
+  { id: "A003", code: "EQP-003", name: "Caldera Cleaver Brooks 200BHP", area: "Planta de Utilidades", status: "mantenimiento", criticidad: "alta", fabricante: "Cleaver Brooks", modelo: "200BHP", serie: "CB-2019-007", instalacion: "2019-11-01" },
+  { id: "A004", code: "EQP-004", name: "Torre de Enfriamiento Evapco", area: "Planta de Utilidades", status: "activo", criticidad: "media", fabricante: "Evapco", modelo: "LSTE-24", serie: "EVP-2022-003", instalacion: "2022-01-10" },
+  { id: "A005", code: "EQP-005", name: "Grua Puente 5T", area: "Taller Central", status: "detenido", criticidad: "alta", fabricante: "Demag", modelo: "GP-5000", serie: "DMG-2018-011", instalacion: "2018-05-22" },
+  { id: "A006", code: "EQP-006", name: "Selladora de Cajas Wexxar", area: "Linea de Empaque A", status: "activo", criticidad: "baja", fabricante: "Wexxar", modelo: "SC-400", serie: "WEX-2023-001", instalacion: "2023-02-14" },
+  { id: "A007", code: "EQP-007", name: "A/C Almacen Principal", area: "Almacen Principal", status: "activo", criticidad: "baja", fabricante: "Carrier", modelo: "HVAC-5T", serie: "CAR-2021-088", instalacion: "2021-08-30" },
 ];
 
 export const PLANS = [
-  { id:"P001", assetId:"A001", name:"PM Semanal - Compresor GA55",   freq:1, unit:"semanas", prioridad:"alta",  duracion:2, activo:true,  items:["Verificar presion de aceite","Revisar correas de transmision","Limpiar filtros de aire","Verificar temperatura de operacion"] },
-  { id:"P002", assetId:"A001", name:"PM Mensual - Compresor GA55",   freq:1, unit:"meses",   prioridad:"alta",  duracion:4, activo:true,  items:["Cambio de aceite","Reemplazo de filtros","Inspeccion general","Revision valvulas de seguridad"] },
-  { id:"P003", assetId:"A002", name:"PM Banda Transportadora",       freq:2, unit:"semanas", prioridad:"media", duracion:1, activo:true,  items:["Lubricacion de rodillos","Verificar tension de banda","Inspeccion de alineacion"] },
-  { id:"P004", assetId:"A003", name:"PM Mensual - Caldera 200BHP",   freq:1, unit:"meses",   prioridad:"alta",  duracion:6, activo:true,  items:["Analisis de agua","Purga de lodos","Verificar quemador","Controles de seguridad","Inspeccion tuberia de vapor"] },
-  { id:"P005", assetId:"A004", name:"PM Torre de Enfriamiento",      freq:1, unit:"meses",   prioridad:"media", duracion:3, activo:true,  items:["Limpieza de relleno","Tratamiento de agua","Verificar aspersores","Inspeccion de motor ventilador"] },
-  { id:"P006", assetId:"A005", name:"PM Anual - Grua Puente",        freq:1, unit:"anios",   prioridad:"alta",  duracion:8, activo:false, items:["Inspeccion estructural","Revision de cables","Prueba de carga nominal","Calibracion de limites de carrera"] },
+  { id: "P001", assetId: "A001", name: "PM Semanal - Compresor GA55", freq: 1, unit: "semanas", prioridad: "alta", duracion: 2, activo: true, items: ["Verificar presion de aceite", "Revisar correas de transmision", "Limpiar filtros de aire", "Verificar temperatura de operacion"] },
+  { id: "P002", assetId: "A001", name: "PM Mensual - Compresor GA55", freq: 1, unit: "meses", prioridad: "alta", duracion: 4, activo: true, items: ["Cambio de aceite", "Reemplazo de filtros", "Inspeccion general", "Revision valvulas de seguridad"] },
+  { id: "P003", assetId: "A002", name: "PM Banda Transportadora", freq: 2, unit: "semanas", prioridad: "media", duracion: 1, activo: true, items: ["Lubricacion de rodillos", "Verificar tension de banda", "Inspeccion de alineacion"] },
+  { id: "P004", assetId: "A003", name: "PM Mensual - Caldera 200BHP", freq: 1, unit: "meses", prioridad: "alta", duracion: 6, activo: true, items: ["Analisis de agua", "Purga de lodos", "Verificar quemador", "Controles de seguridad", "Inspeccion tuberia de vapor"] },
+  { id: "P005", assetId: "A004", name: "PM Torre de Enfriamiento", freq: 1, unit: "meses", prioridad: "media", duracion: 3, activo: true, items: ["Limpieza de relleno", "Tratamiento de agua", "Verificar aspersores", "Inspeccion de motor ventilador"] },
+  { id: "P006", assetId: "A005", name: "PM Anual - Grua Puente", freq: 1, unit: "anios", prioridad: "alta", duracion: 8, activo: false, items: ["Inspeccion estructural", "Revision de cables", "Prueba de carga nominal", "Calibracion de limites de carrera"] },
 ];
 
 export const INIT_WO = [
-  { id:"OT001", folio:"OT-2026-001", tipo:"preventivo", titulo:"PM Semanal Compresor GA55",       assetId:"A001", asignado:"Carlos Mendez",  prioridad:"alta",   status:"completado",  fechaCreacion:"2026-02-28", fechaVen:"2026-03-01", fechaCierre:"2026-03-01", downtime:0,   obs:"Completado sin novedades.",                  causa:null,                             accion:null },
-  { id:"OT002", folio:"OT-2026-002", tipo:"correctivo", titulo:"Falla en rodamiento - Banda #1",  assetId:"A002", asignado:"Luis Ramirez",    prioridad:"critico",status:"en_progreso", fechaCreacion:"2026-03-05", fechaVen:"2026-03-06", fechaCierre:null,           downtime:120, obs:"Ruido inusual en rodamiento central.",       causa:"Falta de lubricacion periodica", accion:"Reemplazo de rodamiento programado para hoy" },
-  { id:"OT003", folio:"OT-2026-003", tipo:"preventivo", titulo:"PM Mensual - Caldera 200BHP",     assetId:"A003", asignado:"Maria Gonzalez",  prioridad:"alta",   status:"pendiente",   fechaCreacion:"2026-03-01", fechaVen:"2026-03-07", fechaCierre:null,           downtime:0,   obs:"",                                          causa:null,                             accion:null },
-  { id:"OT004", folio:"OT-2026-004", tipo:"preventivo", titulo:"PM Torre de Enfriamiento",        assetId:"A004", asignado:"Carlos Mendez",  prioridad:"media",  status:"vencido",     fechaCreacion:"2026-02-25", fechaVen:"2026-03-01", fechaCierre:null,           downtime:0,   obs:"",                                          causa:null,                             accion:null },
-  { id:"OT005", folio:"OT-2026-005", tipo:"correctivo", titulo:"Falla electrica Grua Puente 5T",  assetId:"A005", asignado:"Pedro Sanchez",  prioridad:"critico",status:"asignado",    fechaCreacion:"2026-03-06", fechaVen:"2026-03-07", fechaCierre:null,           downtime:240, obs:"Grua detenida por falla en panel electrico.", causa:"Sobrecalentamiento en contactor K3", accion:"Reemplazo de contactor en proceso" },
-  { id:"OT006", folio:"OT-2026-006", tipo:"preventivo", titulo:"Lubricacion Selladora de Cajas",  assetId:"A006", asignado:"Luis Ramirez",    prioridad:"baja",   status:"completado",  fechaCreacion:"2026-03-03", fechaVen:"2026-03-05", fechaCierre:"2026-03-04",   downtime:0,   obs:"Lubricacion completada.",                   causa:null,                             accion:null },
-  { id:"OT007", folio:"OT-2026-007", tipo:"correctivo", titulo:"Fuga de refrigerante - A/C",      assetId:"A007", asignado:"Maria Gonzalez",  prioridad:"media",  status:"pausado",     fechaCreacion:"2026-03-04", fechaVen:"2026-03-08", fechaCierre:null,           downtime:60,  obs:"Fuga detectada en linea de retorno.",        causa:"Corrosion en tuberia de cobre",  accion:"En espera de refacciones (ETA: 10 Mar)" },
+  { id: "OT001", folio: "OT-2026-001", tipo: "preventivo", titulo: "PM Semanal Compresor GA55", assetId: "A001", asignado: "Carlos Mendez", prioridad: "alta", status: "completado", fechaCreacion: "2026-02-28", fechaVen: "2026-03-01", fechaCierre: "2026-03-01", downtime: 0, obs: "Completado sin novedades.", causa: null, accion: null },
+  { id: "OT002", folio: "OT-2026-002", tipo: "correctivo", titulo: "Falla en rodamiento - Banda #1", assetId: "A002", asignado: "Luis Ramirez", prioridad: "critico", status: "en_progreso", fechaCreacion: "2026-03-05", fechaVen: "2026-03-06", fechaCierre: null, downtime: 120, obs: "Ruido inusual en rodamiento central.", causa: "Falta de lubricacion periodica", accion: "Reemplazo de rodamiento programado para hoy" },
+  { id: "OT003", folio: "OT-2026-003", tipo: "preventivo", titulo: "PM Mensual - Caldera 200BHP", assetId: "A003", asignado: "Maria Gonzalez", prioridad: "alta", status: "pendiente", fechaCreacion: "2026-03-01", fechaVen: "2026-03-07", fechaCierre: null, downtime: 0, obs: "", causa: null, accion: null },
+  { id: "OT004", folio: "OT-2026-004", tipo: "preventivo", titulo: "PM Torre de Enfriamiento", assetId: "A004", asignado: "Carlos Mendez", prioridad: "media", status: "vencido", fechaCreacion: "2026-02-25", fechaVen: "2026-03-01", fechaCierre: null, downtime: 0, obs: "", causa: null, accion: null },
+  { id: "OT005", folio: "OT-2026-005", tipo: "correctivo", titulo: "Falla electrica Grua Puente 5T", assetId: "A005", asignado: "Pedro Sanchez", prioridad: "critico", status: "asignado", fechaCreacion: "2026-03-06", fechaVen: "2026-03-07", fechaCierre: null, downtime: 240, obs: "Grua detenida por falla en panel electrico.", causa: "Sobrecalentamiento en contactor K3", accion: "Reemplazo de contactor en proceso" },
+  { id: "OT006", folio: "OT-2026-006", tipo: "preventivo", titulo: "Lubricacion Selladora de Cajas", assetId: "A006", asignado: "Luis Ramirez", prioridad: "baja", status: "completado", fechaCreacion: "2026-03-03", fechaVen: "2026-03-05", fechaCierre: "2026-03-04", downtime: 0, obs: "Lubricacion completada.", causa: null, accion: null },
+  { id: "OT007", folio: "OT-2026-007", tipo: "correctivo", titulo: "Fuga de refrigerante - A/C", assetId: "A007", asignado: "Maria Gonzalez", prioridad: "media", status: "pausado", fechaCreacion: "2026-03-04", fechaVen: "2026-03-08", fechaCierre: null, downtime: 60, obs: "Fuga detectada en linea de retorno.", causa: "Corrosion en tuberia de cobre", accion: "En espera de refacciones (ETA: 10 Mar)" },
 ];
 
 export const INIT_NOTIFS = [
-  { id:"N1", tipo:"vencida",  titulo:"OT Vencida: PM Torre de Enfriamiento",  msg:"La orden OT-2026-004 vencio el 1 de marzo sin completarse.", fecha:"2026-03-02", leida:false },
-  { id:"N2", tipo:"proxima",  titulo:"PM proximo: Compresor GA55",             msg:"El plan PM Semanal Compresor vence el 8 de marzo.",           fecha:"2026-03-06", leida:false },
-  { id:"N3", tipo:"asignada", titulo:"Nueva asignacion: OT-2026-005",          msg:"OT-2026-005 Falla electrica Grua Puente asignada a Pedro Sanchez.", fecha:"2026-03-06", leida:false },
-  { id:"N4", tipo:"proxima",  titulo:"PM proximo: Caldera Mensual",            msg:"El plan PM Caldera Mensual vence hoy 7 de marzo.",            fecha:"2026-03-07", leida:true  },
-  { id:"N5", tipo:"vencida",  titulo:"OT Vencida: Falla rodamiento Banda #1", msg:"La orden OT-2026-002 vencio sin cerrarse.",                   fecha:"2026-03-06", leida:true  },
+  { id: "N1", tipo: "vencida", titulo: "OT Vencida: PM Torre de Enfriamiento", msg: "La orden OT-2026-004 vencio el 1 de marzo sin completarse.", fecha: "2026-03-02", leida: false },
+  { id: "N2", tipo: "proxima", titulo: "PM proximo: Compresor GA55", msg: "El plan PM Semanal Compresor vence el 8 de marzo.", fecha: "2026-03-06", leida: false },
+  { id: "N3", tipo: "asignada", titulo: "Nueva asignacion: OT-2026-005", msg: "OT-2026-005 Falla electrica Grua Puente asignada a Pedro Sanchez.", fecha: "2026-03-06", leida: false },
+  { id: "N4", tipo: "proxima", titulo: "PM proximo: Caldera  Mensual", msg: "El plan PM Caldera Mensual vence hoy 7 de marzo.", fecha: "2026-03-07", leida: true },
+  { id: "N5", tipo: "vencida", titulo: "OT Vencida: Falla rodamiento Banda #1", msg: "La orden OT-2026-002 vencio sin cerrarse.", fecha: "2026-03-06", leida: true },
 ];
 
-export const complianceData = [{mes:"Oct",val:82},{mes:"Nov",val:78},{mes:"Dic",val:85},{mes:"Ene",val:88},{mes:"Feb",val:75},{mes:"Mar",val:68}];
-export const downtimeData   = [{mes:"Oct",hrs:8},{mes:"Nov",hrs:12},{mes:"Dic",hrs:5},{mes:"Ene",hrs:15},{mes:"Feb",hrs:9},{mes:"Mar",hrs:7}];
-export const tipoData       = [{name:"Preventivo",value:14,color:"#3b82f6"},{name:"Correctivo",value:8,color:"#ef4444"}];
-export const topFallas      = [{asset:"Grua Puente 5T",count:4,down:18},{asset:"Banda Transportadora #1",count:3,down:12},{asset:"Compresor GA55",count:2,down:4},{asset:"A/C Almacen",count:2,down:3},{asset:"Caldera 200BHP",count:1,down:6}];
 
-export const STC = {activo:"#22c55e",detenido:"#ef4444",mantenimiento:"#f59e0b",descomisionado:"#64748b",pendiente:"#94a3b8",asignado:"#3b82f6",en_progreso:"#f59e0b",pausado:"#f97316",completado:"#22c55e",cancelado:"#64748b",vencido:"#ef4444"};
-export const STL = {activo:"Activo",detenido:"Detenido",mantenimiento:"En Mantenimiento",descomisionado:"Descomisionado",pendiente:"Pendiente",asignado:"Asignado",en_progreso:"En Progreso",pausado:"Pausado",completado:"Completado",cancelado:"Cancelado",vencido:"Vencido"};
-export const PRC = {baja:"#22c55e",media:"#3b82f6",alta:"#f59e0b",critico:"#ef4444"};
-export const PRL = {baja:"Baja",media:"Media",alta:"Alta",critico:"Critico"};
-export const CRC = {baja:"#22c55e",media:"#f59e0b",alta:"#ef4444"};
-export const NTC = {vencida:"#ef4444",proxima:"#f59e0b",asignada:"#3b82f6"};
-export const NTL = {vencida:"Vencida",proxima:"Proxima",asignada:"Asignada"};
-export const NTI = {vencida:"⚠",proxima:"🔔",asignada:"📋"};
-export const TT  = {background:"#0d1627",border:"1px solid #1e3a5f",borderRadius:6,fontSize:12,color:"#e2e8f0"};
+export const complianceData = [{ mes: "Oct", val: 82 }, { mes: "Nov", val: 78 }, { mes: "Dic", val: 85 }, { mes: "Ene", val: 88 }, { mes: "Feb", val: 75 }, { mes: "Mar", val: 68 }];
+export const downtimeData = [{ mes: "Oct", hrs: 8 }, { mes: "Nov", hrs: 12 }, { mes: "Dic", hrs: 5 }, { mes: "Ene", hrs: 15 }, { mes: "Feb", hrs: 9 }, { mes: "Mar", hrs: 7 }];
+export const tipoData = [{ name: "Preventivo", value: 14, color: "#3b82f6" }, { name: "Correctivo", value: 8, color: "#ef4444" }];
+export const topFallas = [{ asset: "Grua Puente 5T", count: 4, down: 18 }, { asset: "Banda Transportadora #1", count: 3, down: 12 }, { asset: "Compresor GA55", count: 2, down: 4 }, { asset: "A/C Almacen", count: 2, down: 3 }, { asset: "Caldera 200BHP", count: 1, down: 6 }];
+
+export const STC = { activo: "#22c55e", detenido: "#ef4444", mantenimiento: "#f59e0b", descomisionado: "#64748b", pendiente: "#94a3b8", asignado: "#3b82f6", en_progreso: "#f59e0b", pausado: "#f97316", completado: "#22c55e", cancelado: "#64748b", vencido: "#ef4444" };
+export const STL = { activo: "Activo", detenido: "Detenido", mantenimiento: "En Mantenimiento", descomisionado: "Descomisionado", pendiente: "Pendiente", asignado: "Asignado", en_progreso: "En Progreso", pausado: "Pausado", completado: "Completado", cancelado: "Cancelado", vencido: "Vencido" };
+export const PRC = { baja: "#22c55e", media: "#3b82f6", alta: "#f59e0b", critico: "#ef4444" };
+export const PRL = { baja: "Baja", media: "Media", alta: "Alta", critico: "Critico" };
+export const CRC = { baja: "#22c55e", media: "#f59e0b", alta: "#ef4444" };
+export const NTC = { vencida: "#ef4444", proxima: "#f59e0b", asignada: "#3b82f6" };
+export const NTL = { vencida: "Vencida", proxima: "Proxima", asignada: "Asignada" };
+export const NTI = { vencida: "⚠", proxima: "🔔", asignada: "📋" };
+export const TT = { background: "#0d1627", border: "1px solid #1e3a5f", borderRadius: 6, fontSize: 12, color: "#e2e8f0" };
