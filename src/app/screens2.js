@@ -1,5 +1,10 @@
 'use client';
 import React, { useState } from 'react';
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/style.css';
+
 import {
   AreaChart,
   Area,
@@ -922,10 +927,42 @@ export function NotificationsScreen({ notifs, setNotifs }) {
 // ─── REPORTS ──────────────────────────────────────────────────────────────────
 export function ReportsScreen({ wo }) {
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [dateRange, setDateRange] = useState({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
+  });
+  const [showPicker, setShowPicker] = useState(false);
 
-  const filteredWo = selectedAsset
-    ? wo.filter((w) => w.assetId === selectedAsset)
-    : wo;
+  const quickOptions = [
+    {
+      label: 'Este mes',
+      getValue: () => ({
+        from: startOfMonth(new Date()),
+        to: endOfMonth(new Date()),
+      }),
+    },
+    {
+      label: 'Últimos 3 meses',
+      getValue: () => ({
+        from: subMonths(new Date(), 2),
+        to: new Date(),
+      }),
+    },
+    {
+      label: 'Últimos 6 meses',
+      getValue: () => ({
+        from: subMonths(new Date(), 5),
+        to: new Date(),
+      }),
+    },
+  ];
+
+  const filteredWo = wo.filter((w) => {
+    if (selectedAsset && w.assetId !== selectedAsset) return false;
+    if (!dateRange.from || !dateRange.to) return true;
+    const woDate = new Date(w.fecha);
+    return woDate >= dateRange.from && woDate <= dateRange.to;
+  });
 
   const totalDown = filteredWo.reduce((s, w) => s + (w.downtime || 0), 0);
   const correctivos = filteredWo.filter((w) => w.tipo === 'correctivo').length;
@@ -965,7 +1002,9 @@ export function ReportsScreen({ wo }) {
         sub={
           selectedAsset
             ? `Activo: ${selectedAssetName}`
-            : 'Indicadores de desempeno · Marzo 2026'
+            : dateRange.from && dateRange.to
+              ? `${format(dateRange.from, 'dd MMM yyyy', { locale: es })} - ${format(dateRange.to, 'dd MMM yyyy', { locale: es })}`
+              : 'Indicadores de desempeño'
         }
         action={
           <select
@@ -982,6 +1021,93 @@ export function ReportsScreen({ wo }) {
           </select>
         }
       />
+
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          marginBottom: 20,
+          alignItems: 'center',
+          flexWrap: 'wrap',
+        }}
+      >
+        {quickOptions.map((opt) => (
+          <button
+            key={opt.label}
+            onClick={() => setDateRange(opt.getValue())}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 6,
+              border: '1px solid #e2e8f0',
+              background: '#fff',
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 500,
+              color: '#475569',
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+        <button
+          onClick={() => setShowPicker(!showPicker)}
+          style={{
+            padding: '6px 12px',
+            borderRadius: 6,
+            border: '1px solid #e2e8f0',
+            background: '#fff',
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 500,
+            color: '#475569',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          📅{' '}
+          {dateRange.from && dateRange.to
+            ? `${format(dateRange.from, 'dd MMM')} - ${format(dateRange.to, 'dd MMM yyyy')}`
+            : 'Personalizado'}
+        </button>
+        {showPicker && (
+          <div
+            style={{
+              position: 'absolute',
+              zIndex: 50,
+              marginTop: 8,
+              background: '#fff',
+              borderRadius: 8,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              padding: 16,
+            }}
+          >
+            <DayPicker
+              mode='range'
+              selected={dateRange}
+              onSelect={setDateRange}
+              locale={es}
+              footer={
+                <button
+                  onClick={() => setShowPicker(false)}
+                  style={{
+                    marginTop: 8,
+                    padding: '4px 12px',
+                    background: '#3b82f6',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    fontSize: 12,
+                  }}
+                >
+                  Aplicar
+                </button>
+              }
+            />
+          </div>
+        )}
+      </div>
 
       <div
         style={{
