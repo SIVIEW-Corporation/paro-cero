@@ -1,6 +1,13 @@
 'use client';
 import React, { useState } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import {
+  format,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  eachMonthOfInterval,
+  isSameMonth,
+} from 'date-fns';
 import { es } from 'date-fns/locale';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/style.css';
@@ -957,6 +964,42 @@ export function ReportsScreen({ wo }) {
     },
   ];
 
+  // --- Cálculos Dinámicos de Histórico (6 meses) ---
+  const last6Months = eachMonthOfInterval({
+    start: subMonths(startOfMonth(new Date()), 5),
+    end: endOfMonth(new Date()),
+  });
+
+  const historyData = last6Months.map((month) => {
+    const monthWO = wo.filter((w) => {
+      const wDate = new Date(w.fechaCreacion);
+      const sameAsset = !selectedAsset || w.assetId === selectedAsset;
+      return sameAsset && isSameMonth(wDate, month);
+    });
+
+    const completed = monthWO.filter((w) => w.status === 'completado').length;
+    const totalFinished = monthWO.filter((w) =>
+      ['completado', 'vencido', 'cancelado'].includes(w.status),
+    ).length;
+
+    return {
+      mes: format(month, 'MMM', { locale: es }),
+      compliance:
+        totalFinished > 0 ? Math.round((completed / totalFinished) * 100) : 0,
+      downtime: monthWO.reduce((s, w) => s + (w.downtime || 0), 0) / 60, // horas
+    };
+  });
+
+  const chartCompliance = historyData.map((d) => ({
+    mes: d.mes,
+    val: d.compliance,
+  }));
+  const chartDowntime = historyData.map((d) => ({
+    mes: d.mes,
+    hrs: Math.round(d.downtime * 10) / 10,
+  }));
+
+  // --- Cálculos Dinámicos del Filtro Actual ---
   const filteredWo = wo.filter((w) => {
     if (selectedAsset && w.assetId !== selectedAsset) return false;
     if (!dateRange || !dateRange.from || !dateRange.to) return true;
@@ -972,24 +1015,40 @@ export function ReportsScreen({ wo }) {
       ? Math.round((correctivos / filteredWo.length) * 100)
       : 0;
 
-  const avgMTTR = 3.2;
+  // MTTR Dinámico (Mean Time To Repair)
+  const avgMTTR =
+    correctivos > 0 ? Math.round((totalDown / 60 / correctivos) * 10) / 10 : 0;
 
   const completed = filteredWo.filter((w) => w.status === 'completado').length;
-  const total = filteredWo.filter(
-    (w) =>
-      w.status === 'completado' ||
-      w.status === 'vencido' ||
-      w.status === 'cancelado',
+  const total = filteredWo.filter((w) =>
+    ['completado', 'vencido', 'cancelado'].includes(w.status),
   ).length;
   const compliancePct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  const chartCompliance = selectedAsset
-    ? assetComplianceData[selectedAsset]
-    : complianceData;
-  const chartDowntime = selectedAsset
-    ? assetDowntimeData[selectedAsset]
-    : downtimeData;
-  const chartTipo = selectedAsset ? assetTipoData[selectedAsset] : tipoData;
+  const chartTipo = [
+    { name: 'Preventivo', value: preventivos, color: '#3b82f6' },
+    { name: 'Correctivo', value: correctivos, color: '#ef4444' },
+  ];
+
+  // Ranking de Fallas Dinámico
+  const assetGroups = filteredWo
+    .filter((w) => w.tipo === 'correctivo')
+    .reduce((acc, w) => {
+      if (!acc[w.assetId]) {
+        acc[w.assetId] = { count: 0, down: 0, id: w.assetId };
+      }
+      acc[w.assetId].count += 1;
+      acc[w.assetId].down += w.downtime || 0;
+      return acc;
+    }, {});
+
+  const dynamicTopFallas = Object.values(assetGroups)
+    .map((g) => ({
+      asset: ASSETS.find((a) => a.id === g.id)?.name || 'Desconocido',
+      count: g.count,
+      down: Math.round(g.down / 60),
+    }))
+    .sort((a, b) => b.count - a.count);
 
   const selectedAssetName = selectedAsset
     ? ASSETS.find((a) => a.id === selectedAsset)?.name
@@ -1122,8 +1181,8 @@ export function ReportsScreen({ wo }) {
           value={compliancePct + '%'}
           sub={
             selectedAsset
-              ? 'Completadas/Vencidas'
-              : 'Meta: 90% · Deficit: -22pp'
+              ? 'Basado en histórico del activo'
+              : 'Meta: 90% · General'
           }
           color='#3b82f6'
           icon='📊'
@@ -1138,14 +1197,14 @@ export function ReportsScreen({ wo }) {
         <KpiCard
           label='Paro Acumulado'
           value={Math.round(totalDown / 60) + 'h'}
-          sub={selectedAsset ? 'Desde inicio' : 'Horas · Marzo 2026'}
+          sub={selectedAsset ? 'Paro total activo' : 'Total acumulado'}
           color='#ef4444'
           icon='⏱'
         />
         <KpiCard
           label='% Correctivo'
           value={pct + '%'}
-          sub={`Preventivo: ${preventivos} · Correctivo: ${correctivos}`}
+          sub={`Prev: ${preventivos} · Corr: ${correctivos}`}
           color='#f97316'
           icon='🔴'
         />
@@ -1247,7 +1306,7 @@ export function ReportsScreen({ wo }) {
                 </Td>
               </tr>
             ) : (
-              topFallas.map((f, i) => (
+              dynamicTopFallas.map((f, i) => (
                 <tr key={i}>
                   <Td mono>{i + 1}</Td>
                   <Td bold={i < 2}>{f.asset}</Td>
