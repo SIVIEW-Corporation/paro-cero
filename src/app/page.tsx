@@ -1,6 +1,13 @@
 'use client';
 import React, { useState } from 'react';
-import { G, INIT_WO, INIT_NOTIFS } from '@/app/data';
+import {
+  G,
+  INIT_WO,
+  INIT_NOTIFS,
+  INIT_CHECKLISTS,
+  INIT_HALLAZGOS,
+  PLANTILLAS_CHECKLIST,
+} from '@/app/data';
 import { LoginScreen, Dashboard, AssetsScreen } from '@/app/screens1';
 import {
   PlansScreen,
@@ -8,6 +15,7 @@ import {
   NotificationsScreen,
   ReportsScreen,
 } from '@/app/screens2';
+import { InspeccionesScreen } from '@/app/screens3';
 import { cn } from '@/lib/cn';
 
 const NAV_ITEMS = [
@@ -15,6 +23,7 @@ const NAV_ITEMS = [
   { id: 'assets', label: 'Activos', icon: '⬡' },
   { id: 'plans', label: 'Planes PM', icon: '◎' },
   { id: 'workorders', label: 'Ordenes de Trabajo', icon: '☰' },
+  { id: 'inspecciones', label: 'Inspecciones', icon: '🔍' },
   { id: 'notifications', label: 'Notificaciones', icon: '◉' },
   { id: 'reports', label: 'Reportes y KPIs', icon: '↗' },
 ];
@@ -114,6 +123,9 @@ export default function App() {
   const [wo, setWo] = useState(INIT_WO);
   const [notifs, setNotifs] = useState(INIT_NOTIFS);
   const [mounted, setMounted] = useState(false);
+  const [checklists, setChecklists] = useState(INIT_CHECKLISTS);
+  const [hallazgos, setHallazgos] = useState(INIT_HALLAZGOS);
+  const [plantillas, setPlantillas] = useState(PLANTILLAS_CHECKLIST);
 
   React.useEffect(() => {
     setMounted(true);
@@ -150,6 +162,16 @@ export default function App() {
           {screen === 'plans' && <PlansScreen />}
           {screen === 'workorders' && (
             <WorkOrdersScreen wo={wo} setWo={setWo} />
+          )}
+          {screen === 'inspecciones' && (
+            <InspeccionesScreen
+              checklists={checklists}
+              setChecklists={setChecklists}
+              hallazgos={hallazgos}
+              setHallazgos={setHallazgos}
+              plantillas={plantillas}
+              setPlantillas={setPlantillas}
+            />
           )}
           {screen === 'notifications' && (
             <NotificationsScreen notifs={notifs} setNotifs={setNotifs} />
