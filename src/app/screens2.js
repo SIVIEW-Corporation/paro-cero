@@ -959,8 +959,8 @@ export function ReportsScreen({ wo }) {
 
   const filteredWo = wo.filter((w) => {
     if (selectedAsset && w.assetId !== selectedAsset) return false;
-    if (!dateRange.from || !dateRange.to) return true;
-    const woDate = new Date(w.fecha);
+    if (!dateRange || !dateRange.from || !dateRange.to) return true;
+    const woDate = new Date(w.fechaCreacion);
     return woDate >= dateRange.from && woDate <= dateRange.to;
   });
 
@@ -1002,7 +1002,7 @@ export function ReportsScreen({ wo }) {
         sub={
           selectedAsset
             ? `Activo: ${selectedAssetName}`
-            : dateRange.from && dateRange.to
+            : dateRange?.from && dateRange?.to
               ? `${format(dateRange.from, 'dd MMM yyyy', { locale: es })} - ${format(dateRange.to, 'dd MMM yyyy', { locale: es })}`
               : 'Indicadores de desempeño'
         }
@@ -1066,7 +1066,7 @@ export function ReportsScreen({ wo }) {
           }}
         >
           📅{' '}
-          {dateRange.from && dateRange.to
+          {dateRange?.from && dateRange?.to
             ? `${format(dateRange.from, 'dd MMM')} - ${format(dateRange.to, 'dd MMM yyyy')}`
             : 'Personalizado'}
         </button>
