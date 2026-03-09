@@ -68,7 +68,7 @@ export function PlansScreen() {
     ).length;
     const pct = Math.round((done / selected.items.length) * 100);
     return (
-      <div style={{ padding: '28px 32px', overflowY: 'auto', height: '100%' }}>
+      <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
         <BtnBack onClick={() => setSelected(null)} />
         <div
           style={{
@@ -77,7 +77,12 @@ export function PlansScreen() {
             alignItems: 'flex-start',
             marginBottom: 24,
             paddingBottom: 20,
-            borderBottom: '1px solid #1e3a5f',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            background:
+              'linear-gradient(90deg, rgba(251,191,36,0.03) 0%, transparent 100%)',
+            padding: '16px 20px',
+            margin: '0 -20px 24px -20px',
+            borderRadius: '8px 8px 0 0',
           }}
         >
           <div>
@@ -93,16 +98,36 @@ export function PlansScreen() {
             </div>
             <h1
               style={{
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: 800,
-                color: '#f1f5f9',
+                color: '#f8fafc',
                 letterSpacing: '-0.02em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
               }}
             >
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 4,
+                  height: 22,
+                  background:
+                    'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)',
+                  borderRadius: 2,
+                }}
+              />
               {selected.name}
             </h1>
             {asset && (
-              <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: '#64748b',
+                  marginTop: 6,
+                  marginLeft: 16,
+                }}
+              >
                 Activo: {asset.name} ·{' '}
                 <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
                   {asset.code}
@@ -261,7 +286,7 @@ export function PlansScreen() {
   }
 
   return (
-    <div style={{ padding: '28px 32px', overflowY: 'auto', height: '100%' }}>
+    <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
       <PageHeader
         title='Planes de Mantenimiento'
         sub={PLANS.length + ' planes configurados'}
@@ -403,7 +428,7 @@ export function WorkOrdersScreen({ wo, setWo }) {
     const asset = ASSETS.find((a) => a.id === selected.assetId);
     const curWo = wo.find((w) => w.id === selected.id) || selected;
     return (
-      <div style={{ padding: '28px 32px', overflowY: 'auto', height: '100%' }}>
+      <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
         <BtnBack onClick={() => setSelected(null)} />
         <div
           style={{
@@ -412,7 +437,12 @@ export function WorkOrdersScreen({ wo, setWo }) {
             alignItems: 'flex-start',
             marginBottom: 24,
             paddingBottom: 20,
-            borderBottom: '1px solid #1e3a5f',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            background:
+              'linear-gradient(90deg, rgba(251,191,36,0.03) 0%, transparent 100%)',
+            padding: '16px 20px',
+            margin: '0 -20px 24px -20px',
+            borderRadius: '8px 8px 0 0',
           }}
         >
           <div>
@@ -429,16 +459,36 @@ export function WorkOrdersScreen({ wo, setWo }) {
             </div>
             <h1
               style={{
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: 800,
-                color: '#f1f5f9',
+                color: '#f8fafc',
                 letterSpacing: '-0.02em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
               }}
             >
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 4,
+                  height: 22,
+                  background:
+                    'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)',
+                  borderRadius: 2,
+                }}
+              />
               {curWo.titulo}
             </h1>
             {asset && (
-              <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: '#64748b',
+                  marginTop: 6,
+                  marginLeft: 16,
+                }}
+              >
                 {asset.name} ·{' '}
                 <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
                   {asset.code}
@@ -586,7 +636,7 @@ export function WorkOrdersScreen({ wo, setWo }) {
   }
 
   return (
-    <div style={{ padding: '28px 32px', overflowY: 'auto', height: '100%' }}>
+    <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
       <PageHeader
         title='Ordenes de Trabajo'
         sub={wo.length + ' ordenes registradas'}
@@ -758,7 +808,7 @@ export function NotificationsScreen({ notifs, setNotifs }) {
     setNotifs((ns) => ns.map((n) => ({ ...n, leida: true })));
 
   return (
-    <div style={{ padding: '28px 32px', overflowY: 'auto', height: '100%' }}>
+    <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
       <PageHeader
         title='Notificaciones'
         sub={unread > 0 ? unread + ' sin leer' : 'Todo al dia ✓'}
@@ -909,7 +959,7 @@ export function ReportsScreen({ wo }) {
     : null;
 
   return (
-    <div style={{ padding: '28px 32px', overflowY: 'auto', height: '100%' }}>
+    <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
       <PageHeader
         title='Reportes y KPIs'
         sub={

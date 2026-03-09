@@ -1,6 +1,20 @@
 'use client';
 import React, { useState } from 'react';
 import {
+  LayoutDashboard,
+  Boxes,
+  Calendar,
+  ClipboardList,
+  Search,
+  Bell,
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  LucideIcon,
+} from 'lucide-react';
+import * as motion from 'motion/react-client';
+import {
   G,
   INIT_WO,
   INIT_NOTIFS,
@@ -19,13 +33,13 @@ import { InspeccionesScreen } from '@/app/screens3';
 import { cn } from '@/lib/cn';
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Panel de Control', icon: '▦' },
-  { id: 'assets', label: 'Activos', icon: '⬡' },
-  { id: 'plans', label: 'Planes PM', icon: '◎' },
-  { id: 'workorders', label: 'Ordenes de Trabajo', icon: '☰' },
-  { id: 'inspecciones', label: 'Inspecciones', icon: '🔍' },
-  { id: 'notifications', label: 'Notificaciones', icon: '◉' },
-  { id: 'reports', label: 'Reportes y KPIs', icon: '↗' },
+  { id: 'dashboard', label: 'Panel de Control', icon: LayoutDashboard },
+  { id: 'assets', label: 'Activos', icon: Boxes },
+  { id: 'plans', label: 'Planes PM', icon: Calendar },
+  { id: 'workorders', label: 'Ordenes de Trabajo', icon: ClipboardList },
+  { id: 'inspecciones', label: 'Inspecciones', icon: Search },
+  { id: 'notifications', label: 'Notificaciones', icon: Bell },
+  { id: 'reports', label: 'Reportes y KPIs', icon: BarChart3 },
 ];
 
 interface SidebarProps {
@@ -35,13 +49,29 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
+type NavItem = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+};
+
 function Sidebar({ screen, setScreen, unreadCount, onLogout }: SidebarProps) {
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
-    <div className='flex h-full w-60 flex-shrink-0 flex-col border-r border-slate-700 bg-slate-900'>
-      <div className='border-b border-slate-700 p-5'>
-        <div className='flex items-center gap-2.5'>
-          <div className='flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-amber-500'>
-            <svg width='18' height='18' viewBox='0 0 24 24' fill='none'>
+    <motion.div
+      animate={{ width: collapsed ? 72 : 260 }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      className='flex h-full flex-shrink-0 flex-col border-r border-white/10 bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-800/95 backdrop-blur-xl'
+    >
+      <div className='border-b border-white/10 p-4'>
+        <div className='flex items-center gap-3'>
+          <motion.div
+            animate={{ scale: collapsed ? 1.1 : 1 }}
+            transition={{ duration: 0.2 }}
+            className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/20'
+          >
+            <svg width='20' height='20' viewBox='0 0 24 24' fill='none'>
               <path
                 d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'
                 stroke='#000'
@@ -50,71 +80,152 @@ function Sidebar({ screen, setScreen, unreadCount, onLogout }: SidebarProps) {
                 strokeLinejoin='round'
               />
             </svg>
-          </div>
-          <div>
-            <div className='text-base leading-none font-black tracking-tight text-slate-100'>
+          </motion.div>
+          <motion.div
+            animate={{
+              opacity: collapsed ? 0 : 1,
+              width: collapsed ? 0 : 'auto',
+            }}
+            transition={{ duration: 0.2 }}
+            className='overflow-hidden'
+          >
+            <div className='text-lg font-black tracking-tight whitespace-nowrap text-white'>
               APEX
             </div>
-            <div className='text-xs leading-relaxed tracking-widest text-slate-600 uppercase'>
+            <div className='text-xs font-medium tracking-widest whitespace-nowrap text-slate-500 uppercase'>
               Maintenance
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
-      <nav className='flex-1 overflow-y-auto p-2.5'>
-        {NAV_ITEMS.map((item) => {
+      <nav className='flex-1 overflow-y-auto px-3 py-4'>
+        {NAV_ITEMS.map((item: NavItem, index: number) => {
           const active = screen === item.id;
+          const Icon = item.icon;
+
           return (
-            <button
+            <motion.button
               key={item.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
               onClick={() => setScreen(item.id)}
               className={cn(
-                'font-inherit relative mb-0.5 flex w-full cursor-pointer items-center gap-2.5 rounded-md border-none px-3 py-2 text-left text-sm font-medium transition-all',
+                'group relative mb-1 flex w-full cursor-pointer items-center gap-3 rounded-xl border-none px-3 py-2.5 text-left text-sm font-medium transition-all duration-200',
                 active
-                  ? 'bg-amber-500/15 font-bold text-amber-500'
-                  : 'bg-transparent text-slate-500 hover:bg-slate-800 hover:text-slate-400',
+                  ? 'bg-gradient-to-r from-amber-500/20 to-amber-500/5 text-amber-400 shadow-lg shadow-amber-500/10'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200',
               )}
             >
               {active && (
-                <div className='absolute top-1/2 left-0 h-5.5 w-0.5 -translate-y-1/2 rounded-r-sm bg-amber-500' />
+                <motion.div
+                  layoutId='activeIndicator'
+                  className='absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-amber-500'
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
               )}
-              <span className='w-4.5 flex-shrink-0 text-center text-sm leading-none'>
-                {item.icon}
-              </span>
-              <span className='flex-1'>{item.label}</span>
+              <div className='relative flex flex-shrink-0 items-center justify-center'>
+                <Icon
+                  size={20}
+                  className={cn(
+                    'transition-transform duration-200',
+                    active
+                      ? 'text-amber-400'
+                      : 'text-slate-500 group-hover:text-slate-300',
+                  )}
+                />
+              </div>
+              <motion.span
+                animate={{
+                  opacity: collapsed ? 0 : 1,
+                  width: collapsed ? 0 : 'auto',
+                }}
+                transition={{ duration: 0.2 }}
+                className='flex-1 overflow-hidden whitespace-nowrap'
+              >
+                {item.label}
+              </motion.span>
               {item.id === 'notifications' && unreadCount > 0 && (
-                <span className='flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white'>
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className={cn(
+                    'flex items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white shadow-lg shadow-red-500/30',
+                    collapsed
+                      ? 'absolute -top-1 -right-1 h-4 w-4 p-0'
+                      : 'min-w-5 px-1.5 py-0.5',
+                  )}
+                >
                   {unreadCount}
-                </span>
+                </motion.span>
               )}
-            </button>
+              {collapsed && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  whileHover={{ opacity: 1, x: 0 }}
+                  className='absolute left-full ml-2 hidden rounded-lg bg-slate-800 px-3 py-2 text-sm font-medium whitespace-nowrap text-white shadow-xl group-hover:block'
+                >
+                  {item.label}
+                  <div className='absolute top-1/2 -left-1 h-2 w-2 -translate-y-1/2 rotate-45 bg-slate-800' />
+                </motion.div>
+              )}
+            </motion.button>
           );
         })}
       </nav>
 
-      <div className='border-t border-slate-700 p-3.5'>
-        <div className='mb-2.5 flex items-center gap-2.5'>
-          <div className='flex h-8.5 w-8.5 flex-shrink-0 items-center justify-center rounded-full bg-slate-700 text-xs font-bold text-slate-400'>
+      <div className='border-t border-white/10 p-3'>
+        <div className='mb-3 flex items-center gap-3'>
+          <div className='flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-700 to-slate-600 text-sm font-bold text-slate-300 shadow-inner'>
             SM
           </div>
-          <div>
-            <div className='text-sm leading-none font-bold text-slate-200'>
+          <motion.div
+            animate={{
+              opacity: collapsed ? 0 : 1,
+              width: collapsed ? 0 : 'auto',
+            }}
+            transition={{ duration: 0.2 }}
+            className='overflow-hidden'
+          >
+            <div className='text-sm font-semibold whitespace-nowrap text-slate-200'>
               Supervisor M.
             </div>
-            <div className='mt-0.5 text-xs text-slate-500'>
+            <div className='text-xs whitespace-nowrap text-slate-500'>
               Supervisor · Demo
             </div>
-          </div>
+          </motion.div>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={onLogout}
-          className='font-inherit w-full cursor-pointer rounded border border-slate-700 bg-transparent py-1.5 text-xs text-slate-500 transition-all hover:border-red-500 hover:text-red-500'
+          className={cn(
+            'flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2 text-sm font-medium text-slate-400 transition-all hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400',
+            collapsed && 'px-0',
+          )}
         >
-          Cerrar sesion
-        </button>
+          <LogOut size={16} />
+          <motion.span
+            animate={{
+              opacity: collapsed ? 0 : 1,
+              width: collapsed ? 0 : 'auto',
+            }}
+            transition={{ duration: 0.2 }}
+            className='overflow-hidden whitespace-nowrap'
+          >
+            Cerrar sesión
+          </motion.span>
+        </motion.button>
       </div>
-    </div>
+
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className='absolute top-20 -right-3 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-slate-800 text-slate-400 shadow-lg transition-all hover:border-amber-500/50 hover:bg-slate-700 hover:text-amber-400'
+      >
+        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </button>
+    </motion.div>
   );
 }
 
@@ -149,7 +260,7 @@ export default function App() {
   return (
     <>
       <style>{G}</style>
-      <div className='flex h-screen overflow-hidden bg-slate-950'>
+      <div className='relative flex h-screen overflow-hidden bg-slate-950'>
         <Sidebar
           screen={screen}
           setScreen={setScreen}
