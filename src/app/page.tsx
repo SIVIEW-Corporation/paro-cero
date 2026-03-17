@@ -12,25 +12,50 @@ import {
   ChevronRight,
   LogOut,
   LucideIcon,
+  Menu,
+  X,
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import {
-  G,
-  INIT_WO,
   INIT_NOTIFS,
   INIT_CHECKLISTS,
   INIT_HALLAZGOS,
   PLANTILLAS_CHECKLIST,
 } from '@/app/data';
-import { LoginScreen, Dashboard, AssetsScreen } from '@/app/screens1';
+import { INIT_WO } from '@/app/data/mock-data';
+import { LoginScreen, Dashboard, AssetsScreen } from '@/app/screens/screens1';
 import {
   PlansScreen,
-  WorkOrdersScreen,
   NotificationsScreen,
   ReportsScreen,
 } from '@/app/screens2';
+import { WorkOrdersScreen } from '@/app/screens/WorkOrdersScreen';
 import { InspeccionesScreen } from '@/app/screens3';
 import { cn } from '@/lib/cn';
+
+const G = `
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #07101f; }
+  ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2d5a8e; }
+  input, select, textarea {
+    font-family: inherit;
+    background: #060e20;
+    border: 1.5px solid #1e3a5f;
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: #e2e8f0;
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: #f59e0b; }
+  select option { background: #0d1627; }
+  textarea { resize: vertical; min-height: 80px; }
+`;
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Panel de Control', icon: LayoutDashboard },
@@ -271,9 +296,7 @@ export default function App() {
           {screen === 'dashboard' && <Dashboard wo={wo} />}
           {screen === 'assets' && <AssetsScreen wo={wo} />}
           {screen === 'plans' && <PlansScreen />}
-          {screen === 'workorders' && (
-            <WorkOrdersScreen wo={wo} setWo={setWo} />
-          )}
+          {screen === 'workorders' && <WorkOrdersScreen />}
           {screen === 'inspecciones' && (
             <InspeccionesScreen
               checklists={checklists}

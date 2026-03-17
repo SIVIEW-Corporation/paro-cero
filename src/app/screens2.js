@@ -47,7 +47,7 @@ import {
   assetComplianceData,
   assetDowntimeData,
   assetTipoData,
-} from './data';
+} from '@/app/data';
 
 import {
   Badge,
@@ -64,7 +64,7 @@ import {
   Modal,
   Field,
   ModalFooter,
-} from './ui';
+} from '@/components/ui';
 
 // ─── PLANS ────────────────────────────────────────────────────────────────────
 export function PlansScreen() {

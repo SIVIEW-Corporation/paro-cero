@@ -13,7 +13,7 @@ import {
   ITEM_VALOR_COLORES,
   CHECKLIST_ITEMS_DEFAULT,
   PLANTILLAS_CHECKLIST,
-} from './data';
+} from '@/app/data';
 
 import {
   Badge,
@@ -30,7 +30,7 @@ import {
   Modal,
   Field,
   ModalFooter,
-} from './ui';
+} from '@/components/ui';
 
 export function InspeccionesScreen({
   checklists,
