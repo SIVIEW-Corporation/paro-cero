@@ -1,29 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import { EChartsArea, EChartsPie } from '@/components/charts';
 
 import {
   ASSETS,
   PLANS,
   complianceData,
-  downtimeData,
   tipoData,
   topFallas,
 } from '@/app/data/mock-data';
-import { STC, STL, PRC, PRL, CRC, TT } from '@/app/data/constants';
+import { STC, STL, PRC, PRL, CRC } from '@/app/data/constants';
 
 import {
   Badge,
@@ -234,64 +221,18 @@ export function Dashboard({ wo }: DashboardProps) {
       <div className='mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]'>
         <Card>
           <CardTitle>Cumplimiento PM — Ultimos 6 Meses (%)</CardTitle>
-          <ResponsiveContainer width='100%' height={200}>
-            <AreaChart data={complianceData}>
-              <defs>
-                <linearGradient id='cg' x1='0' y1='0' x2='0' y2='1'>
-                  <stop offset='5%' stopColor='#3b82f6' stopOpacity={0.3} />
-                  <stop offset='95%' stopColor='#3b82f6' stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray='3 3' stroke='#1e3a5f' />
-              <XAxis
-                dataKey='mes'
-                tick={{ fill: '#475569', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: '#475569', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-                domain={[0, 100]}
-              />
-              <Tooltip contentStyle={TT} />
-              <Area
-                type='monotone'
-                dataKey='val'
-                stroke='#3b82f6'
-                fill='url(#cg)'
-                strokeWidth={2.5}
-                name='Cumplimiento %'
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <EChartsArea
+            data={complianceData}
+            dataKey='val'
+            color='#3b82f6'
+            name='Cumplimiento %'
+            height={200}
+            yDomain={[0, 100]}
+          />
         </Card>
         <Card>
           <CardTitle>Mix de Ordenes de Trabajo</CardTitle>
-          <ResponsiveContainer width='100%' height={200}>
-            <PieChart>
-              <Pie
-                data={tipoData}
-                dataKey='value'
-                nameKey='name'
-                cx='50%'
-                cy='45%'
-                outerRadius={68}
-                paddingAngle={4}
-              >
-                {tipoData.map((d, i) => (
-                  <Cell key={i} fill={d.color} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={TT} />
-              <Legend
-                iconType='circle'
-                iconSize={8}
-                wrapperStyle={{ fontSize: 12, color: '#94a3b8' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          <EChartsPie data={tipoData} height={200} />
         </Card>
       </div>
 

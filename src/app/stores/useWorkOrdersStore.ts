@@ -14,7 +14,12 @@ import type {
   CierreAdministrativo,
   FiltrosOT,
 } from '../data/types';
-import { INIT_WO, generarFolioOT, ASSETS } from '../data/mock-data';
+import {
+  INIT_WO,
+  generarFolioOT,
+  ASSETS,
+  generarDatosSeisMeses,
+} from '../data/mock-data';
 import { TECNICOS } from '../data/constants';
 
 interface WorkOrdersState {
@@ -22,6 +27,7 @@ interface WorkOrdersState {
   filtros: FiltrosOT;
 
   // Actions
+  setOrdenes: (ordenes: OrdenTrabajo[]) => void;
   addOrden: (
     orden: Omit<
       OrdenTrabajo,
@@ -68,8 +74,12 @@ const filtrosVacios: FiltrosOT = {
 };
 
 export const useWorkOrdersStore = create<WorkOrdersState>((set, get) => ({
-  ordenes: INIT_WO,
+  ordenes: generarDatosSeisMeses(),
   filtros: filtrosVacios,
+
+  setOrdenes: (ordenes) => {
+    set({ ordenes });
+  },
 
   addOrden: (ordenData) => {
     const now = new Date();

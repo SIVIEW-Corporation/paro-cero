@@ -895,3 +895,117 @@ export function generarFolioChecklist(): string {
   const año = new Date().getFullYear();
   return `CHK-${año}-${String(Date.now()).slice(-6)}`;
 }
+
+// --- Generador de datos de 6 meses para KPIs ---
+
+const ACTIVOS_IDS = ['A001', 'A002', 'A003', 'A004', 'A005', 'A006', 'A007'];
+const TECNICOS_IDS = [
+  { id: 'T001', nombre: 'Carlos Mendez' },
+  { id: 'T002', nombre: 'Luis Ramirez' },
+  { id: 'T003', nombre: 'Maria Gonzalez' },
+  { id: 'T004', nombre: 'Pedro Sanchez' },
+];
+const PRIORIDADES: Array<'baja' | 'media' | 'alta' | 'critico'> = [
+  'baja',
+  'media',
+  'alta',
+  'critico',
+];
+const TIPOS: Array<'preventivo' | 'correctivo' | 'predictivo'> = [
+  'preventivo',
+  'correctivo',
+  'predictivo',
+];
+
+const TITULOS_OT: Record<string, string[]> = {
+  preventivo: [
+    'PM Rutina',
+    'Inspección Mensual',
+    'Cambio de Filtros',
+    'Lubricación',
+    'Ajuste de Correa',
+  ],
+  correctivo: [
+    'Reparación de Fuga',
+    'Reemplazo de Componente',
+    'Ajuste de Motor',
+    'Corrección de Vibración',
+  ],
+  predictivo: [
+    'Análisis de Vibración',
+    'Termografía',
+    'Análisis de Aceite',
+    'Monitoreo de Condición',
+  ],
+};
+
+function getRandomItem<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function generarFechaAleatoria(inicio: Date, fin: Date): Date {
+  return new Date(
+    inicio.getTime() + Math.random() * (fin.getTime() - inicio.getTime()),
+  );
+}
+
+export function generarDatosSeisMeses(): OrdenTrabajo[] {
+  const ordenes: OrdenTrabajo[] = [];
+  const ahora = new Date();
+  const meses = [
+    { fecha: new Date(2025, 9, 1), cant: 15 },
+    { fecha: new Date(2025, 10, 1), cant: 20 },
+    { fecha: new Date(2025, 11, 1), cant: 25 },
+    { fecha: new Date(2026, 0, 1), cant: 35 },
+    { fecha: new Date(2026, 1, 1), cant: 45 },
+    { fecha: new Date(2026, 2, 1), cant: 65 },
+  ];
+
+  let n = 100;
+  meses.forEach((m, i) => {
+    const fin = i === 5 ? ahora : new Date(meses[i + 1].fecha.getTime() - 1);
+    for (let j = 0; j < m.cant; j++) {
+      const fc = generarFechaAleatoria(m.fecha, fin);
+      const estado = getRandomItem([
+        'nueva',
+        'asignada',
+        'en_proceso',
+        'en_espera',
+        'completada',
+        'cerrada',
+        'cancelada',
+      ] as const);
+      ordenes.push({
+        id: `OT${String(n).padStart(3, '0')}`,
+        empresaId: 'EMP001',
+        folio: `OT-${fc.getFullYear()}-${String(n).padStart(3, '0')}`,
+        activoId: getRandomItem(ACTIVOS_IDS),
+        titulo: getRandomItem(TITULOS_OT[getRandomItem(TIPOS)]),
+        descripcion: 'Generado automáticamente',
+        tipo: getRandomItem(TIPOS),
+        status: estado,
+        prioridad: getRandomItem(PRIORIDADES),
+        tecnicoId: getRandomItem(TECNICOS_IDS).id,
+        tecnicoNombre: getRandomItem(TECNICOS_IDS).nombre,
+        fechaCreacion: fc,
+        fechaCompromiso: new Date(fc.getTime() + 7 * 24 * 60 * 60 * 1000),
+        fechaCierre:
+          estado === 'completada' || estado === 'cerrada'
+            ? new Date(fc.getTime() + Math.random() * 5 * 24 * 60 * 60 * 1000)
+            : undefined,
+        observaciones: '',
+        evidencias: [],
+        historial: [],
+        downtimeMinutos:
+          estado === 'completada' ? Math.floor(Math.random() * 480) : 0,
+        createdAt: fc,
+        updatedAt: fc,
+      });
+      n++;
+    }
+  });
+  return ordenes.sort(
+    (a, b) =>
+      new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime(),
+  );
+}

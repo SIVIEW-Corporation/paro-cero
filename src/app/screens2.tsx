@@ -13,29 +13,11 @@ import { es } from 'date-fns/locale';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/style.css';
 
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import { EChartsArea, EChartsBar, EChartsPie } from '@/components/charts';
 
 import {
   ASSETS,
   PLANS,
-  complianceData,
-  downtimeData,
-  tipoData,
-  topFallas,
   STC,
   STL,
   PRC,
@@ -44,7 +26,6 @@ import {
   NTC,
   NTL,
   NTI,
-  TT,
   assetComplianceData,
   assetDowntimeData,
   assetTipoData,
@@ -1017,8 +998,11 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
 
   const historyData = last6Months.map((month) => {
     const monthWO = wo.filter((w) => {
-      const wDate = new Date(w.fechaCreacion);
-      const sameAsset = !selectedAsset || w.assetId === selectedAsset;
+      const wDate =
+        w.fechaCreacion instanceof Date
+          ? w.fechaCreacion
+          : new Date(w.fechaCreacion);
+      const sameAsset = !selectedAsset || w.activoId === selectedAsset;
       return sameAsset && isSameMonth(wDate, month);
     });
 
@@ -1045,9 +1029,12 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
   }));
 
   const filteredWo = wo.filter((w) => {
-    if (selectedAsset && w.assetId !== selectedAsset) return false;
+    if (selectedAsset && w.activoId !== selectedAsset) return false;
     if (!dateRange || !dateRange.from || !dateRange.to) return true;
-    const woDate = new Date(w.fechaCreacion);
+    const woDate =
+      w.fechaCreacion instanceof Date
+        ? w.fechaCreacion
+        : new Date(w.fechaCreacion);
     return woDate >= dateRange.from && woDate <= dateRange.to;
   });
 
@@ -1080,11 +1067,11 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
     .filter((w) => w.tipo === 'correctivo')
     .reduce(
       (acc, w) => {
-        if (!acc[w.assetId]) {
-          acc[w.assetId] = { count: 0, down: 0, id: w.assetId };
+        if (!acc[w.activoId]) {
+          acc[w.activoId] = { count: 0, down: 0, id: w.activoId };
         }
-        acc[w.assetId].count += 1;
-        acc[w.assetId].down += w.downtimeMinutos || 0;
+        acc[w.activoId].count += 1;
+        acc[w.activoId].down += w.downtimeMinutos || 0;
         return acc;
       },
       {} as Record<string, { count: number; down: number; id: string }>,
@@ -1273,64 +1260,24 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
       >
         <Card>
           <CardTitle>Cumplimiento PM — Ultimos 6 Meses (%)</CardTitle>
-          <ResponsiveContainer width='100%' height={210}>
-            <AreaChart data={chartCompliance}>
-              <defs>
-                <linearGradient id='cg2' x1='0' y1='0' x2='0' y2='1'>
-                  <stop offset='5%' stopColor='#3b82f6' stopOpacity={0.3} />
-                  <stop offset='95%' stopColor='#3b82f6' stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray='3 3' stroke='#1e3a5f' />
-              <XAxis
-                dataKey='mes'
-                tick={{ fill: '#475569', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: '#475569', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-                domain={[0, 100]}
-              />
-              <Tooltip contentStyle={TT} />
-              <Area
-                type='monotone'
-                dataKey='val'
-                stroke='#3b82f6'
-                fill='url(#cg2)'
-                strokeWidth={2.5}
-                name='Cumplimiento %'
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <EChartsArea
+            data={chartCompliance}
+            dataKey='val'
+            color='#3b82f6'
+            name='Cumplimiento %'
+            height={210}
+            yDomain={[0, 100]}
+          />
         </Card>
         <Card>
           <CardTitle>Horas de Paro por Mes</CardTitle>
-          <ResponsiveContainer width='100%' height={210}>
-            <BarChart data={chartDowntime}>
-              <CartesianGrid strokeDasharray='3 3' stroke='#1e3a5f' />
-              <XAxis
-                dataKey='mes'
-                tick={{ fill: '#475569', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: '#475569', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip contentStyle={TT} />
-              <Bar
-                dataKey='hrs'
-                fill='#ef4444'
-                radius={[4, 4, 0, 0]}
-                name='Horas paro'
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <EChartsBar
+            data={chartDowntime}
+            dataKey='hrs'
+            color='#ef4444'
+            name='Horas paro'
+            height={210}
+          />
         </Card>
       </div>
 
@@ -1387,28 +1334,7 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
         </Card>
         <Card>
           <CardTitle>Preventivo vs. Correctivo</CardTitle>
-          <ResponsiveContainer width='100%' height={185}>
-            <PieChart>
-              <Pie
-                data={chartTipo}
-                dataKey='value'
-                nameKey='name'
-                cx='50%'
-                cy='50%'
-                outerRadius={70}
-                paddingAngle={4}
-                label={({ name, percent }) =>
-                  name + ' ' + (percent * 100).toFixed(0) + '%'
-                }
-                labelLine={{ stroke: '#1e3a5f' }}
-              >
-                {chartTipo.map((d, i) => (
-                  <Cell key={i} fill={d.color} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={TT} />
-            </PieChart>
-          </ResponsiveContainer>
+          <EChartsPie data={chartTipo} height={185} />
           <div
             style={{
               display: 'flex',
