@@ -150,10 +150,8 @@ interface PageHeaderProps {
 export function PageHeader({ title, sub, action }: PageHeaderProps) {
   return (
     <div
+      className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0'
       style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
         marginBottom: 24,
         paddingBottom: 20,
         borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -252,7 +250,7 @@ export function CardTitle({ children }: CardTitleProps) {
 
 interface RowDataProps {
   label: string;
-  value: string | number;
+  value: ReactNode;
 }
 
 export function RowData({ label, value }: RowDataProps) {
@@ -276,24 +274,27 @@ export function RowData({ label, value }: RowDataProps) {
 interface BtnPrimaryProps {
   children: ReactNode;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
-export function BtnPrimary({ children, onClick }: BtnPrimaryProps) {
+export function BtnPrimary({ children, onClick, disabled }: BtnPrimaryProps) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       style={{
-        background: '#f59e0b',
+        background: disabled ? '#64748b' : '#f59e0b',
         color: '#000',
         fontWeight: 700,
         fontSize: 13,
         padding: '9px 18px',
         borderRadius: 7,
         border: 'none',
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
         letterSpacing: '0.02em',
         whiteSpace: 'nowrap',
         fontFamily: 'inherit',
+        opacity: disabled ? 0.6 : 1,
       }}
     >
       {children}
@@ -395,9 +396,10 @@ export function Modal({ title, onClose, children }: ModalProps) {
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 500,
+        padding: 16,
       }}
     >
-      <Card style={{ width: 520, maxHeight: '90vh', overflowY: 'auto' }}>
+      <Card className='max-h-[90vh] w-full max-w-[520px] overflow-y-auto'>
         <div
           style={{
             display: 'flex',

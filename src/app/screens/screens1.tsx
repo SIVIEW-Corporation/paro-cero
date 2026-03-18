@@ -187,13 +187,13 @@ export function Dashboard({ wo }: DashboardProps) {
   );
 
   return (
-    <div className='h-full overflow-y-auto p-7'>
+    <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
       <PageHeader
         title='Panel de Control'
         sub='Visibilidad operativa en tiempo real · 7 de marzo 2026'
       />
 
-      <div className='mb-6 grid grid-cols-5 gap-3.5'>
+      <div className='mb-6 grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5'>
         <KpiCard
           label='OT Abiertas'
           value={open}
@@ -231,7 +231,7 @@ export function Dashboard({ wo }: DashboardProps) {
         />
       </div>
 
-      <div className='mb-4 grid grid-cols-[2fr_1fr] gap-4'>
+      <div className='mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]'>
         <Card>
           <CardTitle>Cumplimiento PM — Ultimos 6 Meses (%)</CardTitle>
           <ResponsiveContainer width='100%' height={200}>
@@ -295,7 +295,7 @@ export function Dashboard({ wo }: DashboardProps) {
         </Card>
       </div>
 
-      <div className='grid grid-cols-2 gap-4'>
+      <div className='grid grid-cols-1 gap-4 lg:grid-cols-2'>
         <Card>
           <CardTitle>Pendientes y Proximas a Vencer</CardTitle>
           {upcoming.length === 0 ? (
@@ -410,7 +410,7 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
           </div>
         </div>
 
-        <div className='mb-4 grid grid-cols-2 gap-4'>
+        <div className='mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2'>
           <Card>
             <CardTitle>Ficha Tecnica</CardTitle>
             <RowData label='Fabricante' value={selected.fabricante} />
@@ -561,7 +561,7 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
   }
 
   return (
-    <div className='h-full overflow-y-auto p-7'>
+    <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
       <PageHeader
         title='Activos'
         sub={'de ' + ASSETS.length + ' equipos'}
@@ -572,17 +572,17 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
         }
       />
 
-      <div className='mb-4.5 flex gap-3'>
+      <div className='mb-4 flex flex-col gap-3 sm:flex-row'>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder='Buscar por nombre o codigo...'
-          className='max-w-[340px]'
+          className='min-w-[200px] flex-1'
         />
         <select
           value={filterArea}
           onChange={(e) => setFilterArea(e.target.value)}
-          className='max-w-[220px]'
+          className='w-full sm:w-auto sm:max-w-[220px]'
         >
           <option value=''>Todas las areas</option>
           {areas.map((a) => (
@@ -594,7 +594,7 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className='max-w-[200px]'
+          className='w-full sm:w-auto sm:max-w-[200px]'
         >
           <option value=''>Todos los estados</option>
           {['activo', 'detenido', 'mantenimiento', 'descomisionado'].map(
