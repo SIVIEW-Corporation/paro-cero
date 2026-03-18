@@ -532,10 +532,27 @@ export function WorkOrdersScreen({
         >
           <Card>
             <CardTitle>Datos de la Orden</CardTitle>
-            <RowData label='Asignado a' value={curWo.asignado} />
-            <RowData label='Fecha de creacion' value={curWo.fechaCreacion} />
-            <RowData label='Fecha de vencimiento' value={curWo.fechaVen} />
-            <RowData label='Fecha de cierre' value={curWo.fechaCierre || '—'} />
+            <RowData label='Asignado a' value={curWo.tecnicoNombre} />
+            <RowData
+              label='Fecha de creacion'
+              value={format(new Date(curWo.fechaCreacion), 'dd/MM/yyyy')}
+            />
+            <RowData
+              label='Fecha de vencimiento'
+              value={
+                curWo.fechaCompromiso
+                  ? format(new Date(curWo.fechaCompromiso), 'dd/MM/yyyy')
+                  : '-'
+              }
+            />
+            <RowData
+              label='Fecha de cierre'
+              value={
+                curWo.fechaCierre
+                  ? format(new Date(curWo.fechaCierre), 'dd/MM/yyyy')
+                  : '—'
+              }
+            />
             <RowData
               label='Tiempo de paro'
               value={
@@ -742,8 +759,12 @@ export function WorkOrdersScreen({
                   color={w.tipo === 'preventivo' ? '#3b82f6' : '#ef4444'}
                 />
               </Td>
-              <Td>{w.asignado}</Td>
-              <Td mono>{w.fechaVen}</Td>
+              <Td>{w.tecnicoNombre}</Td>
+              <Td mono>
+                {w.fechaCompromiso
+                  ? format(new Date(w.fechaCompromiso), 'dd/MM/yyyy')
+                  : '-'}
+              </Td>
               <Td>
                 <Badge label={PRL[w.prioridad]} color={PRC[w.prioridad]} />
               </Td>
