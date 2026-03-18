@@ -49,9 +49,13 @@ export function EChartsPie({
           value: d.value,
           itemStyle: { color: d.color },
         })),
-        radius: ['40%', '70%'],
+        radius: ['15%', '70%'],
+        roseType: 'radius' as const,
         center: ['50%', '45%'],
         avoidLabelOverlap: true,
+        itemStyle: {
+          borderRadius: 5,
+        },
         label: {
           show: true,
           position: 'inside' as const,

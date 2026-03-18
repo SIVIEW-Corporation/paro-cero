@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "start": "next start",
     "setup:skills": "./skills/setup.sh",
     "format:fix": "prettier --write .",
@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "build": "npm run lint && next build",
+    "build:fast": "next build",
     "build:local": "npm run format:check && npm run build"
   },
   "dependencies": {
