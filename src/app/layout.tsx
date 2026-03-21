@@ -8,12 +8,10 @@ import QueryProvider from '@/components/providers/QueryProvider';
 import './globals.css';
 
 const inter = Inter({
-  variable: '--font-inter',
   subsets: ['latin'],
 });
 
 const inconsolata = Inconsolata({
-  variable: '--font-inconsolata',
   subsets: ['latin'],
 });
 
@@ -31,7 +29,7 @@ export default function RootLayout({
     <html lang='es' suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={`${inter.variable} ${inconsolata.variable} antialiased`}
+        className={`${inter.className} ${inconsolata.className} antialiased`}
       >
         <QueryProvider>{children}</QueryProvider>
         <Toaster position='top-center' richColors closeButton />
