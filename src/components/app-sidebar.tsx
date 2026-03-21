@@ -79,7 +79,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
     >
       <SidebarHeader className='border-b border-white/10 p-4'>
         <div className='flex items-center gap-3'>
-          <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/20'>
+          <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--shPrimary-400)] to-[var(--shPrimary-600)] shadow-[var(--shPrimary-500)]/20 shadow-lg'>
             <Layers className='text-black' size={20} />
           </div>
           <div className='overflow-hidden'>
@@ -106,12 +106,12 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   className={cn(
                     'group relative flex w-full cursor-pointer items-center gap-3 rounded-xl border-none px-3 py-2.5 text-left text-sm font-medium transition-all duration-200',
                     isActive
-                      ? 'bg-gradient-to-r from-amber-500/20 to-amber-500/5 text-amber-400 shadow-lg shadow-amber-500/10'
+                      ? 'bg-gradient-to-r from-[var(--shPrimary-500)]/20 to-[var(--shPrimary-500)]/5 text-[var(--shPrimary-400)] shadow-[var(--shPrimary-500)]/10 shadow-lg'
                       : 'text-slate-400 hover:bg-white/5 hover:text-slate-200',
                   )}
                 >
                   {isActive && (
-                    <div className='absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-amber-500' />
+                    <div className='absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[var(--shPrimary-500)]' />
                   )}
                   <div className='relative flex flex-shrink-0 items-center justify-center'>
                     <Icon
@@ -119,7 +119,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                       className={cn(
                         'transition-transform duration-200',
                         isActive
-                          ? 'text-amber-400'
+                          ? 'text-[var(--shPrimary-400)]'
                           : 'text-slate-500 group-hover:text-slate-300',
                       )}
                     />
@@ -141,7 +141,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
 
       <SidebarFooter className='border-t border-white/10 p-3'>
         <div className='mb-3 flex items-center gap-3'>
-          <div className='flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-700 to-slate-600 text-sm font-bold text-slate-300 shadow-inner'>
+          <div className='from-shGray-600 to-shGray-500 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-bold text-slate-300 shadow-inner'>
             SM
           </div>
           <div className='overflow-hidden'>

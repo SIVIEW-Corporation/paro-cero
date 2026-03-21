@@ -1,20 +1,25 @@
+//Next
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Inter, Inconsolata } from 'next/font/google';
+//Components
+import { Toaster } from 'sonner';
+import QueryProvider from '@/components/providers/QueryProvider';
+//Styles
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const inconsolata = Inconsolata({
+  variable: '--font-inconsolata',
   subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: 'APEX Maintenance',
-  description: 'Sistema de gestión de mantenimiento',
+  title: 'PM0 - Gestión de Mantenimiento | SIVIEW',
+  description: 'Sistema de gestión para procesos de mantenimiento',
 };
 
 export default function RootLayout({
@@ -26,9 +31,10 @@ export default function RootLayout({
     <html lang='es' suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${inconsolata.variable} antialiased`}
       >
-        {children}
+        <QueryProvider>{children}</QueryProvider>
+        <Toaster position='top-center' richColors closeButton />
       </body>
     </html>
   );

@@ -30,5 +30,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "skills", ".gemini", ".cursor", ".antigravity", ".agents", ".claude"]
+  "exclude": [
+    "node_modules",
+    "skills",
+    ".gemini",
+    ".cursor",
+    ".antigravity",
+    ".agents",
+    ".claude"
+  ]
 }

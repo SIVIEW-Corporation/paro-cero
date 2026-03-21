@@ -332,7 +332,7 @@ export function InspeccionesScreen({
             {plantillas.map((p) => (
               <div
                 key={p.id}
-                className='rounded-lg border border-slate-700 bg-slate-900 p-4'
+                className='border-shGray-600 bg-shGray-700 rounded-lg border p-4'
               >
                 <div className='mb-2 flex items-start justify-between'>
                   <div>
@@ -509,7 +509,7 @@ function ExecuteChecklistScreen({
             return (
               <div
                 key={item.id}
-                className='flex flex-col gap-2 rounded-lg bg-slate-900 p-3'
+                className='bg-shGray-700 flex flex-col gap-2 rounded-lg p-3'
               >
                 <div className='flex items-center justify-between'>
                   <span className='text-sm'>
@@ -521,7 +521,7 @@ function ExecuteChecklistScreen({
                       className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
                         valor === 'ok'
                           ? 'border border-green-500 bg-green-500/20 text-green-500'
-                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                          : 'bg-shGray-600 text-shGray-400 hover:bg-shGray-500'
                       }`}
                     >
                       OK
@@ -531,7 +531,7 @@ function ExecuteChecklistScreen({
                       className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
                         valor === 'nok'
                           ? 'border border-red-500 bg-red-500/20 text-red-500'
-                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                          : 'bg-shGray-600 text-shGray-400 hover:bg-shGray-500'
                       }`}
                     >
                       No OK
@@ -541,7 +541,7 @@ function ExecuteChecklistScreen({
                       className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
                         valor === 'na'
                           ? 'border border-slate-500 bg-slate-500/20 text-slate-400'
-                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                          : 'bg-shGray-600 text-shGray-400 hover:bg-shGray-500'
                       }`}
                     >
                       N/A
@@ -720,7 +720,7 @@ function CreatePlantillaForm({ onClose, onSave }) {
           {items.map((item, index) => (
             <div
               key={item.id}
-              className='flex items-center gap-2 rounded bg-slate-800 p-2'
+              className='bg-shGray-600 flex items-center gap-2 rounded p-2'
             >
               <span className='w-6 text-xs text-slate-500'>{index + 1}.</span>
               <span className='flex-1 text-sm'>{item.descripcion}</span>
@@ -745,7 +745,7 @@ function CreatePlantillaForm({ onClose, onSave }) {
           />
           <button
             onClick={handleAddItem}
-            className='rounded bg-slate-700 px-3 py-2 hover:bg-slate-600'
+            className='bg-shGray-500 hover:bg-shGray-400 rounded px-3 py-2'
           >
             +
           </button>

@@ -16,7 +16,7 @@
   "editor.guides.bracketPairs": true, // Guías visuales para identificar bloques de código.
   "editor.bracketPairColorization.independentColorPoolPerBracketType": true, // Colores únicos para distinguir tipos de paréntesis.
   "editor.quickSuggestions": {
-    "strings": true, // Habilita sugerencias dentro de cadenas de texto.
+    "strings": true // Habilita sugerencias dentro de cadenas de texto.
   },
   "editor.folding": true,
   "editor.foldingStrategy": "auto",
@@ -46,7 +46,7 @@
   "files.eol": "\n", // Fuerza saltos de línea LF (estándar Unix/Linux) para compatibilidad.
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit", // Ejecuta correcciones de ESLint al guardar.
+    "source.fixAll.eslint": "explicit" // Ejecuta correcciones de ESLint al guardar.
   },
   // ==============================
   // Lenguajes y Herramientas (ESLint, Tailwind, Python)
@@ -60,34 +60,34 @@
     "javascript",
     "javascriptreact",
     "typescript",
-    "typescriptreact",
+    "typescriptreact"
   ],
   // Configuración de Tailwind CSS
   "tailwindCSS.includeLanguages": {
     "typescript": "javascript",
-    "typescriptreact": "javascript",
+    "typescriptreact": "javascript"
   },
   // Prettier por defecto para lenguajes web
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[scss]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "security.workspace.trust.untrustedFiles": "open",
   "git.confirmSync": false,
   "explorer.confirmPasteNative": false,
-  "explorer.confirmDelete": false,
+  "explorer.confirmDelete": false
 }

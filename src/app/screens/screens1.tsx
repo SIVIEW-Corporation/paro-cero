@@ -54,7 +54,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   }
 
   return (
-    <div className='relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950'>
+    <div className='bg-shGray-800 relative flex min-h-screen items-center justify-center overflow-hidden'>
       <div
         className='pointer-events-none absolute inset-0'
         style={{
@@ -129,7 +129,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             Iniciar Sesion →
           </button>
 
-          <div className='mt-5 rounded-lg border border-slate-700 bg-slate-900 p-3.5'>
+          <div className='border-shGray-600 bg-shGray-700 mt-5 rounded-lg border p-3.5'>
             <div className='mb-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase'>
               Credenciales de Demo
             </div>
@@ -367,7 +367,7 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
           </Card>
           <Card className='flex flex-col items-center justify-center gap-3.5'>
             <CardTitle>Acceso Rapido QR</CardTitle>
-            <div className='flex h-28 w-28 items-center justify-center rounded-2xl border border-slate-700 bg-slate-950'>
+            <div className='bg-shGray-800 flex h-28 w-28 items-center justify-center rounded-2xl border border-slate-700'>
               <svg width='88' height='88' viewBox='0 0 88 88'>
                 <rect
                   x='2'
@@ -555,7 +555,7 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
           {filtered.map((a) => (
             <tr
               key={a.id}
-              className='cursor-pointer transition-colors hover:bg-slate-800'
+              className='hover:bg-shGray-600 cursor-pointer transition-colors'
             >
               <Td mono>{a.code}</Td>
               <Td bold>{a.name}</Td>
