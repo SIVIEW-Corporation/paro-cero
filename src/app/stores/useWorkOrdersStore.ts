@@ -3,24 +3,17 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type {
   OrdenTrabajo,
   EstadoOT,
-  PrioridadOT,
-  TipoOT,
   Evidencia,
   HistorialCambio,
   CierreTecnico,
   CierreAdministrativo,
   FiltrosOT,
 } from '../data/types';
-import {
-  INIT_WO,
-  generarFolioOT,
-  ASSETS,
-  generarDatosSeisMeses,
-} from '../data/mock-data';
-import { TECNICOS } from '../data/constants';
+import { generarFolioOT, generarDatosSeisMeses } from '../data/mock-data';
 
 interface WorkOrdersState {
   ordenes: OrdenTrabajo[];
@@ -73,228 +66,240 @@ const filtrosVacios: FiltrosOT = {
   busqueda: '',
 };
 
-export const useWorkOrdersStore = create<WorkOrdersState>((set, get) => ({
-  ordenes: generarDatosSeisMeses(),
-  filtros: filtrosVacios,
+export const useWorkOrdersStore = create<WorkOrdersState>()(
+  persist(
+    (set, get) => ({
+      ordenes: generarDatosSeisMeses(),
+      filtros: filtrosVacios,
 
-  setOrdenes: (ordenes) => {
-    set({ ordenes });
-  },
+      setOrdenes: (ordenes) => {
+        set({ ordenes });
+      },
 
-  addOrden: (ordenData) => {
-    const now = new Date();
-    const nuevaOrden: OrdenTrabajo = {
-      ...ordenData,
-      id: `OT${Date.now()}`,
-      folio: generarFolioOT(),
-      historial: [
-        {
+      addOrden: (ordenData) => {
+        const now = new Date();
+        const nuevaOrden: OrdenTrabajo = {
+          ...ordenData,
+          id: `OT${Date.now()}`,
+          folio: generarFolioOT(),
+          historial: [
+            {
+              id: `H${Date.now()}`,
+              fecha: now,
+              usuarioId: 'current-user',
+              usuarioNombre: 'Usuario Actual',
+              campo: 'status',
+              valorAnterior: null,
+              valorNuevo: ordenData.status,
+            },
+          ],
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        set((state) => ({
+          ordenes: [...state.ordenes, nuevaOrden],
+        }));
+      },
+
+      updateOrden: (id, updates) => {
+        set((state) => ({
+          ordenes: state.ordenes.map((ot) =>
+            ot.id === id ? { ...ot, ...updates, updatedAt: new Date() } : ot,
+          ),
+        }));
+      },
+
+      deleteOrden: (id) => {
+        set((state) => ({
+          ordenes: state.ordenes.filter((ot) => ot.id !== id),
+        }));
+      },
+
+      changeStatus: (
+        id,
+        newStatus,
+        usuarioId = 'current-user',
+        usuarioNombre = 'Usuario Actual',
+      ) => {
+        const orden = get().ordenes.find((ot) => ot.id === id);
+        if (!orden) return;
+
+        const historialEntry: HistorialCambio = {
           id: `H${Date.now()}`,
-          fecha: now,
-          usuarioId: 'current-user',
-          usuarioNombre: 'Usuario Actual',
+          fecha: new Date(),
+          usuarioId,
+          usuarioNombre,
           campo: 'status',
-          valorAnterior: null,
-          valorNuevo: ordenData.status,
-        },
-      ],
-      createdAt: now,
-      updatedAt: now,
-    };
+          valorAnterior: orden.status,
+          valorNuevo: newStatus,
+        };
 
-    set((state) => ({
-      ordenes: [...state.ordenes, nuevaOrden],
-    }));
-  },
+        const updates: Partial<OrdenTrabajo> = {
+          status: newStatus,
+          historial: [...orden.historial, historialEntry],
+          updatedAt: new Date(),
+        };
 
-  updateOrden: (id, updates) => {
-    set((state) => ({
-      ordenes: state.ordenes.map((ot) =>
-        ot.id === id ? { ...ot, ...updates, updatedAt: new Date() } : ot,
-      ),
-    }));
-  },
+        // Fechas automáticas según estado
+        if (newStatus === 'en_proceso' && !orden.fechaInicio) {
+          updates.fechaInicio = new Date();
+        }
+        if (newStatus === 'completada' && !orden.fechaCierre) {
+          updates.fechaCierre = new Date();
+        }
 
-  deleteOrden: (id) => {
-    set((state) => ({
-      ordenes: state.ordenes.filter((ot) => ot.id !== id),
-    }));
-  },
+        set((state) => ({
+          ordenes: state.ordenes.map((ot) =>
+            ot.id === id ? { ...ot, ...updates } : ot,
+          ),
+        }));
+      },
 
-  changeStatus: (
-    id,
-    newStatus,
-    usuarioId = 'current-user',
-    usuarioNombre = 'Usuario Actual',
-  ) => {
-    const orden = get().ordenes.find((ot) => ot.id === id);
-    if (!orden) return;
+      cerrarTecnico: (id, cierre) => {
+        set((state) => ({
+          ordenes: state.ordenes.map((ot) =>
+            ot.id === id
+              ? {
+                  ...ot,
+                  cierreTecnico: cierre,
+                  fechaCierreTecnico: cierre.fecha,
+                  status: 'completada' as EstadoOT,
+                  updatedAt: new Date(),
+                  historial: [
+                    ...ot.historial,
+                    {
+                      id: `H${Date.now()}`,
+                      fecha: new Date(),
+                      usuarioId: cierre.tecnicoId,
+                      usuarioNombre: cierre.tecnicoNombre,
+                      campo: 'cierre_tecnico',
+                      valorAnterior: null,
+                      valorNuevo: 'Cierre técnico registrado',
+                    },
+                  ],
+                }
+              : ot,
+          ),
+        }));
+      },
 
-    const historialEntry: HistorialCambio = {
-      id: `H${Date.now()}`,
-      fecha: new Date(),
-      usuarioId,
-      usuarioNombre,
-      campo: 'status',
-      valorAnterior: orden.status,
-      valorNuevo: newStatus,
-    };
+      cerrarAdministrativo: (id, cierre) => {
+        set((state) => ({
+          ordenes: state.ordenes.map((ot) =>
+            ot.id === id
+              ? {
+                  ...ot,
+                  cierreAdministrativo: cierre,
+                  fechaCierreAdmin: cierre.fecha,
+                  status: 'cerrada' as EstadoOT,
+                  updatedAt: new Date(),
+                  historial: [
+                    ...ot.historial,
+                    {
+                      id: `H${Date.now()}`,
+                      fecha: new Date(),
+                      usuarioId: cierre.adminId,
+                      usuarioNombre: cierre.adminNombre,
+                      campo: 'cierre_administrativo',
+                      valorAnterior: null,
+                      valorNuevo: 'Cierre administrativo registrado',
+                    },
+                  ],
+                }
+              : ot,
+          ),
+        }));
+      },
 
-    const updates: Partial<OrdenTrabajo> = {
-      status: newStatus,
-      historial: [...orden.historial, historialEntry],
-      updatedAt: new Date(),
-    };
+      addEvidencia: (id, evidencia) => {
+        set((state) => ({
+          ordenes: state.ordenes.map((ot) =>
+            ot.id === id
+              ? {
+                  ...ot,
+                  evidencias: [...ot.evidencias, evidencia],
+                  updatedAt: new Date(),
+                }
+              : ot,
+          ),
+        }));
+      },
 
-    // Fechas automáticas según estado
-    if (newStatus === 'en_proceso' && !orden.fechaInicio) {
-      updates.fechaInicio = new Date();
-    }
-    if (newStatus === 'completada' && !orden.fechaCierre) {
-      updates.fechaCierre = new Date();
-    }
+      removeEvidencia: (otId, evidenciaId) => {
+        set((state) => ({
+          ordenes: state.ordenes.map((ot) =>
+            ot.id === otId
+              ? {
+                  ...ot,
+                  evidencias: ot.evidencias.filter((e) => e.id !== evidenciaId),
+                  updatedAt: new Date(),
+                }
+              : ot,
+          ),
+        }));
+      },
 
-    set((state) => ({
-      ordenes: state.ordenes.map((ot) =>
-        ot.id === id ? { ...ot, ...updates } : ot,
-      ),
-    }));
-  },
+      setFiltros: (nuevosFiltros) => {
+        set((state) => ({
+          filtros: { ...state.filtros, ...nuevosFiltros },
+        }));
+      },
 
-  cerrarTecnico: (id, cierre) => {
-    set((state) => ({
-      ordenes: state.ordenes.map((ot) =>
-        ot.id === id
-          ? {
-              ...ot,
-              cierreTecnico: cierre,
-              fechaCierreTecnico: cierre.fecha,
-              status: 'completada' as EstadoOT,
-              updatedAt: new Date(),
-              historial: [
-                ...ot.historial,
-                {
-                  id: `H${Date.now()}`,
-                  fecha: new Date(),
-                  usuarioId: cierre.tecnicoId,
-                  usuarioNombre: cierre.tecnicoNombre,
-                  campo: 'cierre_tecnico',
-                  valorAnterior: null,
-                  valorNuevo: 'Cierre técnico registrado',
-                },
-              ],
-            }
-          : ot,
-      ),
-    }));
-  },
+      clearFiltros: () => {
+        set({ filtros: filtrosVacios });
+      },
 
-  cerrarAdministrativo: (id, cierre) => {
-    set((state) => ({
-      ordenes: state.ordenes.map((ot) =>
-        ot.id === id
-          ? {
-              ...ot,
-              cierreAdministrativo: cierre,
-              fechaCierreAdmin: cierre.fecha,
-              status: 'cerrada' as EstadoOT,
-              updatedAt: new Date(),
-              historial: [
-                ...ot.historial,
-                {
-                  id: `H${Date.now()}`,
-                  fecha: new Date(),
-                  usuarioId: cierre.adminId,
-                  usuarioNombre: cierre.adminNombre,
-                  campo: 'cierre_administrativo',
-                  valorAnterior: null,
-                  valorNuevo: 'Cierre administrativo registrado',
-                },
-              ],
-            }
-          : ot,
-      ),
-    }));
-  },
+      getOrdenById: (id) => {
+        return get().ordenes.find((ot) => ot.id === id);
+      },
 
-  addEvidencia: (id, evidencia) => {
-    set((state) => ({
-      ordenes: state.ordenes.map((ot) =>
-        ot.id === id
-          ? {
-              ...ot,
-              evidencias: [...ot.evidencias, evidencia],
-              updatedAt: new Date(),
-            }
-          : ot,
-      ),
-    }));
-  },
+      getFilteredOrdenes: () => {
+        const { ordenes, filtros } = get();
 
-  removeEvidencia: (otId, evidenciaId) => {
-    set((state) => ({
-      ordenes: state.ordenes.map((ot) =>
-        ot.id === otId
-          ? {
-              ...ot,
-              evidencias: ot.evidencias.filter((e) => e.id !== evidenciaId),
-              updatedAt: new Date(),
-            }
-          : ot,
-      ),
-    }));
-  },
+        return ordenes.filter((ot) => {
+          if (filtros.status && ot.status !== filtros.status) return false;
+          if (filtros.prioridad && ot.prioridad !== filtros.prioridad)
+            return false;
+          if (filtros.tecnicoId && ot.tecnicoId !== filtros.tecnicoId)
+            return false;
+          if (filtros.activoId && ot.activoId !== filtros.activoId)
+            return false;
 
-  setFiltros: (nuevosFiltros) => {
-    set((state) => ({
-      filtros: { ...state.filtros, ...nuevosFiltros },
-    }));
-  },
+          if (filtros.fechaInicio) {
+            const fechaIni = new Date(filtros.fechaInicio);
+            const fechaCreacion = new Date(ot.fechaCreacion);
+            if (fechaCreacion < fechaIni) return false;
+          }
 
-  clearFiltros: () => {
-    set({ filtros: filtrosVacios });
-  },
+          if (filtros.fechaFin) {
+            const fechaFin = new Date(filtros.fechaFin);
+            const fechaCreacion = new Date(ot.fechaCreacion);
+            if (fechaCreacion > fechaFin) return false;
+          }
 
-  getOrdenById: (id) => {
-    return get().ordenes.find((ot) => ot.id === id);
-  },
+          if (filtros.busqueda) {
+            const busqueda = filtros.busqueda.toLowerCase();
+            const matchFolio = ot.folio.toLowerCase().includes(busqueda);
+            const matchTitulo = ot.titulo.toLowerCase().includes(busqueda);
+            const matchDescripcion = ot.descripcion
+              .toLowerCase()
+              .includes(busqueda);
+            if (!matchFolio && !matchTitulo && !matchDescripcion) return false;
+          }
 
-  getFilteredOrdenes: () => {
-    const { ordenes, filtros } = get();
+          return true;
+        });
+      },
 
-    return ordenes.filter((ot) => {
-      if (filtros.status && ot.status !== filtros.status) return false;
-      if (filtros.prioridad && ot.prioridad !== filtros.prioridad) return false;
-      if (filtros.tecnicoId && ot.tecnicoId !== filtros.tecnicoId) return false;
-      if (filtros.activoId && ot.activoId !== filtros.activoId) return false;
-
-      if (filtros.fechaInicio) {
-        const fechaIni = new Date(filtros.fechaInicio);
-        const fechaCreacion = new Date(ot.fechaCreacion);
-        if (fechaCreacion < fechaIni) return false;
-      }
-
-      if (filtros.fechaFin) {
-        const fechaFin = new Date(filtros.fechaFin);
-        const fechaCreacion = new Date(ot.fechaCreacion);
-        if (fechaCreacion > fechaFin) return false;
-      }
-
-      if (filtros.busqueda) {
-        const busqueda = filtros.busqueda.toLowerCase();
-        const matchFolio = ot.folio.toLowerCase().includes(busqueda);
-        const matchTitulo = ot.titulo.toLowerCase().includes(busqueda);
-        const matchDescripcion = ot.descripcion
-          .toLowerCase()
-          .includes(busqueda);
-        if (!matchFolio && !matchTitulo && !matchDescripcion) return false;
-      }
-
-      return true;
-    });
-  },
-
-  getOrdenesByStatus: (status) => {
-    return get().ordenes.filter((ot) => ot.status === status);
-  },
-}));
+      getOrdenesByStatus: (status) => {
+        return get().ordenes.filter((ot) => ot.status === status);
+      },
+    }),
+    {
+      name: 'work-orders-session-storage',
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({ ordenes: state.ordenes }),
+    },
+  ),
+);

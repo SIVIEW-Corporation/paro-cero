@@ -6,10 +6,15 @@ import {
   TURNOS,
   CHECKLIST_ESTADOS,
   CHECKLIST_ESTADO_COLORES,
+  HALLAZGO_STATUS,
+  HALLAZGO_COLORES,
   SEVERIDADES,
+  SEVERIDAD_COLORES,
   CHECKLIST_ITEMS_DEFAULT,
-  PLANTILLAS_CHECKLIST,
 } from '@/app/data';
+import type { OrdenTrabajo } from '@/app/data/types';
+import { TECNICOS } from '@/app/data/constants';
+import { useWorkOrdersStore } from '@/app/stores/useWorkOrdersStore';
 
 import {
   Badge,
@@ -54,13 +59,14 @@ type Checklist = {
 
 type Hallazgo = {
   id: string;
+  empresaId: string;
   checklistId: string | null;
   checklistFolio: string | null;
   itemId: string | null;
   itemDescripcion: string | null;
   descripcion: string;
-  severidad: string;
-  status: string;
+  severidad: 'baja' | 'media' | 'alta' | 'critica';
+  status: 'abierto' | 'en_proceso' | 'resuelto';
   activoId: string;
   activoCode: string;
   activoName: string;
@@ -79,6 +85,8 @@ type PlantillaChecklist = {
   items: { id: string; descripcion: string }[];
 };
 
+type SetListState<T> = (value: T[] | ((prev: T[]) => T[])) => void;
+
 type Notificacion = {
   id: string;
   titulo: string;
@@ -96,12 +104,12 @@ export function InspeccionesScreen({
   plantillas,
   setPlantillas,
 }: {
-  checklists: any[];
-  setChecklists: any;
-  hallazgos: any[];
-  setHallazgos: any;
-  plantillas: any[];
-  setPlantillas: any;
+  checklists: Checklist[];
+  setChecklists: SetListState<Checklist>;
+  hallazgos: Hallazgo[];
+  setHallazgos: SetListState<Hallazgo>;
+  plantillas: PlantillaChecklist[];
+  setPlantillas: SetListState<PlantillaChecklist>;
 }) {
   const [view, setView] = useState<'list' | 'execute'>('list');
   const [selectedChecklist, setSelectedChecklist] = useState<Checklist | null>(
@@ -111,6 +119,11 @@ export function InspeccionesScreen({
   const [showCreatePlantilla, setShowCreatePlantilla] = useState(false);
   const [showCreateHallazgo, setShowCreateHallazgo] = useState(false);
   const [showVerPlantillas, setShowVerPlantillas] = useState(false);
+  const [hallazgoStatusFilter, setHallazgoStatusFilter] = useState('');
+  const [hallazgoSeveridadFilter, setHallazgoSeveridadFilter] = useState('');
+
+  const ordenes = useWorkOrdersStore((state) => state.ordenes);
+  const setOrdenes = useWorkOrdersStore((state) => state.setOrdenes);
 
   const [filterActivo, setFilterActivo] = useState('');
   const [filterFecha, setFilterFecha] = useState('');
@@ -144,6 +157,85 @@ export function InspeccionesScreen({
   const uniqueAreas = [...new Set(ASSETS.map((a) => a.area))];
   const uniqueResponsables = [...new Set(checklists.map((c) => c.responsable))];
 
+  const filteredHallazgos = hallazgos.filter((h) => {
+    if (hallazgoStatusFilter && h.status !== hallazgoStatusFilter) {
+      return false;
+    }
+    if (hallazgoSeveridadFilter && h.severidad !== hallazgoSeveridadFilter) {
+      return false;
+    }
+    return true;
+  });
+
+  const resolveOtTracking = (hallazgo: Hallazgo) => {
+    if (!hallazgo.otId) {
+      return 'Sin OT';
+    }
+
+    const ot = ordenes.find((orden) => orden.id === hallazgo.otId);
+    return ot?.folio || hallazgo.otId;
+  };
+
+  const createOtFromHallazgo = (hallazgo: Hallazgo) => {
+    if (hallazgo.otId) {
+      return;
+    }
+
+    const now = new Date();
+    const maxId = ordenes.reduce((max, item) => {
+      const current = Number(item.id.replace(/\D/g, ''));
+      return Number.isNaN(current) ? max : Math.max(max, current);
+    }, 0);
+    const nextId = maxId + 1;
+
+    const prioridadBySeveridad: Record<
+      Hallazgo['severidad'],
+      OrdenTrabajo['prioridad']
+    > = {
+      baja: 'baja',
+      media: 'media',
+      alta: 'alta',
+      critica: 'critico',
+    };
+
+    const tecnicoDefault = TECNICOS[0];
+    const nuevaOt: OrdenTrabajo = {
+      id: `OT${String(nextId).padStart(3, '0')}`,
+      empresaId: hallazgo.empresaId || 'EMP001',
+      folio: `OT-${now.getFullYear()}-${String(nextId).padStart(3, '0')}`,
+      activoId: hallazgo.activoId,
+      titulo: `Atender hallazgo ${hallazgo.activoCode}`,
+      descripcion: hallazgo.descripcion,
+      tipo: 'correctivo',
+      status: 'nueva',
+      prioridad: prioridadBySeveridad[hallazgo.severidad],
+      tecnicoId: tecnicoDefault?.id || 'T001',
+      tecnicoNombre: tecnicoDefault?.nombre || 'Carlos Mendez',
+      fechaCreacion: now,
+      fechaCompromiso: now,
+      observaciones: `OT creada desde hallazgo ${hallazgo.id}`,
+      evidencias: [],
+      historial: [],
+      downtimeMinutos: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setOrdenes([nuevaOt, ...ordenes]);
+
+    setHallazgos((prev: Hallazgo[]) =>
+      prev.map((current) =>
+        current.id === hallazgo.id
+          ? {
+              ...current,
+              status: 'en_proceso',
+              otId: nuevaOt.id,
+            }
+          : current,
+      ),
+    );
+  };
+
   const handleExecuteChecklist = (checklist: Checklist) => {
     setSelectedChecklist(checklist);
     setView('execute');
@@ -160,23 +252,25 @@ export function InspeccionesScreen({
           setSelectedChecklist(null);
         }}
         onSave={(updatedChecklist) => {
-          setChecklists((prev) =>
-            prev.map((c) =>
+          setChecklists((prev: Checklist[]) =>
+            prev.map((c: Checklist) =>
               c.id === updatedChecklist.id ? updatedChecklist : c,
             ),
           );
           if (updatedChecklist.items.some((i) => i.valor === 'nok')) {
-            const newFindings = updatedChecklist.items
+            const newFindings: Hallazgo[] = updatedChecklist.items
               .filter((i) => i.valor === 'nok')
               .map((i) => {
                 const plantilla = plantillas.find(
                   (p) => p.id === updatedChecklist.plantillaId,
                 );
                 const itemDesc = plantilla?.items.find(
-                  (it) => it.id === i.itemId,
+                  (it: { id: string; descripcion: string }) =>
+                    it.id === i.itemId,
                 )?.descripcion;
                 return {
                   id: `H${Date.now()}_${i.itemId}`,
+                  empresaId: 'EMP001',
                   checklistId: updatedChecklist.id,
                   checklistFolio: updatedChecklist.folio,
                   itemId: i.itemId,
@@ -193,7 +287,7 @@ export function InspeccionesScreen({
                   resolvedAt: null,
                 };
               });
-            setHallazgos((prev) => [...prev, ...newFindings]);
+            setHallazgos((prev: Hallazgo[]) => [...prev, ...newFindings]);
           }
           setView('list');
           setSelectedChecklist(null);
@@ -365,6 +459,98 @@ export function InspeccionesScreen({
         </DataTable>
       </Card>
 
+      <Card>
+        <div className='mb-4 flex items-center justify-between'>
+          <CardTitle>Hallazgos</CardTitle>
+          <div className='text-xs text-slate-400'>
+            {filteredHallazgos.length} registros
+          </div>
+        </div>
+
+        <div className='mb-4 flex gap-3'>
+          <select
+            value={hallazgoStatusFilter}
+            onChange={(e) => setHallazgoStatusFilter(e.target.value)}
+            className='max-w-[180px]'
+          >
+            <option value=''>Todos los estados</option>
+            {Object.entries(HALLAZGO_STATUS).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={hallazgoSeveridadFilter}
+            onChange={(e) => setHallazgoSeveridadFilter(e.target.value)}
+            className='max-w-[180px]'
+          >
+            <option value=''>Todas las severidades</option>
+            {Object.entries(SEVERIDADES).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <DataTable
+          head={[
+            'ID',
+            'Checklist',
+            'Activo',
+            'Descripcion',
+            'Severidad',
+            'Estado',
+            'OT',
+            'Acciones',
+          ]}
+        >
+          {filteredHallazgos.map((hallazgo: Hallazgo) => (
+            <tr key={hallazgo.id}>
+              <Td mono>{hallazgo.id}</Td>
+              <Td>{hallazgo.checklistFolio || 'Manual'}</Td>
+              <Td>
+                <div className='text-xs text-slate-400'>
+                  {hallazgo.activoCode}
+                </div>
+                <div>{hallazgo.activoName}</div>
+              </Td>
+              <Td>
+                <div className='max-w-[320px] truncate'>
+                  {hallazgo.descripcion}
+                </div>
+              </Td>
+              <Td>
+                <Badge
+                  label={SEVERIDADES[hallazgo.severidad]}
+                  color={SEVERIDAD_COLORES[hallazgo.severidad]}
+                />
+              </Td>
+              <Td>
+                <Badge
+                  label={HALLAZGO_STATUS[hallazgo.status]}
+                  color={HALLAZGO_COLORES[hallazgo.status]}
+                />
+              </Td>
+              <Td mono>{resolveOtTracking(hallazgo)}</Td>
+              <Td>
+                {!hallazgo.otId && hallazgo.status !== 'resuelto' ? (
+                  <BtnPrimary onClick={() => createOtFromHallazgo(hallazgo)}>
+                    Crear OT
+                  </BtnPrimary>
+                ) : (
+                  <span className='text-xs text-slate-400'>
+                    Seguimiento activo
+                  </span>
+                )}
+              </Td>
+            </tr>
+          ))}
+        </DataTable>
+      </Card>
+
       {showCreateChecklist && (
         <Modal
           title='Nuevo Checklist'
@@ -374,7 +560,7 @@ export function InspeccionesScreen({
             plantillas={plantillas}
             onClose={() => setShowCreateChecklist(false)}
             onSave={(newChecklist) => {
-              setChecklists((prev) => [...prev, newChecklist]);
+              setChecklists((prev: Checklist[]) => [...prev, newChecklist]);
               setShowCreateChecklist(false);
             }}
           />
@@ -389,7 +575,10 @@ export function InspeccionesScreen({
           <CreatePlantillaForm
             onClose={() => setShowCreatePlantilla(false)}
             onSave={(newPlantilla) => {
-              setPlantillas((prev) => [...prev, newPlantilla]);
+              setPlantillas((prev: PlantillaChecklist[]) => [
+                ...prev,
+                newPlantilla,
+              ]);
               setShowCreatePlantilla(false);
             }}
           />
@@ -417,7 +606,12 @@ export function InspeccionesScreen({
                   <Badge label={`${p.items.length} items`} color='#3b82f6' />
                 </div>
                 <div className='mt-2 text-xs text-slate-400'>
-                  Items: {p.items.map((i) => i.descripcion).join(', ')}
+                  Items:{' '}
+                  {p.items
+                    .map(
+                      (i: { id: string; descripcion: string }) => i.descripcion,
+                    )
+                    .join(', ')}
                 </div>
               </div>
             ))}
@@ -433,7 +627,7 @@ export function InspeccionesScreen({
           <CreateHallazgoForm
             onClose={() => setShowCreateHallazgo(false)}
             onSave={(newHallazgo) => {
-              setHallazgos((prev) => [...prev, newHallazgo]);
+              setHallazgos((prev: Hallazgo[]) => [...prev, newHallazgo]);
               setShowCreateHallazgo(false);
             }}
           />
@@ -867,13 +1061,14 @@ function CreateHallazgoForm({
 }) {
   const [activoId, setActivoId] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [severidad, setSeveridad] = useState('media');
+  const [severidad, setSeveridad] = useState<Hallazgo['severidad']>('media');
 
   const activo = ASSETS.find((a) => a.id === activoId);
 
   const handleSave = () => {
     const newHallazgo: Hallazgo = {
       id: `H_${Date.now()}`,
+      empresaId: 'EMP001',
       checklistId: null,
       checklistFolio: null,
       itemId: null,
@@ -915,7 +1110,9 @@ function CreateHallazgoForm({
       <Field label='Severidad'>
         <select
           value={severidad}
-          onChange={(e) => setSeveridad(e.target.value)}
+          onChange={(e) =>
+            setSeveridad(e.target.value as Hallazgo['severidad'])
+          }
         >
           {Object.entries(SEVERIDADES).map(([key, label]) => (
             <option key={key} value={key}>

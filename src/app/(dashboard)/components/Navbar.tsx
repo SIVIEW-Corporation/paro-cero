@@ -137,7 +137,7 @@ export default function Navbar() {
   }, [isUserMenuOpen]);
 
   return (
-    <header className='bg-shBackground/80 fixed top-0 z-50 grid w-screen place-items-center p-2 backdrop-blur-md sm:p-3 lg:px-4 xl:px-5'>
+    <header className='app-topbar bg-shBackground/80 fixed top-0 z-50 grid w-screen place-items-center p-2 backdrop-blur-md sm:p-3 lg:px-4 xl:px-5'>
       <nav className='flex w-full max-w-[1540px] items-center justify-between'>
         <Link href='/' scroll={false}>
           <Image

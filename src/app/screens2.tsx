@@ -30,6 +30,9 @@ import {
   assetDowntimeData,
   assetTipoData,
 } from '@/app/data';
+import { TECNICOS } from '@/app/data/constants';
+import { generarDatosSeisMeses } from '@/app/data/mock-data';
+import { useWorkOrdersStore } from '@/app/stores/useWorkOrdersStore';
 
 import {
   Badge,
@@ -709,6 +712,73 @@ export function WorkOrdersScreen({
   const [selected, setSelected] = useState<OrdenTrabajo | null>(null);
   const [filterStatus, setFilter] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [newOtData, setNewOtData] = useState({
+    titulo: '',
+    activoId: ASSETS[0]?.id || '',
+    tipo: 'preventivo' as OrdenTrabajo['tipo'],
+    prioridad: 'media' as OrdenTrabajo['prioridad'],
+    tecnicoId: TECNICOS[0]?.id || '',
+    fechaCompromiso: format(new Date(), 'yyyy-MM-dd'),
+    observaciones: '',
+  });
+
+  const closeCreateModal = () => {
+    setShowCreate(false);
+    setNewOtData({
+      titulo: '',
+      activoId: ASSETS[0]?.id || '',
+      tipo: 'preventivo',
+      prioridad: 'media',
+      tecnicoId: TECNICOS[0]?.id || '',
+      fechaCompromiso: format(new Date(), 'yyyy-MM-dd'),
+      observaciones: '',
+    });
+  };
+
+  const createWorkOrder = () => {
+    const titulo = newOtData.titulo.trim();
+    if (!titulo || !newOtData.activoId || !newOtData.tecnicoId) {
+      alert('Completa título, activo y técnico.');
+      return;
+    }
+
+    const now = new Date();
+    const maxId = wo.reduce((max, item) => {
+      const current = Number(item.id.replace(/\D/g, ''));
+      return Number.isNaN(current) ? max : Math.max(max, current);
+    }, 0);
+    const nextId = maxId + 1;
+
+    const tecnico = TECNICOS.find((t) => t.id === newOtData.tecnicoId);
+    const fechaCompromiso = newOtData.fechaCompromiso
+      ? new Date(`${newOtData.fechaCompromiso}T00:00:00`)
+      : now;
+
+    const nuevaOt: OrdenTrabajo = {
+      id: `OT${String(nextId).padStart(3, '0')}`,
+      empresaId: 'EMP001',
+      folio: `OT-${now.getFullYear()}-${String(nextId).padStart(3, '0')}`,
+      activoId: newOtData.activoId,
+      titulo,
+      descripcion: newOtData.observaciones || 'Sin descripción',
+      tipo: newOtData.tipo,
+      status: 'nueva',
+      prioridad: newOtData.prioridad,
+      tecnicoId: newOtData.tecnicoId,
+      tecnicoNombre: tecnico?.nombre || 'Sin asignar',
+      fechaCreacion: now,
+      fechaCompromiso,
+      observaciones: newOtData.observaciones,
+      evidencias: [],
+      historial: [],
+      downtimeMinutos: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setWo((prev) => [nuevaOt, ...prev]);
+    closeCreateModal();
+  };
 
   const statusCounts: Record<string, number> = {};
   wo.forEach((w) => {
@@ -725,7 +795,7 @@ export function WorkOrdersScreen({
   };
 
   if (selected) {
-    const asset = ASSETS.find((a) => a.id === selected.assetId);
+    const asset = ASSETS.find((a) => a.id === selected.activoId);
     const curWo = wo.find((w) => w.id === selected.id) || selected;
     return (
       <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
@@ -1077,15 +1147,23 @@ export function WorkOrdersScreen({
       </Card>
 
       {showCreate && (
-        <Modal
-          title='Nueva Orden de Trabajo'
-          onClose={() => setShowCreate(false)}
-        >
+        <Modal title='Nueva Orden de Trabajo' onClose={closeCreateModal}>
           <Field label='Titulo de la Orden'>
-            <input placeholder='Ej: Revision preventiva bomba #3' />
+            <input
+              placeholder='Ej: Revision preventiva bomba #3'
+              value={newOtData.titulo}
+              onChange={(e) =>
+                setNewOtData((prev) => ({ ...prev, titulo: e.target.value }))
+              }
+            />
           </Field>
           <Field label='Activo'>
-            <select>
+            <select
+              value={newOtData.activoId}
+              onChange={(e) =>
+                setNewOtData((prev) => ({ ...prev, activoId: e.target.value }))
+              }
+            >
               {ASSETS.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.code} — {a.name}
@@ -1097,13 +1175,29 @@ export function WorkOrdersScreen({
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
           >
             <Field label='Tipo'>
-              <select>
+              <select
+                value={newOtData.tipo}
+                onChange={(e) =>
+                  setNewOtData((prev) => ({
+                    ...prev,
+                    tipo: e.target.value as OrdenTrabajo['tipo'],
+                  }))
+                }
+              >
                 <option value='preventivo'>Preventivo</option>
                 <option value='correctivo'>Correctivo</option>
               </select>
             </Field>
             <Field label='Prioridad'>
-              <select>
+              <select
+                value={newOtData.prioridad}
+                onChange={(e) =>
+                  setNewOtData((prev) => ({
+                    ...prev,
+                    prioridad: e.target.value as OrdenTrabajo['prioridad'],
+                  }))
+                }
+              >
                 <option value='baja'>Baja</option>
                 <option value='media'>Media</option>
                 <option value='alta'>Alta</option>
@@ -1115,23 +1209,50 @@ export function WorkOrdersScreen({
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
           >
             <Field label='Asignado a'>
-              <select>
-                <option>Carlos Mendez</option>
-                <option>Luis Ramirez</option>
-                <option>Maria Gonzalez</option>
-                <option>Pedro Sanchez</option>
+              <select
+                value={newOtData.tecnicoId}
+                onChange={(e) =>
+                  setNewOtData((prev) => ({
+                    ...prev,
+                    tecnicoId: e.target.value,
+                  }))
+                }
+              >
+                {TECNICOS.map((tecnico) => (
+                  <option key={tecnico.id} value={tecnico.id}>
+                    {tecnico.nombre}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label='Fecha de Vencimiento'>
-              <input type='date' />
+              <input
+                type='date'
+                value={newOtData.fechaCompromiso}
+                onChange={(e) =>
+                  setNewOtData((prev) => ({
+                    ...prev,
+                    fechaCompromiso: e.target.value,
+                  }))
+                }
+              />
             </Field>
           </div>
           <Field label='Observaciones'>
-            <textarea placeholder='Describe el trabajo a realizar...' />
+            <textarea
+              placeholder='Describe el trabajo a realizar...'
+              value={newOtData.observaciones}
+              onChange={(e) =>
+                setNewOtData((prev) => ({
+                  ...prev,
+                  observaciones: e.target.value,
+                }))
+              }
+            />
           </Field>
           <ModalFooter
-            onCancel={() => setShowCreate(false)}
-            onConfirm={() => setShowCreate(false)}
+            onCancel={closeCreateModal}
+            onConfirm={createWorkOrder}
             confirmLabel='Crear OT'
           />
         </Modal>
@@ -1275,12 +1396,20 @@ export function NotificationsScreen({
 }
 
 export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
+  const setOrdenes = useWorkOrdersStore((state) => state.setOrdenes);
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
   });
   const [showPicker, setShowPicker] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const closedStatuses: OrdenTrabajo['status'][] = [
+    'completada',
+    'cerrada',
+    'cancelada',
+  ];
 
   const quickOptions = [
     {
@@ -1323,7 +1452,7 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
 
     const completed = monthWO.filter((w) => w.status === 'completada').length;
     const totalFinished = monthWO.filter((w) =>
-      ['completada', 'vencido', 'cancelada'].includes(w.status),
+      closedStatuses.includes(w.status),
     ).length;
 
     return {
@@ -1369,7 +1498,7 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
 
   const completed = filteredWo.filter((w) => w.status === 'completada').length;
   const total = filteredWo.filter((w) =>
-    ['completada', 'vencido', 'cancelada'].includes(w.status),
+    closedStatuses.includes(w.status),
   ).length;
   const compliancePct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
@@ -1403,35 +1532,310 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
   const selectedAssetName = selectedAsset
     ? ASSETS.find((a) => a.id === selectedAsset)?.name
     : null;
+  const printDateLabel =
+    dateRange?.from && dateRange?.to
+      ? `${format(dateRange.from, 'dd MMM yyyy', { locale: es })} - ${format(dateRange.to, 'dd MMM yyyy', { locale: es })}`
+      : format(new Date(), 'dd MMM yyyy', { locale: es });
+
+  const regenerateDemoData = () => {
+    if (
+      !window.confirm(
+        'Se generará un nuevo set de datos demo para órdenes de trabajo. ¿Deseas continuar?',
+      )
+    ) {
+      return;
+    }
+
+    setOrdenes(generarDatosSeisMeses());
+  };
+
+  const exportCsv = () => {
+    const headers = [
+      'id',
+      'folio',
+      'activo_id',
+      'activo_nombre',
+      'tipo',
+      'status',
+      'prioridad',
+      'tecnico',
+      'fecha_creacion',
+      'fecha_compromiso',
+      'downtime_minutos',
+      'titulo',
+      'descripcion',
+    ];
+
+    const escapeCsv = (value: string | number) => {
+      const stringValue = String(value ?? '');
+      if (
+        stringValue.includes(',') ||
+        stringValue.includes('"') ||
+        stringValue.includes('\n')
+      ) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+
+    const rows = filteredWo.map((item) => {
+      const activoNombre =
+        ASSETS.find((a) => a.id === item.activoId)?.name || '';
+      return [
+        item.id,
+        item.folio,
+        item.activoId,
+        activoNombre,
+        item.tipo,
+        item.status,
+        item.prioridad,
+        item.tecnicoNombre,
+        format(new Date(item.fechaCreacion), 'yyyy-MM-dd'),
+        format(new Date(item.fechaCompromiso), 'yyyy-MM-dd'),
+        item.downtimeMinutos || 0,
+        item.titulo,
+        item.descripcion,
+      ];
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => escapeCsv(cell)).join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `reporte-kpis-${format(new Date(), 'yyyyMMdd-HHmm')}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setShowExportMenu(false);
+  };
+
+  const exportPdfEjecutivo = () => {
+    const periodLabel =
+      dateRange?.from && dateRange?.to
+        ? `${format(dateRange.from, 'dd MMM yyyy', { locale: es })} - ${format(dateRange.to, 'dd MMM yyyy', { locale: es })}`
+        : 'Periodo general';
+    const topRows = (
+      selectedAsset
+        ? [
+            {
+              asset: selectedAssetName || 'Activo seleccionado',
+              count: correctivos,
+              down: Math.round(totalDown / 60),
+            },
+          ]
+        : dynamicTopFallas
+    )
+      .slice(0, 10)
+      .map(
+        (row, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${row.asset}</td>
+            <td>${row.count}</td>
+            <td>${row.down}</td>
+          </tr>
+        `,
+      )
+      .join('');
+
+    const reportHtml = `
+      <!doctype html>
+      <html lang="es">
+        <head>
+          <meta charset="utf-8" />
+          <title>Reporte Ejecutivo</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 28px; color: #0f172a; }
+            h1 { margin: 0 0 8px; font-size: 22px; }
+            .meta { color: #334155; margin-bottom: 18px; font-size: 13px; }
+            .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+            .kpi { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; }
+            .kpi .label { font-size: 12px; color: #475569; }
+            .kpi .value { font-size: 20px; font-weight: 700; margin-top: 2px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; font-size: 12px; }
+            th { background: #f1f5f9; }
+          </style>
+        </head>
+        <body>
+          <h1>Reporte Ejecutivo de Mantenimiento</h1>
+          <div class="meta">
+            Activo: ${selectedAssetName || 'Todos'}<br />
+            Periodo: ${periodLabel}<br />
+            Generado: ${format(new Date(), 'dd MMM yyyy HH:mm', { locale: es })}
+          </div>
+
+          <div class="kpis">
+            <div class="kpi"><div class="label">Cumplimiento PM</div><div class="value">${compliancePct}%</div></div>
+            <div class="kpi"><div class="label">MTTR Promedio</div><div class="value">${avgMTTR} h</div></div>
+            <div class="kpi"><div class="label">Paro Acumulado</div><div class="value">${Math.round(totalDown / 60)} h</div></div>
+            <div class="kpi"><div class="label">% Correctivo</div><div class="value">${pct}%</div></div>
+          </div>
+
+          <h2 style="margin: 0 0 8px; font-size: 16px;">Top fallas por activo</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Activo</th>
+                <th>Fallas</th>
+                <th>Paro (h)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${topRows || '<tr><td colspan="4">Sin datos para el periodo seleccionado</td></tr>'}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=1100,height=900');
+    if (!printWindow) {
+      alert('No se pudo abrir la ventana de impresión.');
+      return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(reportHtml);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    setShowExportMenu(false);
+  };
+
+  const exportPdfVistaCompleta = () => {
+    setShowExportMenu(false);
+    window.dispatchEvent(new Event('resize'));
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 120);
+    }, 260);
+  };
 
   return (
-    <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
-      <PageHeader
-        title='Reportes y KPIs'
-        sub={
-          selectedAsset
-            ? `Activo: ${selectedAssetName}`
-            : dateRange?.from && dateRange?.to
-              ? `${format(dateRange.from, 'dd MMM yyyy', { locale: es })} - ${format(dateRange.to, 'dd MMM yyyy', { locale: es })}`
-              : 'Indicadores de desempeño'
-        }
-        action={
-          <select
-            value={selectedAsset || ''}
-            onChange={(e) => setSelectedAsset(e.target.value || null)}
-            style={{ minWidth: 220 }}
-          >
-            <option value=''>Todos los activos</option>
-            {ASSETS.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.code} — {a.name}
-              </option>
-            ))}
-          </select>
-        }
-      />
+    <div
+      className='report-print-root'
+      style={{ padding: '28px', overflowY: 'auto', height: '100%' }}
+    >
+      <div className='no-print'>
+        <PageHeader
+          title='Reportes y KPIs'
+          sub={
+            selectedAsset
+              ? `Activo: ${selectedAssetName}`
+              : dateRange?.from && dateRange?.to
+                ? `${format(dateRange.from, 'dd MMM yyyy', { locale: es })} - ${format(dateRange.to, 'dd MMM yyyy', { locale: es })}`
+                : 'Indicadores de desempeño'
+          }
+          action={
+            <div
+              className='no-print'
+              style={{ display: 'flex', gap: 8, alignItems: 'center' }}
+            >
+              <select
+                value={selectedAsset || ''}
+                onChange={(e) => setSelectedAsset(e.target.value || null)}
+                style={{ minWidth: 220 }}
+              >
+                <option value=''>Todos los activos</option>
+                {ASSETS.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.code} — {a.name}
+                  </option>
+                ))}
+              </select>
+
+              <div style={{ position: 'relative' }}>
+                <BtnGhost onClick={() => setShowExportMenu((prev) => !prev)}>
+                  Exportar reporte ▾
+                </BtnGhost>
+
+                {showExportMenu && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 'calc(100% + 6px)',
+                      minWidth: 240,
+                      background: '#0d1627',
+                      border: '1px solid #1e3a5f',
+                      borderRadius: 8,
+                      boxShadow: '0 10px 24px rgba(0,0,0,0.35)',
+                      padding: 6,
+                      zIndex: 80,
+                    }}
+                  >
+                    <button
+                      onClick={exportPdfVistaCompleta}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#e2e8f0',
+                        padding: '9px 10px',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        fontSize: 13,
+                      }}
+                    >
+                      Exportar PDF vista completa
+                    </button>
+                    <button
+                      onClick={exportPdfEjecutivo}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#e2e8f0',
+                        padding: '9px 10px',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        fontSize: 13,
+                      }}
+                    >
+                      Exportar PDF ejecutivo
+                    </button>
+                    <button
+                      onClick={exportCsv}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#e2e8f0',
+                        padding: '9px 10px',
+                        borderRadius: 6,
+                        cursor: 'pointer',
+                        fontSize: 13,
+                      }}
+                    >
+                      Exportar CSV base de datos
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          }
+        />
+      </div>
+
+      <div className='print-only-date'>Fecha: {printDateLabel}</div>
 
       <div
+        className='no-print'
         style={{
           display: 'flex',
           gap: 8,
@@ -1458,6 +1862,7 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
             {opt.label}
           </button>
         ))}
+        <BtnGhost onClick={regenerateDemoData}>Regenerar datos demo</BtnGhost>
         <button
           onClick={() => setShowPicker(!showPicker)}
           style={{
@@ -1523,109 +1928,93 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
         )}
       </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4,1fr)',
-          gap: 14,
-          marginBottom: 24,
-        }}
-      >
-        <KpiCard
-          label='Cumplimiento PM'
-          value={compliancePct + '%'}
-          sub={
-            selectedAsset
-              ? 'Basado en historico del activo'
-              : 'Meta: 90% · General'
-          }
-          color='#3b82f6'
-          icon={<span>📊</span>}
-        />
-        <KpiCard
-          label='MTTR Promedio'
-          value={avgMTTR + 'h'}
-          sub='Mean time to repair'
-          color='#22c55e'
-          icon={<span>🔧</span>}
-        />
-        <KpiCard
-          label='Paro Acumulado'
-          value={Math.round(totalDown / 60) + 'h'}
-          sub={selectedAsset ? 'Paro total activo' : 'Total acumulado'}
-          color='#ef4444'
-          icon={<span>⏱</span>}
-        />
-        <KpiCard
-          label='% Correctivo'
-          value={pct + '%'}
-          sub={`Prev: ${preventivos} · Corr: ${correctivos}`}
-          color='#f97316'
-          icon={<span>🔴</span>}
-        />
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 16,
-          marginBottom: 16,
-        }}
-      >
-        <Card>
-          <CardTitle>Cumplimiento PM — Ultimos 6 Meses (%)</CardTitle>
-          <EChartsArea
-            data={chartCompliance}
-            dataKey='val'
+      <div className='print-content'>
+        <div
+          className='report-kpi-grid'
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4,1fr)',
+            gap: 14,
+            marginBottom: 24,
+          }}
+        >
+          <KpiCard
+            label='Cumplimiento PM'
+            value={compliancePct + '%'}
+            sub={
+              selectedAsset
+                ? 'Basado en historico del activo'
+                : 'Meta: 90% · General'
+            }
             color='#3b82f6'
-            name='Cumplimiento %'
-            height={210}
-            yDomain={[0, 100]}
+            icon={<span>📊</span>}
           />
-        </Card>
-        <Card>
-          <CardTitle>Horas de Paro por Mes</CardTitle>
-          <EChartsBar
-            data={chartDowntime}
-            dataKey='hrs'
+          <KpiCard
+            label='MTTR Promedio'
+            value={avgMTTR + 'h'}
+            sub='Mean time to repair'
+            color='#22c55e'
+            icon={<span>🔧</span>}
+          />
+          <KpiCard
+            label='Paro Acumulado'
+            value={Math.round(totalDown / 60) + 'h'}
+            sub={selectedAsset ? 'Paro total activo' : 'Total acumulado'}
             color='#ef4444'
-            name='Horas paro'
-            height={210}
+            icon={<span>⏱</span>}
           />
-        </Card>
-      </div>
+          <KpiCard
+            label='% Correctivo'
+            value={pct + '%'}
+            sub={`Prev: ${preventivos} · Corr: ${correctivos}`}
+            color='#f97316'
+            icon={<span>🔴</span>}
+          />
+        </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <Card>
-          <CardTitle>Ranking de Fallas por Activo</CardTitle>
-          <DataTable head={['#', 'Activo', 'Fallas', 'Paro (h)']}>
-            {selectedAsset ? (
-              <tr>
-                <Td mono>1</Td>
-                <Td bold>{selectedAssetName}</Td>
-                <Td>
-                  <span
-                    style={{
-                      fontFamily: 'monospace',
-                      fontWeight: 700,
-                      color: '#ef4444',
-                    }}
-                  >
-                    {correctivos}
-                  </span>
-                </Td>
-                <Td>
-                  <span style={{ fontFamily: 'monospace', color: '#f97316' }}>
-                    {Math.round(totalDown / 60)}
-                  </span>
-                </Td>
-              </tr>
-            ) : (
-              dynamicTopFallas.map((f, i) => (
-                <tr key={i}>
-                  <Td mono>{i + 1}</Td>
-                  <Td bold={i < 2}>{f.asset}</Td>
+        <div
+          className='report-main-charts'
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 16,
+            marginBottom: 16,
+          }}
+        >
+          <Card>
+            <CardTitle>Cumplimiento PM — Ultimos 6 Meses (%)</CardTitle>
+            <EChartsArea
+              data={chartCompliance}
+              dataKey='val'
+              color='#3b82f6'
+              name='Cumplimiento %'
+              height={210}
+              yDomain={[0, 100]}
+            />
+          </Card>
+          <Card>
+            <CardTitle>Horas de Paro por Mes</CardTitle>
+            <EChartsBar
+              data={chartDowntime}
+              dataKey='hrs'
+              color='#ef4444'
+              name='Horas paro'
+              height={210}
+            />
+          </Card>
+        </div>
+
+        <div
+          className='report-bottom-grid'
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+        >
+          <Card>
+            <CardTitle>Ranking de Fallas por Activo</CardTitle>
+            <DataTable head={['#', 'Activo', 'Fallas', 'Paro (h)']}>
+              {selectedAsset ? (
+                <tr>
+                  <Td mono>1</Td>
+                  <Td bold>{selectedAssetName}</Td>
                   <Td>
                     <span
                       style={{
@@ -1634,52 +2023,159 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
                         color: '#ef4444',
                       }}
                     >
-                      {f.count}
+                      {correctivos}
                     </span>
                   </Td>
                   <Td>
                     <span style={{ fontFamily: 'monospace', color: '#f97316' }}>
-                      {f.down}
+                      {Math.round(totalDown / 60)}
                     </span>
                   </Td>
                 </tr>
-              ))
-            )}
-          </DataTable>
-        </Card>
-        <Card>
-          <CardTitle>Preventivo vs. Correctivo</CardTitle>
-          <EChartsPie data={chartTipo} height={185} />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 28,
-              marginTop: 10,
-            }}
-          >
-            {chartTipo.map((d) => (
-              <div
-                key={d.name}
-                style={{ display: 'flex', alignItems: 'center', gap: 7 }}
-              >
+              ) : (
+                dynamicTopFallas.map((f, i) => (
+                  <tr key={i}>
+                    <Td mono>{i + 1}</Td>
+                    <Td bold={i < 2}>{f.asset}</Td>
+                    <Td>
+                      <span
+                        style={{
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                          color: '#ef4444',
+                        }}
+                      >
+                        {f.count}
+                      </span>
+                    </Td>
+                    <Td>
+                      <span
+                        style={{ fontFamily: 'monospace', color: '#f97316' }}
+                      >
+                        {f.down}
+                      </span>
+                    </Td>
+                  </tr>
+                ))
+              )}
+            </DataTable>
+          </Card>
+          <Card>
+            <CardTitle>Preventivo vs. Correctivo</CardTitle>
+            <EChartsPie data={chartTipo} height={185} />
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 28,
+                marginTop: 10,
+              }}
+            >
+              {chartTipo.map((d) => (
                 <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    background: d.color,
-                    borderRadius: 3,
-                  }}
-                />
-                <span style={{ fontSize: 13, color: '#94a3b8' }}>
-                  {d.name}:{' '}
-                  <strong style={{ color: '#e2e8f0' }}>{d.value}</strong>
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
+                  key={d.name}
+                  style={{ display: 'flex', alignItems: 'center', gap: 7 }}
+                >
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      background: d.color,
+                      borderRadius: 3,
+                    }}
+                  />
+                  <span style={{ fontSize: 13, color: '#94a3b8' }}>
+                    {d.name}:{' '}
+                    <strong style={{ color: '#e2e8f0' }}>{d.value}</strong>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
+
+      <style jsx global>{`
+        .print-only-date {
+          display: none;
+        }
+
+        @media print {
+          @page {
+            size: A4 landscape;
+            margin: 6mm;
+          }
+
+          html,
+          body {
+            background: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .no-print {
+            display: none !important;
+          }
+
+          .app-topbar {
+            display: none !important;
+          }
+
+          main.container {
+            max-width: 100% !important;
+            padding-top: 0 !important;
+          }
+
+          .report-print-root {
+            padding: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+
+          .print-only-date {
+            display: block;
+            margin: 0 0 8px;
+            font-size: 12px;
+            color: #111827;
+            font-weight: 600;
+          }
+
+          .report-kpi-grid {
+            gap: 8px !important;
+            margin-bottom: 10px !important;
+          }
+
+          .report-main-charts {
+            gap: 10px !important;
+            margin-bottom: 10px !important;
+          }
+
+          .report-bottom-grid {
+            gap: 10px !important;
+          }
+
+          .report-main-charts .echarts-for-react {
+            height: 180px !important;
+          }
+
+          .report-bottom-grid .echarts-for-react {
+            height: 140px !important;
+          }
+
+          .report-print-root th,
+          .report-print-root td {
+            font-size: 10px !important;
+            padding: 4px !important;
+          }
+
+          .report-print-root table,
+          .report-print-root tr,
+          .report-print-root td,
+          .report-print-root th {
+            page-break-inside: avoid;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -20,10 +20,11 @@ interface AreaChartProps {
 
 const baseOptions = {
   grid: {
-    left: 40,
+    left: 46,
     right: 20,
-    top: 20,
-    bottom: 30,
+    top: 16,
+    bottom: 40,
+    containLabel: true,
   },
   tooltip: {
     backgroundColor: '#0d1627',
