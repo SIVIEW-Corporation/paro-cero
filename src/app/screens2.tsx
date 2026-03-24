@@ -48,21 +48,152 @@ import {
   ModalFooter,
 } from '@/components/ui';
 
-import type { OrdenTrabajo, PlanMantenimiento, Activo } from '@/app/data/types';
+import type { OrdenTrabajo } from '@/app/data/types';
 
 export function PlansScreen() {
-  const [selected, setSelected] = useState<any>(null);
+  const [plans, setPlans] = useState(PLANS);
+  const [selected, setSelected] = useState<(typeof PLANS)[number] | null>(null);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [showCreate, setShowCreate] = useState(false);
+  const [planName, setPlanName] = useState('');
+  const [planActivoId, setPlanActivoId] = useState(ASSETS[0]?.id || '');
+  const [planFreq, setPlanFreq] = useState(1);
+  const [planUnit, setPlanUnit] = useState<
+    'dias' | 'semanas' | 'meses' | 'anios'
+  >('semanas');
+  const [planDuracion, setPlanDuracion] = useState(2);
+  const [planPrioridad, setPlanPrioridad] = useState<
+    'baja' | 'media' | 'alta' | 'critico'
+  >('alta');
+  const [planActivo, setPlanActivo] = useState(true);
+  const [planItems, setPlanItems] = useState<string[]>([]);
+  const [newItem, setNewItem] = useState('');
+  const [createError, setCreateError] = useState('');
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    background: '#0a1628',
+    border: '1px solid #1e3a5f',
+    borderRadius: 6,
+    color: '#e2e8f0',
+    padding: '9px 10px',
+    fontSize: 13,
+    fontFamily: 'inherit',
+  };
 
   const toggle = (key: string) => setChecked((c) => ({ ...c, [key]: !c[key] }));
 
+  const resetCreateForm = () => {
+    setPlanName('');
+    setPlanActivoId(ASSETS[0]?.id || '');
+    setPlanFreq(1);
+    setPlanUnit('semanas');
+    setPlanDuracion(2);
+    setPlanPrioridad('alta');
+    setPlanActivo(true);
+    setPlanItems([]);
+    setNewItem('');
+    setCreateError('');
+  };
+
+  const openCreateModal = () => {
+    resetCreateForm();
+    setShowCreate(true);
+  };
+
+  const closeCreateModal = () => {
+    setShowCreate(false);
+    setCreateError('');
+  };
+
+  const addPlanItem = () => {
+    const item = newItem.trim();
+    if (!item) {
+      return;
+    }
+
+    setPlanItems((prev) => [...prev, item]);
+    setNewItem('');
+    setCreateError('');
+  };
+
+  const removePlanItem = (index: number) => {
+    setPlanItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const getNextPlanId = () => {
+    const highest = plans.reduce((max, plan) => {
+      const num = Number.parseInt(plan.id.replace(/\D/g, ''), 10);
+      return Number.isNaN(num) ? max : Math.max(max, num);
+    }, 0);
+
+    return `P${String(highest + 1).padStart(3, '0')}`;
+  };
+
+  const createPlan = () => {
+    const name = planName.trim();
+
+    if (!name) {
+      setCreateError('Ingresa el nombre del plan.');
+      return;
+    }
+
+    if (!planActivoId) {
+      setCreateError('Selecciona un activo asociado.');
+      return;
+    }
+
+    if (planFreq <= 0) {
+      setCreateError('La frecuencia debe ser mayor a 0.');
+      return;
+    }
+
+    if (planDuracion <= 0) {
+      setCreateError('La duración estimada debe ser mayor a 0.');
+      return;
+    }
+
+    if (planItems.length === 0) {
+      setCreateError('Agrega al menos una actividad al checklist.');
+      return;
+    }
+
+    const now = new Date();
+    const newPlan = {
+      id: getNextPlanId(),
+      empresaId: 'EMP001',
+      activoId: planActivoId,
+      assetId: planActivoId,
+      name,
+      freq: planFreq,
+      unit: planUnit,
+      prioridad: planPrioridad,
+      duracion: planDuracion,
+      activo: planActivo,
+      items: planItems,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setPlans((prev) => [newPlan, ...prev]);
+    closeCreateModal();
+    resetCreateForm();
+  };
+
   if (selected) {
-    const asset = ASSETS.find((a) => a.id === selected.activoId);
-    const done = selected.items.filter(
-      (_: any, i: any) => checked[selected.id + '-' + i],
+    const currentPlan =
+      plans.find((plan) => plan.id === selected.id) || selected;
+    const currentPlanAssetId =
+      (currentPlan as { activoId?: string }).activoId ||
+      (currentPlan as { assetId?: string }).assetId;
+    const asset = ASSETS.find((a) => a.id === currentPlanAssetId);
+    const done = currentPlan.items.filter(
+      (_, i) => checked[currentPlan.id + '-' + i],
     ).length;
-    const pct = Math.round((done / selected.items.length) * 100);
+    const pct =
+      currentPlan.items.length > 0
+        ? Math.round((done / currentPlan.items.length) * 100)
+        : 0;
 
     return (
       <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
@@ -91,7 +222,7 @@ export function PlansScreen() {
                 marginBottom: 5,
               }}
             >
-              {selected.id}
+              {currentPlan.id}
             </div>
             <h1
               style={{
@@ -114,7 +245,7 @@ export function PlansScreen() {
                   borderRadius: 2,
                 }}
               />
-              {selected.name}
+              {currentPlan.name}
             </h1>
             {asset && (
               <p
@@ -134,12 +265,12 @@ export function PlansScreen() {
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <Badge
-              label={selected.activo ? 'Activo' : 'Inactivo'}
-              color={selected.activo ? '#22c55e' : '#64748b'}
+              label={currentPlan.activo ? 'Activo' : 'Inactivo'}
+              color={currentPlan.activo ? '#22c55e' : '#64748b'}
             />
             <Badge
-              label={PRL[selected.prioridad as keyof typeof PRL]}
-              color={PRC[selected.prioridad as keyof typeof PRC]}
+              label={PRL[currentPlan.prioridad as keyof typeof PRL]}
+              color={PRC[currentPlan.prioridad as keyof typeof PRC]}
             />
           </div>
         </div>
@@ -151,31 +282,31 @@ export function PlansScreen() {
             <CardTitle>Parametros del Plan</CardTitle>
             <RowData
               label='Frecuencia'
-              value={'Cada ' + selected.freq + ' ' + selected.unit}
+              value={'Cada ' + currentPlan.freq + ' ' + currentPlan.unit}
             />
             <RowData
               label='Prioridad'
               value={
                 <Badge
-                  label={PRL[selected.prioridad]}
-                  color={PRC[selected.prioridad]}
+                  label={PRL[currentPlan.prioridad as keyof typeof PRL]}
+                  color={PRC[currentPlan.prioridad as keyof typeof PRC]}
                 />
               }
             />
             <RowData
               label='Duracion estimada'
-              value={selected.duracion + ' horas'}
+              value={currentPlan.duracion + ' horas'}
             />
             <RowData
               label='Total actividades'
-              value={selected.items.length + ' items'}
+              value={currentPlan.items.length + ' items'}
             />
             <RowData
               label='Estado'
               value={
                 <Badge
-                  label={selected.activo ? 'Activo' : 'Inactivo'}
-                  color={selected.activo ? '#22c55e' : '#64748b'}
+                  label={currentPlan.activo ? 'Activo' : 'Inactivo'}
+                  color={currentPlan.activo ? '#22c55e' : '#64748b'}
                 />
               }
             />
@@ -222,8 +353,8 @@ export function PlansScreen() {
                 </span>
               </div>
             </div>
-            {selected.items.map((item, i) => {
-              const k = selected.id + '-' + i;
+            {currentPlan.items.map((item, i) => {
+              const k = currentPlan.id + '-' + i;
               return (
                 <div
                   key={i}
@@ -286,12 +417,8 @@ export function PlansScreen() {
     <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
       <PageHeader
         title='Planes de Mantenimiento'
-        sub={PLANS.length + ' planes configurados'}
-        action={
-          <BtnPrimary onClick={() => setShowCreate(true)}>
-            + Nuevo Plan
-          </BtnPrimary>
-        }
+        sub={plans.length + ' planes configurados'}
+        action={<BtnPrimary onClick={openCreateModal}>+ Nuevo Plan</BtnPrimary>}
       />
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         <DataTable
@@ -306,8 +433,11 @@ export function PlansScreen() {
             '',
           ]}
         >
-          {PLANS.map((p) => {
-            const asset = ASSETS.find((a) => a.id === p.assetId);
+          {plans.map((p) => {
+            const planAssetId =
+              (p as { activoId?: string }).activoId ||
+              (p as { assetId?: string }).assetId;
+            const asset = ASSETS.find((a) => a.id === planAssetId);
             return (
               <tr
                 key={p.id}
@@ -327,7 +457,10 @@ export function PlansScreen() {
                 </Td>
                 <Td mono>{p.duracion}h</Td>
                 <Td>
-                  <Badge label={PRL[p.prioridad]} color={PRC[p.prioridad]} />
+                  <Badge
+                    label={PRL[p.prioridad as keyof typeof PRL]}
+                    color={PRC[p.prioridad as keyof typeof PRC]}
+                  />
                 </Td>
                 <Td>
                   <Badge
@@ -349,13 +482,25 @@ export function PlansScreen() {
       {showCreate && (
         <Modal
           title='Crear Nuevo Plan de Mantenimiento'
-          onClose={() => setShowCreate(false)}
+          onClose={closeCreateModal}
         >
           <Field label='Nombre del Plan'>
-            <input placeholder='Ej: PM Semanal - Bomba #3' />
+            <input
+              placeholder='Ej: PM Semanal - Bomba #3'
+              style={inputStyle}
+              value={planName}
+              onChange={(e) => {
+                setPlanName(e.target.value);
+                setCreateError('');
+              }}
+            />
           </Field>
           <Field label='Activo Asociado'>
-            <select>
+            <select
+              style={inputStyle}
+              value={planActivoId}
+              onChange={(e) => setPlanActivoId(e.target.value)}
+            >
               {ASSETS.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.code} — {a.name}
@@ -367,15 +512,28 @@ export function PlansScreen() {
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
           >
             <Field label='Frecuencia (valor)'>
-              <input type='number' defaultValue={1} />
+              <input
+                type='number'
+                style={inputStyle}
+                min={1}
+                value={planFreq}
+                onChange={(e) => setPlanFreq(Number(e.target.value) || 0)}
+              />
             </Field>
             <Field label='Unidad'>
-              <select>
+              <select
+                style={inputStyle}
+                value={planUnit}
+                onChange={(e) =>
+                  setPlanUnit(
+                    e.target.value as 'dias' | 'semanas' | 'meses' | 'anios',
+                  )
+                }
+              >
                 <option value='dias'>Dias</option>
                 <option value='semanas'>Semanas</option>
                 <option value='meses'>Meses</option>
                 <option value='anios'>Años</option>
-                <option value='horas'>Horas</option>
               </select>
             </Field>
           </div>
@@ -383,10 +541,24 @@ export function PlansScreen() {
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
           >
             <Field label='Duracion estimada (h)'>
-              <input type='number' defaultValue={2} />
+              <input
+                type='number'
+                style={inputStyle}
+                min={1}
+                value={planDuracion}
+                onChange={(e) => setPlanDuracion(Number(e.target.value) || 0)}
+              />
             </Field>
             <Field label='Prioridad'>
-              <select>
+              <select
+                style={inputStyle}
+                value={planPrioridad}
+                onChange={(e) =>
+                  setPlanPrioridad(
+                    e.target.value as 'baja' | 'media' | 'alta' | 'critico',
+                  )
+                }
+              >
                 <option value='baja'>Baja</option>
                 <option value='media'>Media</option>
                 <option value='alta'>Alta</option>
@@ -394,9 +566,131 @@ export function PlansScreen() {
               </select>
             </Field>
           </div>
+          <Field label='Estado'>
+            <select
+              style={inputStyle}
+              value={planActivo ? 'activo' : 'inactivo'}
+              onChange={(e) => setPlanActivo(e.target.value === 'activo')}
+            >
+              <option value='activo'>Activo</option>
+              <option value='inactivo'>Inactivo</option>
+            </select>
+          </Field>
+          <Field label='Checklist de Actividades'>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+              <input
+                placeholder='Ej: Verificar presión de aceite'
+                style={inputStyle}
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addPlanItem();
+                  }
+                }}
+              />
+              <button
+                type='button'
+                onClick={addPlanItem}
+                style={{
+                  background: '#1d4ed8',
+                  color: '#e2e8f0',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '0 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  fontFamily: 'inherit',
+                }}
+              >
+                Agregar
+              </button>
+            </div>
+            <div
+              style={{
+                border: '1px solid #1e3a5f',
+                borderRadius: 8,
+                overflow: 'hidden',
+              }}
+            >
+              {planItems.length === 0 ? (
+                <div
+                  style={{
+                    color: '#64748b',
+                    fontSize: 12,
+                    padding: '10px 12px',
+                    background: '#0a1628',
+                  }}
+                >
+                  Aún no hay actividades.
+                </div>
+              ) : (
+                planItems.map((item, index) => (
+                  <div
+                    key={`${item}-${index}`}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '9px 12px',
+                      borderBottom:
+                        index === planItems.length - 1
+                          ? 'none'
+                          : '1px solid #0d1f38',
+                      background: '#0a1628',
+                    }}
+                  >
+                    <span style={{ fontSize: 13, color: '#cbd5e1' }}>
+                      {item}
+                    </span>
+                    <button
+                      type='button'
+                      onClick={() => removePlanItem(index)}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#ef4444',
+                        fontSize: 12,
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 11,
+                color: '#64748b',
+                fontFamily: 'monospace',
+              }}
+            >
+              Total actividades: {planItems.length}
+            </div>
+          </Field>
+          {createError && (
+            <div
+              style={{
+                marginTop: 4,
+                color: '#fca5a5',
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              {createError}
+            </div>
+          )}
           <ModalFooter
-            onCancel={() => setShowCreate(false)}
-            onConfirm={() => setShowCreate(false)}
+            onCancel={closeCreateModal}
+            onConfirm={createPlan}
             confirmLabel='Crear Plan'
           />
         </Modal>
