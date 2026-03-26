@@ -70,14 +70,22 @@ Documentar las queries necesarias para crear las tablas base del sistema de mant
 
 | Campo | Tipo sugerido | Nulo | Default | Notas |
 | --- | --- | --- | --- | --- |
-| `id` | `uuid` | No | `gen_random_uuid()` | PK |
 | `empresa_id` | `uuid` | No | - | propietario del activo |
 | `code` | `varchar(80)` | No | - | codigo interno (candidato a unico por empresa) |
 | `nombre` | `varchar(150)` | No | - | nombre del equipo |
 | `descripcion` | `text` | Si | - | detalle opcional |
+|`Status`| `varchar(50)` | No | - | activo/inactivo/mantenimiento |
+|`criticidad`| `varchar(50)` | No | - | alta/media/baja |
+|`ubicacion`| `varchar(50)` | No | - | ubicacion del activo |
+|`fecha_instalacion`| `timestamptz` | No | - | fecha de instalacion del activo |
+|`fecha_compra`| `timestamptz` | No | - | fecha de mantenimiento del activo |
+
+
+
 | `activo` | `smallint` | No | `1` | soft delete/historico (`1` activo, `0` inactivo) |
 | `created_at` | `timestamptz` | No | `now()` | auditoria |
 | `updated_at` | `timestamptz` | No | `now()` | auditoria |
+| `id` | `uuid` | No | `gen_random_uuid()` | PK |
 
 - Claves:
   - PK: `id`
