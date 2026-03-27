@@ -70,7 +70,14 @@ export function WorkOrdersScreen() {
     prioridad: 'media' as PrioridadOT,
     tecnicoId: '',
     fechaCompromiso: '',
-    observaciones: '',
+    fechaCierre: '',
+    downtimeMinutos: '',
+    descripcionProblema: '',
+    descripcionServicio: '',
+    gastoDinero: false,
+    montoGastado: '',
+    usoRefaccionConsumible: false,
+    refaccionConsumibleDetalle: '',
   });
 
   const filteredOrdenes = getFilteredOrdenes();
@@ -94,6 +101,30 @@ export function WorkOrdersScreen() {
     }
 
     const now = new Date();
+    const downtimeMinutos = Number(formData.downtimeMinutos || '0');
+    if (Number.isNaN(downtimeMinutos) || downtimeMinutos < 0) {
+      alert('El tiempo de paro debe ser 0 o mayor');
+      return;
+    }
+
+    const montoGastado = formData.gastoDinero
+      ? Number(formData.montoGastado)
+      : 0;
+    if (
+      formData.gastoDinero &&
+      (Number.isNaN(montoGastado) || montoGastado <= 0)
+    ) {
+      alert('Si se gastó dinero, captura un monto mayor a 0');
+      return;
+    }
+
+    const refaccionConsumibleDetalle =
+      formData.refaccionConsumibleDetalle.trim();
+    if (formData.usoRefaccionConsumible && !refaccionConsumibleDetalle) {
+      alert('Detalla qué refacción o consumible se usó');
+      return;
+    }
+
     addOrden({
       empresaId: 'EMP001',
       activoId: formData.activoId,
@@ -107,9 +138,20 @@ export function WorkOrdersScreen() {
         TECNICOS.find((t) => t.id === formData.tecnicoId)?.nombre || '',
       fechaCreacion: now,
       fechaCompromiso: new Date(formData.fechaCompromiso || now),
-      observaciones: formData.observaciones,
+      fechaCierre: formData.fechaCierre
+        ? new Date(`${formData.fechaCierre}T00:00:00`)
+        : undefined,
+      descripcionProblema: formData.descripcionProblema,
+      descripcionServicio: formData.descripcionServicio,
+      observaciones: formData.descripcionProblema,
+      gastoDinero: formData.gastoDinero,
+      montoGastado,
+      usoRefaccionConsumible: formData.usoRefaccionConsumible,
+      refaccionConsumibleDetalle: formData.usoRefaccionConsumible
+        ? refaccionConsumibleDetalle
+        : '',
       evidencias: [],
-      downtimeMinutos: 0,
+      downtimeMinutos,
     });
 
     setShowCreate(false);
@@ -121,7 +163,14 @@ export function WorkOrdersScreen() {
       prioridad: 'media',
       tecnicoId: '',
       fechaCompromiso: '',
-      observaciones: '',
+      fechaCierre: '',
+      downtimeMinutos: '',
+      descripcionProblema: '',
+      descripcionServicio: '',
+      gastoDinero: false,
+      montoGastado: '',
+      usoRefaccionConsumible: false,
+      refaccionConsumibleDetalle: '',
     });
   };
 
@@ -140,6 +189,9 @@ export function WorkOrdersScreen() {
   // Vista detalle
   if (selected) {
     const activo = getActivoById(selected.activoId);
+    const descripcionProblema =
+      selected.descripcionProblema || selected.observaciones || '';
+    const descripcionServicio = selected.descripcionServicio || '';
     return (
       <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
         <BtnBack onClick={() => setSelected(null)} />
@@ -289,7 +341,7 @@ export function WorkOrdersScreen() {
                 </p>
               </div>
             )}
-            {selected.observaciones && (
+            {descripcionProblema && (
               <div style={{ marginBottom: 14 }}>
                 <div
                   style={{
@@ -301,13 +353,88 @@ export function WorkOrdersScreen() {
                     marginBottom: 5,
                   }}
                 >
-                  Observaciones
+                  Descripción del problema
                 </div>
                 <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
-                  {selected.observaciones}
+                  {descripcionProblema}
                 </p>
               </div>
             )}
+            {descripcionServicio && (
+              <div style={{ marginBottom: 14 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: '#64748b',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    marginBottom: 5,
+                  }}
+                >
+                  Descripción del servicio
+                </div>
+                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                  {descripcionServicio}
+                </p>
+              </div>
+            )}
+            <div style={{ marginBottom: 14 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: '#64748b',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  marginBottom: 5,
+                }}
+              >
+                Gasto económico
+              </div>
+              <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                {selected.gastoDinero ? 'Sí' : 'No'}
+                {selected.gastoDinero
+                  ? ` · $${(selected.montoGastado || 0).toLocaleString(
+                      'es-MX',
+                      {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      },
+                    )}`
+                  : ''}
+              </p>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: '#64748b',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  marginBottom: 5,
+                }}
+              >
+                Refacción o consumible
+              </div>
+              <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                {selected.usoRefaccionConsumible ? 'Sí' : 'No'}
+              </p>
+              {selected.usoRefaccionConsumible && (
+                <p
+                  style={{
+                    marginTop: 6,
+                    fontSize: 12,
+                    color: '#94a3b8',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Detalle:{' '}
+                  {selected.refaccionConsumibleDetalle || 'No especificado'}
+                </p>
+              )}
+            </div>
             {selected.causaRaiz && (
               <div style={{ marginBottom: 14 }}>
                 <div
@@ -347,11 +474,14 @@ export function WorkOrdersScreen() {
               </div>
             )}
             {!selected.descripcion &&
-              !selected.observaciones &&
+              !descripcionProblema &&
+              !descripcionServicio &&
+              !selected.gastoDinero &&
+              !selected.usoRefaccionConsumible &&
               !selected.causaRaiz &&
               !selected.accionTomada && (
                 <p style={{ fontSize: 13, color: '#475569' }}>
-                  Sin observaciones registradas.
+                  Sin descripciones registradas.
                 </p>
               )}
           </Card>
@@ -873,15 +1003,137 @@ export function WorkOrdersScreen() {
               />
             </Field>
           </div>
-          <Field label='Observaciones'>
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+          >
+            <Field label='Tiempo de paro (min)'>
+              <input
+                type='number'
+                min={0}
+                value={formData.downtimeMinutos}
+                onChange={(e) =>
+                  setFormData({ ...formData, downtimeMinutos: e.target.value })
+                }
+              />
+            </Field>
+            <Field label='Fecha de cierre'>
+              <input
+                type='date'
+                value={formData.fechaCierre}
+                onChange={(e) =>
+                  setFormData({ ...formData, fechaCierre: e.target.value })
+                }
+              />
+            </Field>
+          </div>
+          <Field label='Descripción del problema'>
             <textarea
-              placeholder='Notas adicionales...'
-              value={formData.observaciones}
+              placeholder='Describe el problema detectado...'
+              value={formData.descripcionProblema}
               onChange={(e) =>
-                setFormData({ ...formData, observaciones: e.target.value })
+                setFormData({
+                  ...formData,
+                  descripcionProblema: e.target.value,
+                })
               }
             />
           </Field>
+          <Field label='Descripción del servicio'>
+            <textarea
+              placeholder='Describe el servicio realizado o a realizar...'
+              value={formData.descripcionServicio}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  descripcionServicio: e.target.value,
+                })
+              }
+            />
+          </Field>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 12,
+              marginBottom: 12,
+            }}
+          >
+            <label
+              style={{
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                fontSize: 13,
+                color: '#cbd5e1',
+              }}
+            >
+              <input
+                type='checkbox'
+                checked={formData.gastoDinero}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    gastoDinero: e.target.checked,
+                    montoGastado: e.target.checked ? formData.montoGastado : '',
+                  })
+                }
+              />
+              ¿Se gastó dinero?
+            </label>
+            <label
+              style={{
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                fontSize: 13,
+                color: '#cbd5e1',
+              }}
+            >
+              <input
+                type='checkbox'
+                checked={formData.usoRefaccionConsumible}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    usoRefaccionConsumible: e.target.checked,
+                    refaccionConsumibleDetalle: e.target.checked
+                      ? formData.refaccionConsumibleDetalle
+                      : '',
+                  })
+                }
+              />
+              ¿Se usó refacción o consumible?
+            </label>
+          </div>
+          {formData.gastoDinero && (
+            <Field label='Monto gastado'>
+              <input
+                type='number'
+                min={0}
+                step='0.01'
+                placeholder='Ej: 1500.00'
+                value={formData.montoGastado}
+                onChange={(e) =>
+                  setFormData({ ...formData, montoGastado: e.target.value })
+                }
+              />
+            </Field>
+          )}
+          {formData.usoRefaccionConsumible && (
+            <Field label='Detalle de refacción/consumible *'>
+              <input
+                type='text'
+                placeholder='Ej: Rodamiento 6205, aceite hidráulico ISO 46'
+                value={formData.refaccionConsumibleDetalle}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    refaccionConsumibleDetalle: e.target.value,
+                  })
+                }
+              />
+            </Field>
+          )}
           <ModalFooter
             onCancel={() => setShowCreate(false)}
             onConfirm={handleCreateOrden}

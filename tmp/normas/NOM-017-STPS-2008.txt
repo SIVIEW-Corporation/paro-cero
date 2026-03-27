@@ -1,0 +1,717 @@
+Martes 9 de diciembre de 2008 DIARIO OFICIAL (Segunda Sección)      
+ 
+SECRETARIA DEL TRABAJO Y PREVISION SOCIAL 
+NORMA Oficial Mexicana NOM-017-STPS-2008, Equipo de protección personal-Selección, uso y manejo en los 
+centros de trabajo. 
+Al margen un sello con el Escudo Nacional, que dice: Estados Unidos Mexicanos.- Secretaría del Trabajo  y 
+Previsión Social. 
+JAVIER LOZANO ALARCON, Secretario del Trabajo y Previsión Social, con fundamento en los artículos 
+16 y 40 fracciones I y XI de la Ley Orgánica de la Administración Pública Federal; 512, 523 fracción I, 524 y 
+527 último párrafo de la Ley Federal del Trabajo; 3o. fracción XI, 38 fracción II, 40 fracción VII, 46, 47 fracción 
+IV, 51 cuarto párrafo y 52 de la Ley Federal sobre Metrología y Normalización; 28 del Reglamento de la Ley 
+Federal sobre Metrología y Normalización; 4o. y 101 del Reglamento Federal de Seguridad, Higiene y Medio 
+Ambiente de Trabajo, y 18 del Reglamento Interior de la Secretaría del Trabajo y Previsión Social, y 
+CONSIDERANDO 
+Que con fecha 27 de junio de 2007, en cumplimiento de lo previsto por el artículo 46 fracción I, de la Ley 
+Federal sobre Metrología y Normalización, la Secretaría del Trabajo y Previsión Social presentó ante el 
+Comité Consultivo Nacional de Normalización de Seguridad y Salud en el Trabajo, el Anteproyecto de 
+Modificación de la presente Norma Oficial Mexicana y que el citado Comité lo consideró correcto y acordó que 
+se publicara como Proyecto en el Diario Oficial de la Federación; 
+Que con objeto de cumplir con lo dispuesto en los artículos 69-E y 69-H de la Ley Federal de 
+Procedimiento Administrativo, el Anteproyecto corre spondiente fue sometido a la consideración de la 
+Comisión Federal de Mejora Regulatoria, la que dictaminó favorablemente en relación al mismo; 
+Que con fecha 22 de mayo de 2008, en cumplimiento del Acuerdo por el que se establece la organización 
+y Reglas de Operación del Comité Consultivo Nacional de Normalización de Seguridad y Salud en  el Trabajo, 
+y de lo previsto por el artículo 47 fracción I de la Ley Federal sobre Metrología y Normalización, se publicó en 
+el Diario Oficial de la Federación el Proyecto de Modificación a la Norma Oficial Mexicana  NOM-017-STPS-
+2001, Equipo de protección personal- Selección, uso y manejo en los centros de trabajo, para quedar como 
+PROY-NOM-017-STPS-2007, Equipo de protección personal-Selección, uso y manejo en los centros de 
+trabajo, a efecto de que, dentro de los siguientes 60 días naturales a dicha publicación, los interesados 
+presentaran sus comentarios al Comité; 
+Que habiendo recibido comentarios de cinco promoventes, el Comité referido procedió a su estudio y 
+resolvió oportunamente sobre los mismos, publicando esta dependencia las respuestas respectivas en el 
+Diario Oficial de la Federación el 27 de octubre de 2008 en cumplimiento a lo previsto por el artículo 47 
+fracción III de la Ley Federal sobre Metrología y Normalización; 
+Que derivado de la incorporación de los comentarios presentados al Proyecto de Modificación a la Norma 
+Oficial Mexicana NOM-017-STPS-2001, Equipo de protección personal-Selección, uso y manejo en los 
+centros de trabajo, para quedar como PROY-NOM-017-STPS-2007, Equipo de protección personal-Selección, 
+uso y manejo en los centros de trabajo, así como de la revisión final del propio proyecto, se realizaron 
+diversas modificaciones con el propósito de dar claridad, congruencia y certeza jurídica en cuanto a las 
+disposiciones que aplican en los centros de trabajo, y 
+Que en atención a las anteriores c onsideraciones y toda vez que el Comité Consultivo Nacional de 
+Normalización de Seguridad y Salud en el Trabajo otorgó la aprobación respectiva, se expide la siguiente: 
+NORMA OFICIAL MEXICANA NOM-017-STPS-2008, EQUIPO DE PROTECCION PERSONAL-
+SELECCION, USO Y MANEJO EN LOS CENTROS DE TRABAJO 
+INDICE 
+1. Objetivo 
+2. Campo de aplicación 
+3. Referencias 
+4. Definiciones 
+5. Obligaciones del patrón 
+6. Obligaciones de los trabajadores que usen equipo de protección personal 
+7. Indicaciones, instrucciones o procedimientos para el uso, revisión, reposición, limpieza, limitaciones, 
+mantenimiento, resguardo y disposición final del equipo de protección personal 
+8. Unidades de verificación 
+
+      (Segunda Sección) DIARIO OF ICIAL Martes 9 de diciembre de 2008 
+ 
+9. Procedimiento para la evaluación de la conformidad 
+10. Vigilancia 
+11. Bibliografía 
+12. Concordancia con normas internacionales 
+ Guía de referencia, identificación y selección del equipo de protección personal 
+1. Objetivo 
+Establecer los requisitos mínimos para que el patrón seleccione, adquiera y proporcione a sus 
+trabajadores, el equipo de protección personal correspondiente para protegerlos de los agentes del medio 
+ambiente de trabajo que puedan dañar su integridad física y su salud. 
+2. Campo de aplicación 
+Esta Norma aplica en todos los centros de trabajo del territorio nacional en que se requiera el uso de 
+equipo de protección personal para proteger a los trabajadores contra los riesgos derivados de las actividades 
+que desarrollen. 
+3. Referencias 
+Para la correcta interpretación de esta Norma, deben consultarse las siguientes normas oficiales 
+mexicanas o las que las sustituyan. 
+NOM-026-STPS-1998, Colores y señales de seguridad e higiene-Identificación de riesgos por fluidos 
+conducidos en tuberías. 
+NOM-113-STPS-1994, Calzado de protección. 
+NOM-115-STPS-1994, Cascos de protección-Especificaciones, métodos de prueba y clasificación. 
+NOM-116-STPS-1994, Seguridad-Respiradores purificadores de aire contra partículas nocivas. 
+NOM-087-ECOL-SSA-2002, Residuos biológico infecciosos-Clasificación y especificaciones de manejo. 
+NOM-052-SEMARNAT-2005, Que establece las caract erísticas, el procedimiento de identificación, 
+clasificación y los listados de los residuos peligrosos. 
+4. Definiciones 
+Para efectos de la presente Norma se establecen las siguientes definiciones: 
+4.1 Autoridad del trabajo; autoridad laboral: las unidades administrativas competentes de la Secretaría del 
+Trabajo y Previsión Social, que realicen funciones de inspección en materia de seguridad e higiene en el 
+trabajo y las correspondientes de las entidades federativas y del Distrito Federal, que actúen en auxilio de 
+aquéllas. 
+4.2 Equipo de protección personal (EPP): conjunto de elementos y dispositivos, diseñados 
+específicamente para proteger al trabajador contra accidentes y enfermedades que pudieran ser causados por 
+agentes o factores generados con motivo de sus actividades de trabajo y de la atención de emergencias. En 
+caso de que en el análisis de riesgo se establezca la necesidad de utilizar ropa de trabajo con características 
+de protección, ésta será considerada equipo de protección personal. 
+4.3 Disposición final: son las medidas que se le aplican al equipo de protección personal deteriorado, de 
+tal manera que sea una garantía de que ya no se volverá a utilizar como protección para el trabajador. Se 
+refiere al destino final que se le da al quipo de protección personal una vez que ya no es útil. 
+5. Obligaciones del patrón 
+5.1 Mostrar a la autoridad del trabajo, cuando ésta así lo solicite, los documentos que la presente Norma le 
+obligue a elaborar o poseer. 
+5.2 Identificar y analizar los riesgos de trabajo a lo s que están expuestos los trabajadores por cada puesto 
+de trabajo y área del centro laboral. Esta información d ebe registrarse y conservarse actualizada mientras no 
+se modifiquen los implementos y procesos de trabajo, con al menos los siguientes datos: tipo de actividad que 
+desarrolla el trabajador, tipo de riesgo de trabajo identificado, región anatómica por proteger, puesto de trabajo 
+y equipo de protección personal requerido. 
+5.3 Determinar el equipo de protección personal, que deben utilizar los trabajadores en función de los 
+riesgos de trabajo a los que puedan estar expuestos por las actividades que desarrollan o por las áreas en 
+donde se encuentran. En caso de que en el análisis de riesgo se establezca la necesidad de utilizar ropa de 
+trabajo con características de protección, ésta será considerada equipo de protección personal. 
+
+Martes 9 de diciembre de 2008 DIARIO OFICIAL (Segunda Sección)      
+ 
+El patrón puede hacer uso de las tablas contenidas en la guía de referencia de la presente Norma para 
+determinar el equipo de protección personal para los trabajadores y para los visitantes que ingresen a las 
+áreas donde existan señales de uso obligatorio del equipo de protección personal específico. 
+5.4 Proporcionar a los trabajadores equipo de protección personal que cumpla con las siguientes 
+condiciones: 
+a) Que atenúe la exposición del trabajador con los agentes de riesgo; 
+b) Que en su caso, sea de uso personal; 
+c) Que esté acorde a las características físicas de los trabajadores, y 
+d) Que cuente con las indicaciones, las instrucciones o los procedimientos del fabricante para su uso, 
+revisión, reposición, limpieza, limitaciones, mantenimiento, resguardo y disposición final. 
+5.5 Comunicar a los trabajadores los riesgos de trabajo a los que están expuestos, por puesto de trabajo o 
+área del centro laboral, con base a la identificación y análisis de riesgos a los que se refiere el apartado 5.2. 
+5.5.1 Comunicar al contratista los riesgos y las reglas de seguridad del área en donde desarrollará sus 
+actividades. 
+5.5.2 Los contratistas deben dar seguimiento a sus trabajadores para que porten el equipo de protección 
+personal y cumpla con las condiciones de la presente norma. 
+5.6 Proporcionar a los trabajadores la capacitación y adiestramiento para el uso, revisión, reposición, 
+limpieza, limitaciones, mantenimiento, resguardo y di sposición final del equipo de protección personal, con 
+base en las indicaciones, instrucciones o procedimientos que elabore el fabricante de tal equipo de protección 
+personal. 
+5.7 Supervisar que durante la jornada de trabajo, los trabajadores utilicen el equipo de protección personal 
+proporcionado, con base a la capacitación y adiestramiento proporcionados previamente. 
+5.8 Identificar y señalar las áreas del centro de trabajo en donde se requiera el uso obligatorio de equipo 
+de protección personal. La señalización debe cumplir con lo establecido en la NOM-026-STPS-1998. 
+6. Obligaciones de los trabajadores que usen equipo de protección personal 
+6.1 Participar en la capacitación y adiestramiento que el patrón proporcione para el uso, revisión, 
+reposición, limpieza, limitaciones, mantenimiento, resguardo y disposición final del equipo de protección 
+personal. 
+6.2 Utilizar el equipo de protección personal proporcion ado por el patrón de acuerdo a la capacitación que 
+recibieron para tal efecto. 
+6.3 Revisar antes de iniciar, durante y al finalizar su turno de trabajo, las condiciones del equipo de 
+protección personal que utiliza. 
+6.4 Informar al patrón cuando las condiciones del equipo  de protección personal ya no lo proteja, a fin de 
+que se le proporcione mantenimiento, o se lo reemplace. 
+7. Indicaciones, instrucciones o procedimientos para el uso, revisión, reposición, limpieza, 
+limitaciones, mantenimiento, resguardo y disposición final del equipo de protección personal 
+7.1 Las indicaciones, instrucciones o procedimientos que el patrón proporcione a los trabajadores para el 
+uso, revisión, reposición, limpieza, limitaciones, mantenimiento, resguardo y disposición final del equipo de 
+protección personal, según aplique, deben al menos: 
+a) Basarse en la información proporcionada por el proveedor, distribuidor o fabricante del equipo, y en 
+la que el patrón considere conveniente adicionar; 
+b) En su caso, contar con instrucciones para verificar su correcto funcionamiento; 
+c) Identificar las limitaciones del equipo de protección personal e incluir la información sobre la 
+capacidad o grado de protección que éste ofrece; 
+d) Incluir la información que describa en qué condiciones no proporciona protección o donde no se debe 
+usar; 
+e) Considerar el tiempo de vida útil que el fabricante recomiende y las fallas o deterioros que el 
+trabajador identifique, de tal forma que impida su óptimo funcionamiento; 
+f) Considerar las medidas técnicas o administrativas que se deben adoptar para minimizar los efectos 
+que generen o produzcan alguna respuesta o reacción adversa en el trabajador; 
+
+      (Segunda Sección) DIARIO OF ICIAL Martes 9 de diciembre de 2008 
+ 
+g)  Incluir las acciones que se deben realizar antes, durante y después de su uso, para comprobar que 
+continúa proporcionando la protección para la cual fue diseñado; 
+h) Indicar que cuando el trabajador esté en contacto con posibles agentes infecciosos, el EPP que 
+utilice debe ser para ese uso exclusivo; 
+i) Establecer el procedimiento para la descon taminación o desinfección del EPP, cuand o aplique, 
+después de cada jornada de uso, de acuerdo con las instrucciones o recomendaciones del 
+fabricante; 
+j) Prever que si el EPP se limpia en el centro de trabajo, ya sea por el trabajador usuario o por alguna 
+otra persona designada por el patrón, se consider en las sustancias, condiciones o aditamentos para 
+esta actividad; 
+k) Establecer el mecanismo a seguir para reemplaz arse o repararse inmediatamente cuando derivado 
+de su revisión muestren algún deterioro, que impidan su óptimo funcionamiento; 
+l) Indicar que el reemplazo en sus partes dañadas, debe realizarse con refacciones de acuerdo a las 
+recomendaciones del fabricante o proveedor; 
+m) Precisar lugares y formas de almacenarse en reci pientes o contenedores especiales, si así lo 
+establecen las recomendaciones del fabricante  o proveedor para que no presenten daños o mal 
+funcionamiento después de su uso, y 
+n) Establecer las medidas de seguridad para trat arlo como residuo sólido, de conformidad con un 
+procedimiento que para tal efecto se establezca, cuando quede contaminado con sustancias 
+químicas peligrosas y no sea posible su descontaminación, o se determine que ya no cumple con su 
+función de protección. 
+8. Unidades de verificación 
+8.1 El patrón tendrá la opción de contratar una unidad de verificación acreditada y aprobada, en los 
+términos de la Ley Federal sobre Metrología y Normalización y su Reglamento, para verificar el grado de 
+cumplimiento de la presente Norma. 
+8.2 Las unidades de verificación contratadas a petición de parte deben verificar el grado de cumplimiento 
+de acuerdo con lo establecido en el procedimiento de evaluación de la conformidad. 
+8.3 Las unidades de verificación deben entregar al patrón el dictamen de verificación favorable cuando se 
+hayan cubierto los requerimientos de la presente Norma. 
+8.4 La vigencia del dictamen de verificación, cuando éste sea favorable, será de dos años, siempre y 
+cuando no sean modificadas las condiciones que sirvieron para su emisión. 
+9. Procedimiento para la evaluación de la conformidad 
+9.1 Este procedimiento de evaluación de la conformidad aplica para las visitas de inspección desarrolladas 
+por la autoridad laboral y para las visitas de verificación que realicen las unidades de verificación. 
+9.2 La evaluación de la conformidad de la presente Norma podrá ser realizada a petición de parte 
+interesada, por las unidades de verificación acreditadas por la entidad de acreditación y aprobadas por la 
+Secretaría del Trabajo y Previsión Social. 
+9.3 Para obtener el directorio vigente de las unidades de verificación que están aprobadas ante la 
+dependencia y pueden extender el dictamen de conformidad con esta Norma Oficial Mexicana, podrán 
+ingresar a la página de la Secretaría del Trabajo y Previsión Social, vía Internet en la dirección: 
+www.stps.gob.mx. 
+9.4 El interesado que obtuvo la evaluación de la conformidad con esta Norma a través de una unidad de 
+verificación, debe conservar el dictamen correspondiente y tenerlo a la disposición de la autoridad del trabajo 
+cuando ésta lo solicite. 
+9.5 Los aspectos a verificar durante la evaluación de la conformidad que son aplicables mediante la 
+constatación física o documental son: 
+
+Martes 9 de diciembre de 2008 DIARIO OFICIAL (Segunda Sección)      
+ 
+Disposición Comprobación 
+(documental o 
+física) 
+Criterio de aceptación Observaciones 
+5.2  Documental El patrón cumple cuando presente los 
+registros de la identificación y análisis 
+de los riesgos, por cada puesto de 
+trabajo y área del centro laboral, con 
+al menos los siguientes datos: 
+¾ Tipo de actividad que desarrolla 
+el trabajador; 
+¾ Tipo de riesgo de trabajo 
+identificado; 
+¾ Región anatómica que se debe 
+proteger contra el riesgo de 
+trabajo identificado; 
+¾ Puesto de trabajo, y 
+¾ Equipo(s) de protección 
+personal requerido. 
+Es válido presentar los registros 
+en la Tabla A1, de la guía de 
+referencia de la NOM o presentar 
+otro tipo de registro, siempre y 
+cuando integre como mínimo la 
+información que se indica en los 
+criterios de aceptación. 
+5.3 Documental El patrón cumple cuando presente 
+evidencias de que determinó el 
+equipo de protección personal que 
+utilizan sus trabajadores, en función 
+de los riesgos de trabajo a los que 
+pueden estar expuestos, por las 
+actividades que desarrollan o por los 
+riesgos de las áreas en donde se 
+encuentran.  
+Las tablas contenidas en la guía 
+de referencia de la presente 
+norma pueden ser utilizadas por 
+el patrón para los efectos 
+solicitados. 
+Otras metodologías para 
+determinar el equipo de 
+protección personal pueden 
+utilizarse, siempre y cuando 
+reúnan los requisitos solicitados 
+para tal efecto. 
+5.4 Física y 
+documental 
+El patrón cumple cuando: 
+¾ Presenta evidencias de que 
+proporciona equipo de protección 
+personal a los trabajadores, y 
+¾ Demuestra que el equipo de 
+protección personal que 
+proporciona a los trabajadores 
+cumple con las siguientes 
+condiciones: 
+9 Atenúa la exposición del 
+trabajador con los agentes 
+de riesgo; 
+9 En su caso, es de uso 
+personal; 
+9  Está acorde a las 
+características físicas de los 
+trabajadores, y 
+9  Cuenta con las indicaciones, 
+las instrucciones o los 
+procedimientos del 
+fabricante para su uso, 
+revisión, reposición, 
+limpieza, limitaciones, 
+mantenimiento, resguardo y 
+disposición final.  
+ 
+
+      (Segunda Sección) DIARIO OF ICIAL Martes 9 de diciembre de 2008 
+ 
+5.5 Documental El patrón cumple cuando: 
+¾ Presenta evidencias de que 
+comunica a los trabajadores los 
+riesgos de trabajo a los que están 
+expuestos: 
+9 Por puesto de trabajo, o 
+9 Por área del centro laboral, y
+¾ La comunicación de los riesgos 
+de trabajo se basa en: 
+9 El tipo de actividad que 
+desarrolla el trabajador; 
+9 El tipo de riesgo de trabajo 
+identificado; 
+9 La región anatómica del 
+trabajador por proteger; 
+9 El puesto de trabajo del 
+trabajador, y 
+9 El equipo de protección 
+personal requerido. 
+El evaluador puede considerar 
+como evidencias de 
+cumplimiento, la información que 
+por escrito o por otros medios de 
+comunicación se le presenten, y 
+que muestren que se informa a 
+los trabajadores de manera 
+particular o de forma general 
+sobre los riesgos a los que se 
+exponen. Las evidencias pueden 
+ser videos, cartel ones, trípticos, 
+boletines, entre otros. 
+5.5.1 Documental  El patrón cumple cuando presenta 
+evidencias de que comunica al 
+contratista o contratistas: 
+9 Los riesgos del área en donde 
+desarrollará sus actividades, y 
+9 Las reglas de seguridad que 
+deben adoptar para prevenir tales 
+riesgos. 
+El evaluador puede considerar 
+como evidencias de 
+cumplimiento, la información que 
+por escrito o por otros medios de 
+comunicación se le presenten, y 
+que muestren que a los 
+contratistas se les informa sobre 
+los riesgos a los que se exponen 
+en las áreas donde desarrollarán 
+sus actividades y sobre las reglas 
+de seguridad a seguir. Las 
+evidencias pueden ser videos, 
+cartelones, trípticos, boletines, 
+entre otros. 
+5.5.2 Documental  El patrón cumple cuando presenta 
+evidencias de que los contratistas 
+que desarrollan trabajos en las 
+instalaciones de su centro de trabajo, 
+dan seguimiento a sus trabajadores 
+para que: 
+¾ Porten el equipo de protección 
+personal, y 
+¾ Cumplan con las condiciones de 
+la presente norma. 
+ 
+ 
+5.6 Documental  El patrón cumple cuando presenta 
+evidencias de que: 
+¾ Proporcionó a los trabajadores 
+capacitación para que: 
+9 Usen el equipo de protección 
+personal de forma adecuada 
+y con las limitaciones que el 
+fabricante les establezca; 
+9 Revisen el equipo de 
+protección personal; 
+ 
+
+Martes 9 de diciembre de 2008 DIARIO OFICIAL (Segunda Sección)      
+ 
+9 Limpien el equipo de 
+protección personal y lo 
+mantengan en condiciones 
+de uso; 
+9 Resguarden el equipo de 
+protección personal; 
+9 Soliciten la reposición del 
+equipo de protección 
+personal cuando ya no les 
+proteja, y 
+9 Desechen el equipo de 
+protección personal al final 
+de su vida útil. 
+5.7 Física y 
+documental 
+El patrón cumple cuando, derivado de 
+un recorrido por el centro de trabajo, 
+se constate que: 
+¾ Los trabajadores, de acuerdo al 
+área donde desarrollan sus 
+actividades o por el puesto de 
+trabajo que desempeñan, usan 
+equipo de protección personal, y 
+¾ Los trabajadores utilizan el 
+equipo de protección personal 
+durante su jornada de trabajo, 
+con base en la capacitación y 
+adiestramiento que el patrón les 
+proporcionó. 
+Sería conveniente que el 
+evaluador considere las formas 
+en que al patrón le llega la 
+información sobre el cumplimiento 
+de esta obligación. También 
+puede considerarse que se trata 
+de funciones asignadas a ciertos 
+trabajadores de mando, como el 
+supervisor, el jefe de seguridad, 
+el encargado de planta u otro 
+puesto similar. 
+5.8 Física  El patrón cumple cuando: 
+¾ Derivado del re corrido por el 
+centro de trabajo se constata que 
+las áreas, de acuerdo con las 
+actividades que en ellas se 
+desarrollan, se encuentran 
+señalizadas para que se use 
+obligatoriamente el equipo de 
+protección personal, y 
+¾ La señalización está acorde con 
+lo que establece la 
+NOM-026-STPS-1998. 
+La NOM-026-STPS-1998 precisa 
+que las señales de obligación 
+deben tener forma circular, fondo 
+en color azul y símbolo en color 
+blanco. 
+Nota: los registros se pueden presentar impresos o en medios electrónicos. 
+10. Vigilancia 
+La vigilancia del cumplimiento de esta Norma Oficial Mexicana corresponde a la Secretaría del Trabajo y 
+Previsión Social. 
+11. Bibliografía 
+• Ley Federal del Trabajo, artículos: 512, 512-D, 512-F y 527. 
+• Reglamento Federal de Seguridad, Higiene y Medio Ambiente de Trabajo, publicado en el Diario 
+Oficial de la Federación el 21 de enero de 1997. 
+• NMX-S-001, Calidad para gafas de copa. 
+• NMX-S-002-SCFI, Seguridad-respiradores purificadores de aire de cartuchos químicos-
+especificaciones y métodos de prueba. 
+• NMX-S-003/1-SCFI, Seguridad-equipo de protección persona-filtros oculares-parte 1: protectores 
+oculares para soldadura y técnicas afines-requisitos de transmitancia y utilización. 
+
+      (Segunda Sección) DIARIO OF ICIAL Martes 9 de diciembre de 2008 
+ 
+• NMX-S-013, Norma de calidad para protectores faciales con pantalla. 
+• NMX-S-018-SCFI, Guantes de hule para uso eléctrico-especificaciones y métodos de prueba. 
+• NMX-S-035, Seguridad protectores auditivos. 
+• NMX-S-039-SCFI, Guantes de protección contra su stancias químicas-especificaciones y métodos de 
+prueba. 
+• NMX-S-040, Seguridad-guantes de flor de carnaza y combinado de flor y carnaza. 
+• NMX-S-041, Caretas para soldador. 
+• NMX-S-056-SCFI, Seguridad-equipo de protección personal-protectores faciales contra impactos-
+requisitos y métodos de prueba. 
+• NMX-S-057-SCFI, Seguridad-equipo de protección personal-protectores oculares primarios contra 
+impactos-requerimientos y métodos de prueba. 
+• NMX-S-058/1-SCFI, Seguridad-sistemas de protecci ón personal para interrumpir caídas de altura-
+parte 1: arneses de cuerpo completo-requisitos y métodos de prueba. 
+• NMX-S-058/5-SCFI, Seguridad-sistemas de protecci ón personal para interrumpir caídas de altura-
+parte 5: conectores con dispositivos de cierre y bloqueo automáticos-requisitos y métodos de prueba. 
+• NMX-S-059-SCFI, Seguridad-respiradores purificad ores de aire con canisters-especificaciones y 
+métodos de prueba. 
+12. Concordancia con normas internacionales 
+Esta Norma Oficial Mexicana no concuerda con ninguna norma internacional, por no existir referencia 
+alguna al momento de su elaboración. 
+TRANSITORIOS 
+PRIMERO. La presente Norma Oficial Mexicana entrará en vigor a los sesenta días naturales siguientes a 
+su publicación en el Diario Oficial de la Federación. 
+SEGUNDO. Durante el lapso señalado en el artículo anterior, los patrones cumplirán con la Norma Oficial 
+Mexicana NOM-017-STPS-2001, Equipo de protección personal-Selección, uso y manejo en los centros de 
+trabajo, o bien realizarán las adaptaciones para observ ar las disposiciones de la presente Norma Oficial 
+Mexicana y, en este último caso, las autoridades laborales proporcionarán a petición de los patrones 
+interesados, asesoría y orientación para instrumentar su cumplimiento, sin que los patrones se hagan 
+acreedores a sanciones por el incumplimiento de la norma en vigor. 
+TERCERO. A partir de la fecha en que entre en vigor la presente Norma quedará sin efectos la Norma 
+Oficial Mexicana NOM-017-STPS-2001, Equipo de protección personal-Selección, uso y manejo en los 
+centros de trabajo, publicada en el Diario Oficial de la Federación el 5 de noviembre de 2001. 
+Dado en la Ciudad de México, a los catorce días del mes de noviembre de dos mil ocho.- El Secretario del 
+Trabajo y Previsión Social, Javier Lozano Alarcón.- Rúbrica. 
+GUIA DE REFERENCIA 
+El contenido de esta guía es un complemento para la mejor comprensión de la Norma y no es de 
+cumplimiento obligatorio. 
+IDENTIFICACION Y SELECCION DEL EQUIPO DE PROTECCION PERSONAL 
+Con base en la actividad que desarrolle cada trabajador, en función de su puesto de trabajo, se podrá 
+seleccionar el equipo de protección personal para la región anatómica del cuerpo expuesta y la protección que 
+se requiere dar. 
+La tabla A1 relaciona las regiones anatómicas del cuerpo humano con el equipo de protección personal, 
+así como los tipos de riesgo a cubrir. 
+Al revisar la tabla A1, se recomienda también revisar el listado de las normas oficiales mexicanas emitidas 
+por la Secretaría del Trabajo y Previsión Social para cumplir con los requisitos de seguridad establecidos en 
+ciertos procesos o actividades, así como las normas de producto emitidas al respecto. 
+El equipo de protección personal seleccionado deberá, preferentemente, contar con la certificación emitida 
+por un organismo de certificación, acreditado y/o aprobado en los términos de la Ley Federal sobre Metrología 
+y Normalización, cuando existan normas oficiales mexicanas o normas mexicanas, y organismos acreditados 
+para certificar los equipos regulados por dichas normas. 
+
+Martes 9 de diciembre de 2008 DIARIO OFICIAL (Segunda Sección)      
+ 
+TABLA A1 
+DETERMINACION DEL EQUIPO DE PROTECCION PERSONAL 
+CLAVE Y 
+REGION 
+ANATOMICA 
+CLAVE Y EPP TIPO DE RIESGO EN FUNCION DE LA ACTIVIDAD  DEL 
+TRABAJADOR 
+1) Cabeza A) Casco contra 
+impacto 
+B) Casco dieléctrico  
+C) Capuchas 
+A) Golpeado por algo, que sea un posibilidad de riesgo 
+continuo inherente a su actividad. 
+B) Riesgo a una descarga eléctrica (considerar alto o bajo 
+voltaje, los cascos son diferentes). 
+C) Exposición a temperaturas bajas o exposición a 
+partículas. Protección con una capucha que puede ir 
+abajo del casco de protección personal.  
+2) Ojos y cara A) Anteojos de 
+protección  
+B) Goggles  
+C) Pantalla facial   
+D) Careta para 
+soldador 
+E) Gafas para soldador
+A) Riesgo de proyección de partículas o líquidos. En caso de 
+estar expuesto a radiaciones, se utilizan anteojos de 
+protección contra la radiación. 
+B) Riesgo de exposición a vapores o humos que pudieran 
+irritar los ojos o partículas mayores o a alta velocidad. 
+C) Se utiliza también cuando se expone a la proyección de 
+partículas en procesos tales como esmerilado o procesos 
+similares; para proteger ojos y cara. 
+D) Específico para procesos de soldadura eléctrica.  
+E) Específico para procesos con soldadura autógena.  
+3) Oídos A) Tapones auditivos  
+B) Conchas acústicas 
+A) Protección contra riesgo de ruido; de acuerdo al máximo 
+especificado en el producto o por el fabricante. 
+B) Mismo caso del inciso A.  
+4) Aparato 
+respiratorio 
+   
+A) Respirador contra 
+partículas  
+B) Respirador contra 
+gases y vapores   
+C) Mascarilla 
+desechable 
+D) Equipo de 
+respiración 
+autónomo 
+En este tipo de productos es importante verificar las 
+recomendaciones o especificaciones de protección del equipo, 
+hecha por el fabricante del producto. 
+A) Protección contra polvos o partículas en el medio 
+ambiente laboral y que representan un riesgo a la salud 
+del trabajador. 
+B) Protección contra gases y vapores. Considerar que hay 
+diferentes tipos de gases y vapores para los cuales 
+aplican también diferentes tipos de respiradores, 
+incluyendo para gases o vapores tóxicos. 
+C) Mascarilla sencilla de protección contra polvos.  
+D) Se utiliza cuando el trabajador entra a espacios 
+confinados o cuando un respirador no proporciona la 
+protección requerida.  
+5) Extremidades 
+superiores 
+     
+A) Guantes contra 
+sustancias químicas
+B) Guantes dieléctricos
+C) Guantes contra 
+temperaturas 
+extremas 
+D) Guantes   
+E) Mangas 
+En este tipo de productos es importante verificar las 
+recomendaciones o especificaciones de los diferentes guantes 
+existentes en el mercado, hecha por el fabricante del 
+producto. Su uso depende de los materiales o actividad a 
+desarrollar. 
+A) Riesgo por exposición o contacto con sustancias químicas 
+corrosivas. 
+B) Protección contra descargas eléctricas. Considerar que 
+son diferentes guantes dependiendo de protección contra 
+alta o baja tensión. 
+C) Riesgo por exposición a temperaturas bajas o altas.   
+D) Hay una gran variedad de guantes: tela, carnaza, piel, 
+pvc, látex, entre otros. Dependiendo del tipo de protección 
+que se requiere, actividades expuestas a corte, vidrio, etc.
+E) Se utilizan cuando es necesario extender la protección de 
+
+      (Segunda Sección) DIARIO OF ICIAL Martes 9 de diciembre de 2008 
+ 
+CLAVE Y 
+REGION 
+ANATOMICA 
+CLAVE Y EPP TIPO DE RIESGO EN FUNCION DE LA ACTIVIDAD  DEL 
+TRABAJADOR 
+los guantes hasta los brazos.  
+6) Tronco A) Mandil contra altas 
+temperaturas  
+B) Mandil contra 
+sustancias químicas 
+C) Overol    
+D) Bata  
+E) Ropa contra 
+sustancias 
+peligrosas  
+A) Riesgo por exposición a altas temperaturas; cuando se 
+puede tener contacto del cuerpo con algo que esté a alta 
+temperatura. 
+B) Riesgo por exposición a sustancias químicas corrosivas; 
+cuando se puede tener contacto del cuerpo con este tipo 
+de sustancias. 
+C) Extensión de la protección en todo el cuerpo por posible 
+exposición a sustancias o tem peraturas. Considerar la 
+facilidad de quitarse la ropa lo más pronto posible, cuando 
+se trata de sustancias corrosivas. 
+D) Protección generalment e usada en laboratorios u 
+hospitales. 
+E) Es un equipo de protección personal que protege cuerpo, 
+cabeza, brazos, piernas pies, cubre y protege 
+completamente el cuerpo humano ante la exposición a 
+sustancias altamente tóxicas o corrosivas. 
+7) Extremidades 
+inferiores 
+A) Calzado 
+ocupacional 
+B) Calzado contra 
+impactos  
+C) Calzado conductivo   
+D) Calzado dieléctrico 
+E) Calzado contra 
+sustancias químicas 
+F) Polainas  
+G) Botas 
+impermeables 
+A) Proteger a la persona contra golpes, machacamientos, 
+resbalones, etc. 
+B) Protección mayor que la del inciso anterior contra golpes, 
+que pueden representar un riesgo permanente en función 
+de la actividad desarrollada. 
+C) Protección del trabajador cuando es necesario que se 
+elimine la electricidad estática del trabajador; 
+generalmente usadas en áreas de trabajo con manejo de 
+sustancias explosivas. 
+D) Protección contra descargas eléctricas. 
+E) Protección de los pies cuando hay posibilidad de tener 
+contacto con algunas sustancias químicas. Considerar 
+especificación del fabricante. 
+F) Extensión de la protección que pudiera tenerse con los 
+zapatos exclusivamente. 
+G) Generalmente utilizadas cuando se trabaja en áreas 
+húmedas. 
+8) Otros A) Equipo de 
+protección contra 
+caídas de altura 
+B) Equipo para 
+brigadista contra 
+incendio 
+A) Específico para proteger a trabajadores que desarrollen 
+sus actividades en alturas y entrada a espacios 
+confinados. 
+B) Específico para proteger a los brigadistas contra altas 
+temperaturas y fuego. Hay equipo adicional en función de 
+las actividades rescate a realizar.  
+ 
+Al relacionar en una Tabla A1, los puestos de trabajo con sus correspondientes regiones anatómicas y el 
+equipo de protección personal requerido, se puede ingresar a la Tabla A2. 
+La Tabla A2 relaciona las regiones anatómicas y los EPP con las claves enunciadas en la Tabla A1. 
+
+ 
+ 
+Martes 9 de diciembre de 2008 DIARIO OFICIAL (Segunda Sección)     67 TABLA A2 
+EQUIPO DE PROTECCION PERSONAL POR PUESTO DE TRABAJO 
+PUESTO EQUIPO DE PROTECCION PERSONAL 
+ 1 2 3 4 5 6 7 8 
+ 
+ 
+A B C D A B C D E A B A B C A B C D E A B C D E A B C D E F A B 
+ 
+ 
+                                
+ 
+ 
+                                
+ 
+ 
+                                
+ 
+ 
+                                
+ 
+ 
+ 
+                                
+ 
+ 
+ 
+                                
+ 
+ 
+ 
+                                
+ 
+                                 
+ 
+ 
+ 
+                                
+ 
+ 
+ 
+                                
+ 
+ 
+ 
+                                
+ 
+ 
+________________________________ 

@@ -711,6 +711,7 @@ export function WorkOrdersScreen({
 }) {
   const [selected, setSelected] = useState<OrdenTrabajo | null>(null);
   const [filterStatus, setFilter] = useState('');
+  const [filterActivoId, setFilterActivoId] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [newOtData, setNewOtData] = useState({
     titulo: '',
@@ -719,7 +720,14 @@ export function WorkOrdersScreen({
     prioridad: 'media' as OrdenTrabajo['prioridad'],
     tecnicoId: TECNICOS[0]?.id || '',
     fechaCompromiso: format(new Date(), 'yyyy-MM-dd'),
-    observaciones: '',
+    fechaCierre: '',
+    downtimeMinutos: '',
+    descripcionProblema: '',
+    descripcionServicio: '',
+    gastoDinero: false,
+    montoGastado: '',
+    usoRefaccionConsumible: false,
+    refaccionConsumibleDetalle: '',
   });
 
   const closeCreateModal = () => {
@@ -731,7 +739,14 @@ export function WorkOrdersScreen({
       prioridad: 'media',
       tecnicoId: TECNICOS[0]?.id || '',
       fechaCompromiso: format(new Date(), 'yyyy-MM-dd'),
-      observaciones: '',
+      fechaCierre: '',
+      downtimeMinutos: '',
+      descripcionProblema: '',
+      descripcionServicio: '',
+      gastoDinero: false,
+      montoGastado: '',
+      usoRefaccionConsumible: false,
+      refaccionConsumibleDetalle: '',
     });
   };
 
@@ -753,6 +768,39 @@ export function WorkOrdersScreen({
     const fechaCompromiso = newOtData.fechaCompromiso
       ? new Date(`${newOtData.fechaCompromiso}T00:00:00`)
       : now;
+    const fechaCierre = newOtData.fechaCierre
+      ? new Date(`${newOtData.fechaCierre}T00:00:00`)
+      : undefined;
+    const downtimeMinutos = Number(newOtData.downtimeMinutos || '0');
+
+    if (Number.isNaN(downtimeMinutos) || downtimeMinutos < 0) {
+      alert('El tiempo de paro debe ser 0 o mayor.');
+      return;
+    }
+
+    const montoGastado = newOtData.gastoDinero
+      ? Number(newOtData.montoGastado)
+      : 0;
+
+    if (
+      newOtData.gastoDinero &&
+      (Number.isNaN(montoGastado) || montoGastado <= 0)
+    ) {
+      alert('Si se gastó dinero, captura un monto mayor a 0.');
+      return;
+    }
+
+    const refaccionConsumibleDetalle =
+      newOtData.refaccionConsumibleDetalle.trim();
+    const descripcionProblema = newOtData.descripcionProblema.trim();
+    const descripcionServicio = newOtData.descripcionServicio.trim();
+
+    if (newOtData.usoRefaccionConsumible && !refaccionConsumibleDetalle) {
+      alert(
+        'Si se usó refacción o consumible, captura cuál fue en el detalle.',
+      );
+      return;
+    }
 
     const nuevaOt: OrdenTrabajo = {
       id: `OT${String(nextId).padStart(3, '0')}`,
@@ -760,7 +808,10 @@ export function WorkOrdersScreen({
       folio: `OT-${now.getFullYear()}-${String(nextId).padStart(3, '0')}`,
       activoId: newOtData.activoId,
       titulo,
-      descripcion: newOtData.observaciones || 'Sin descripción',
+      descripcion:
+        descripcionServicio || descripcionProblema || 'Sin descripción',
+      descripcionProblema,
+      descripcionServicio,
       tipo: newOtData.tipo,
       status: 'nueva',
       prioridad: newOtData.prioridad,
@@ -768,10 +819,17 @@ export function WorkOrdersScreen({
       tecnicoNombre: tecnico?.nombre || 'Sin asignar',
       fechaCreacion: now,
       fechaCompromiso,
-      observaciones: newOtData.observaciones,
+      fechaCierre,
+      observaciones: descripcionProblema,
+      gastoDinero: newOtData.gastoDinero,
+      montoGastado,
+      usoRefaccionConsumible: newOtData.usoRefaccionConsumible,
+      refaccionConsumibleDetalle: newOtData.usoRefaccionConsumible
+        ? refaccionConsumibleDetalle
+        : '',
       evidencias: [],
       historial: [],
-      downtimeMinutos: 0,
+      downtimeMinutos,
       createdAt: now,
       updatedAt: now,
     };
@@ -784,7 +842,12 @@ export function WorkOrdersScreen({
   wo.forEach((w) => {
     statusCounts[w.status] = (statusCounts[w.status] || 0) + 1;
   });
-  const filtered = wo.filter((w) => !filterStatus || w.status === filterStatus);
+  const filtered = wo.filter((w) => {
+    const matchesStatus = !filterStatus || w.status === filterStatus;
+    const matchesActivo = !filterActivoId || w.activoId === filterActivoId;
+
+    return matchesStatus && matchesActivo;
+  });
 
   const changeStatus = (id: string, s: string) => {
     setWo((prev) =>
@@ -797,6 +860,9 @@ export function WorkOrdersScreen({
   if (selected) {
     const asset = ASSETS.find((a) => a.id === selected.activoId);
     const curWo = wo.find((w) => w.id === selected.id) || selected;
+    const descripcionProblema =
+      curWo.descripcionProblema || curWo.observaciones || '';
+    const descripcionServicio = curWo.descripcionServicio || '';
     return (
       <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
         <BtnBack onClick={() => setSelected(null)} />
@@ -925,8 +991,8 @@ export function WorkOrdersScreen({
             />
           </Card>
           <Card>
-            <CardTitle>Observaciones y Analisis</CardTitle>
-            {curWo.observaciones && (
+            <CardTitle>Descripción y Analisis</CardTitle>
+            {descripcionProblema && (
               <div style={{ marginBottom: 14 }}>
                 <div
                   style={{
@@ -938,10 +1004,88 @@ export function WorkOrdersScreen({
                     marginBottom: 5,
                   }}
                 >
-                  Observaciones
+                  Descripción del problema
                 </div>
                 <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
-                  {curWo.observaciones}
+                  {descripcionProblema}
+                </p>
+              </div>
+            )}
+            {descripcionServicio && (
+              <div style={{ marginBottom: 14 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: '#64748b',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    marginBottom: 5,
+                  }}
+                >
+                  Descripción del servicio
+                </div>
+                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                  {descripcionServicio}
+                </p>
+              </div>
+            )}
+            <div style={{ marginBottom: 14 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: '#64748b',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  marginBottom: 5,
+                }}
+              >
+                Gasto económico
+              </div>
+              <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                {curWo.gastoDinero ? 'Sí' : 'No'}
+                {curWo.gastoDinero
+                  ? ` · $${(curWo.montoGastado || 0).toLocaleString('es-MX', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`
+                  : ''}
+              </p>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: '#64748b',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  marginBottom: 5,
+                }}
+              >
+                Refacción o consumible
+              </div>
+              <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                {curWo.usoRefaccionConsumible ? 'Sí' : 'No'}
+              </p>
+            </div>
+            {curWo.usoRefaccionConsumible && (
+              <div style={{ marginBottom: 14 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: '#64748b',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    marginBottom: 5,
+                  }}
+                >
+                  Detalle de refacción o consumible
+                </div>
+                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                  {curWo.refaccionConsumibleDetalle || 'No especificado'}
                 </p>
               </div>
             )}
@@ -983,11 +1127,16 @@ export function WorkOrdersScreen({
                 </p>
               </div>
             )}
-            {!curWo.observaciones && !curWo.causa && !curWo.accion && (
-              <p style={{ fontSize: 13, color: '#475569' }}>
-                Sin observaciones registradas.
-              </p>
-            )}
+            {!descripcionProblema &&
+              !descripcionServicio &&
+              !curWo.gastoDinero &&
+              !curWo.usoRefaccionConsumible &&
+              !curWo.causa &&
+              !curWo.accion && (
+                <p style={{ fontSize: 13, color: '#475569' }}>
+                  Sin descripciones registradas.
+                </p>
+              )}
           </Card>
         </div>
 
@@ -1089,6 +1238,28 @@ export function WorkOrdersScreen({
             {STL[s as keyof typeof STL] || s} ({n})
           </button>
         ))}
+        <select
+          value={filterActivoId}
+          onChange={(e) => setFilterActivoId(e.target.value)}
+          style={{
+            background: '#0d1627',
+            border: '1.5px solid #1e3a5f',
+            color: '#cbd5e1',
+            fontSize: 12,
+            fontWeight: 700,
+            padding: '6px 10px',
+            borderRadius: 5,
+            fontFamily: 'inherit',
+            minWidth: 210,
+          }}
+        >
+          <option value=''>Todos los activos</option>
+          {ASSETS.map((asset) => (
+            <option key={asset.id} value={asset.id}>
+              {asset.code} - {asset.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <Card style={{ padding: 0, overflow: 'hidden' }}>
@@ -1238,18 +1409,147 @@ export function WorkOrdersScreen({
               />
             </Field>
           </div>
-          <Field label='Observaciones'>
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+          >
+            <Field label='Tiempo de paro (min)'>
+              <input
+                type='number'
+                min={0}
+                placeholder='0'
+                value={newOtData.downtimeMinutos}
+                onChange={(e) =>
+                  setNewOtData((prev) => ({
+                    ...prev,
+                    downtimeMinutos: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field label='Fecha de cierre'>
+              <input
+                type='date'
+                value={newOtData.fechaCierre}
+                onChange={(e) =>
+                  setNewOtData((prev) => ({
+                    ...prev,
+                    fechaCierre: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+          </div>
+          <Field label='Descripción del problema'>
             <textarea
-              placeholder='Describe el trabajo a realizar...'
-              value={newOtData.observaciones}
+              placeholder='Describe el problema detectado...'
+              value={newOtData.descripcionProblema}
               onChange={(e) =>
                 setNewOtData((prev) => ({
                   ...prev,
-                  observaciones: e.target.value,
+                  descripcionProblema: e.target.value,
                 }))
               }
             />
           </Field>
+          <Field label='Descripción del servicio'>
+            <textarea
+              placeholder='Describe el servicio realizado o a realizar...'
+              value={newOtData.descripcionServicio}
+              onChange={(e) =>
+                setNewOtData((prev) => ({
+                  ...prev,
+                  descripcionServicio: e.target.value,
+                }))
+              }
+            />
+          </Field>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 12,
+              marginBottom: 12,
+            }}
+          >
+            <label
+              style={{
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                fontSize: 13,
+                color: '#cbd5e1',
+              }}
+            >
+              <input
+                type='checkbox'
+                checked={newOtData.gastoDinero}
+                onChange={(e) =>
+                  setNewOtData((prev) => ({
+                    ...prev,
+                    gastoDinero: e.target.checked,
+                    montoGastado: e.target.checked ? prev.montoGastado : '',
+                  }))
+                }
+              />
+              ¿Se gastó dinero?
+            </label>
+            <label
+              style={{
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                fontSize: 13,
+                color: '#cbd5e1',
+              }}
+            >
+              <input
+                type='checkbox'
+                checked={newOtData.usoRefaccionConsumible}
+                onChange={(e) =>
+                  setNewOtData((prev) => ({
+                    ...prev,
+                    usoRefaccionConsumible: e.target.checked,
+                    refaccionConsumibleDetalle: e.target.checked
+                      ? prev.refaccionConsumibleDetalle
+                      : '',
+                  }))
+                }
+              />
+              ¿Se usó refacción o consumible?
+            </label>
+          </div>
+          {newOtData.gastoDinero && (
+            <Field label='Monto gastado'>
+              <input
+                type='number'
+                min={0}
+                step='0.01'
+                placeholder='Ej: 1500.00'
+                value={newOtData.montoGastado}
+                onChange={(e) =>
+                  setNewOtData((prev) => ({
+                    ...prev,
+                    montoGastado: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+          )}
+          {newOtData.usoRefaccionConsumible && (
+            <Field label='Detalle de refacción o consumible *'>
+              <input
+                type='text'
+                placeholder='Ej: Rodamiento SKF 6205'
+                value={newOtData.refaccionConsumibleDetalle}
+                onChange={(e) =>
+                  setNewOtData((prev) => ({
+                    ...prev,
+                    refaccionConsumibleDetalle: e.target.value,
+                  }))
+                }
+              />
+            </Field>
+          )}
           <ModalFooter
             onCancel={closeCreateModal}
             onConfirm={createWorkOrder}
@@ -1561,9 +1861,16 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
       'tecnico',
       'fecha_creacion',
       'fecha_compromiso',
+      'fecha_cierre',
       'downtime_minutos',
+      'gasto_dinero',
+      'monto_gastado',
+      'uso_refaccion_consumible',
+      'refaccion_consumible_detalle',
       'titulo',
       'descripcion',
+      'descripcion_problema',
+      'descripcion_servicio',
     ];
 
     const escapeCsv = (value: string | number) => {
@@ -1592,9 +1899,18 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
         item.tecnicoNombre,
         format(new Date(item.fechaCreacion), 'yyyy-MM-dd'),
         format(new Date(item.fechaCompromiso), 'yyyy-MM-dd'),
+        item.fechaCierre
+          ? format(new Date(item.fechaCierre), 'yyyy-MM-dd')
+          : '',
         item.downtimeMinutos || 0,
+        item.gastoDinero ? 'si' : 'no',
+        item.montoGastado || 0,
+        item.usoRefaccionConsumible ? 'si' : 'no',
+        item.refaccionConsumibleDetalle || '',
         item.titulo,
         item.descripcion,
+        item.descripcionProblema || item.observaciones || '',
+        item.descripcionServicio || '',
       ];
     });
 

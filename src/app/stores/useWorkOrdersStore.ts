@@ -80,6 +80,15 @@ export const useWorkOrdersStore = create<WorkOrdersState>()(
         const now = new Date();
         const nuevaOrden: OrdenTrabajo = {
           ...ordenData,
+          descripcionProblema:
+            ordenData.descripcionProblema ?? ordenData.observaciones ?? '',
+          descripcionServicio: ordenData.descripcionServicio ?? '',
+          observaciones: ordenData.observaciones ?? '',
+          gastoDinero: ordenData.gastoDinero ?? false,
+          montoGastado: ordenData.montoGastado ?? 0,
+          usoRefaccionConsumible: ordenData.usoRefaccionConsumible ?? false,
+          refaccionConsumibleDetalle:
+            ordenData.refaccionConsumibleDetalle ?? '',
           id: `OT${Date.now()}`,
           folio: generarFolioOT(),
           historial: [
@@ -285,7 +294,24 @@ export const useWorkOrdersStore = create<WorkOrdersState>()(
             const matchDescripcion = ot.descripcion
               .toLowerCase()
               .includes(busqueda);
-            if (!matchFolio && !matchTitulo && !matchDescripcion) return false;
+            const matchDescripcionProblema = (ot.descripcionProblema || '')
+              .toLowerCase()
+              .includes(busqueda);
+            const matchDescripcionServicio = (ot.descripcionServicio || '')
+              .toLowerCase()
+              .includes(busqueda);
+            const matchObservaciones = (ot.observaciones || '')
+              .toLowerCase()
+              .includes(busqueda);
+            if (
+              !matchFolio &&
+              !matchTitulo &&
+              !matchDescripcion &&
+              !matchDescripcionProblema &&
+              !matchDescripcionServicio &&
+              !matchObservaciones
+            )
+              return false;
           }
 
           return true;

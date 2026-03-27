@@ -142,7 +142,13 @@ export interface OrdenTrabajo {
   fechaCierre?: Date;
   fechaCierreTecnico?: Date;
   fechaCierreAdmin?: Date;
-  observaciones: string;
+  descripcionProblema?: string;
+  descripcionServicio?: string;
+  observaciones?: string;
+  gastoDinero?: boolean;
+  montoGastado?: number;
+  usoRefaccionConsumible?: boolean;
+  refaccionConsumibleDetalle?: string;
   causaRaiz?: string;
   accionTomada?: string;
   cierreTecnico?: CierreTecnico;
