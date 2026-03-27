@@ -161,9 +161,9 @@ export default function Navbar() {
                 key={tab.id}
                 className={cn(
                   'flex items-center gap-1 text-sm font-normal transition duration-200',
-                  isActive && 'text-shPrimary-500 cursor-default',
+                  isActive && 'text-shPrimary-400 cursor-default',
                   !isActive &&
-                    'text-shGray-400 active:text-shPrimary-400 cursor-pointer hover:text-white hover:underline',
+                    'text-shGray-400 active:text-shPrimary-500 cursor-pointer hover:text-white hover:underline',
                 )}
                 scroll={false}
               >
@@ -184,7 +184,7 @@ export default function Navbar() {
                 aria-label='User menu'
                 aria-expanded={isUserMenuOpen}
               >
-                <span className='text-shPrimary-500 text-sm font-bold'>
+                <span className='text-shPrimary-400 text-sm font-bold'>
                   {getUserInitials(user)}
                 </span>
               </button>
@@ -200,7 +200,7 @@ export default function Navbar() {
                     <p className='text-shGray-400 truncate text-xs'>
                       {user.email}
                     </p>
-                    <p className='text-shPrimary-500 mt-0.5 text-xs font-medium'>
+                    <p className='text-shPrimary-400 mt-0.5 text-xs font-medium'>
                       {getRoleLabel(user.rol)}
                     </p>
                   </div>
@@ -252,9 +252,9 @@ export default function Navbar() {
                 key={tab.id}
                 className={cn(
                   'duration:200 my-5 flex items-center gap-2 text-base font-normal transition-all',
-                  isActive && 'text-shPrimary-500 cursor-default',
+                  isActive && 'text-shPrimary-400 cursor-default',
                   !isActive &&
-                    'text-shGray-400 active:text-shPrimary-400 cursor-pointer hover:text-white hover:underline',
+                    'text-shGray-400 active:text-shPrimary-500 cursor-pointer hover:text-white hover:underline',
                 )}
                 scroll={false}
                 onClick={() => setIsOpen(false)}
@@ -269,7 +269,7 @@ export default function Navbar() {
           {user && (
             <div className='border-shGray-700 mt-6 flex flex-col items-center gap-4 border-t pt-6'>
               <div className='bg-shGray-800 flex h-14 w-14 items-center justify-center rounded-full'>
-                <span className='text-shPrimary-500 text-lg font-bold'>
+                <span className='text-shPrimary-400 text-lg font-bold'>
                   {getUserInitials(user)}
                 </span>
               </div>
@@ -277,7 +277,7 @@ export default function Navbar() {
                 <p className='text-shGray-100 text-sm font-semibold'>
                   {user.nombre}
                 </p>
-                <p className='text-shPrimary-500 text-xs font-medium'>
+                <p className='text-shPrimary-400 text-xs font-medium'>
                   {getRoleLabel(user.rol)}
                 </p>
               </div>
