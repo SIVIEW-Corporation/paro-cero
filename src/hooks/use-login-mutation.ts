@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { authService } from '@/services/auth-service';
 import { useAuthStore } from '@/store/auth-store';
-import { setAuthTokenAction, setRefreshTokenAction } from '@/app/actions/auth';
+import { setAuthCookiesAction } from '@/app/actions/auth';
 import type { LoginInput } from '@/lib/auth-schema';
 
 export function useLoginMutation() {
@@ -11,17 +11,13 @@ export function useLoginMutation() {
 
   return useMutation({
     mutationFn: async (credentials: LoginInput) => {
-      // 1. Call login API
       const data = await authService.login(credentials);
 
-      // 2. Store user and tokens in Zustand
       setUser(data.user);
       setAccessToken(data.access_token);
       setRefreshToken(data.refresh_token);
 
-      // 3. Set both httpOnly cookies via server actions
-      await setAuthTokenAction(data.access_token);
-      await setRefreshTokenAction(data.refresh_token);
+      await setAuthCookiesAction(data.access_token, data.refresh_token);
 
       return data;
     },

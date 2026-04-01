@@ -25,6 +25,35 @@ export async function setRefreshTokenAction(refreshToken: string) {
   return { success: true };
 }
 
+/**
+ * Sets both auth cookies in a single server action call.
+ * Avoids the "unexpected response" error from sequential server action calls.
+ */
+export async function setAuthCookiesAction(
+  accessToken: string,
+  refreshToken: string,
+) {
+  const cookieStore = await cookies();
+
+  cookieStore.set('access_token', accessToken, {
+    httpOnly: true,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 900, // 15 minutes — slightly longer than JWT expiry
+  });
+
+  cookieStore.set('refresh_token', refreshToken, {
+    httpOnly: true,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 86400, // 1 day
+  });
+
+  return { success: true };
+}
+
 export async function clearAuthCookiesAction() {
   const cookieStore = await cookies();
   cookieStore.delete('access_token');
