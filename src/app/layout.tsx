@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Inter, Inconsolata } from 'next/font/google';
 //Components
 import { Toaster } from 'sonner';
-import QueryProvider from '@/components/providers/QueryProvider';
+import Providers from './providers';
 //Styles
 import './globals.css';
 
@@ -31,7 +31,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${inter.className} ${inconsolata.className} antialiased`}
       >
-        <QueryProvider>{children}</QueryProvider>
+        <Providers>{children}</Providers>
         <Toaster position='top-center' richColors closeButton />
       </body>
     </html>

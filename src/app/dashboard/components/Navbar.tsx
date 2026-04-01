@@ -5,76 +5,13 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
-//Icons
-import {
-  LayoutGrid,
-  Boxes,
-  Calendar,
-  ClipboardList,
-  Search,
-  Bell,
-  BarChart3,
-  LogOut,
-} from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/cn';
 // Store
 import { useAuthStore } from '@/app/stores/use-auth-store';
-// Types
+// Types and Consts
 import type { Usuario } from '@/app/data/types';
-
-const iconSize = 16;
-
-const tabs = [
-  {
-    id: 0,
-    label: 'Inicio',
-    tooltip: 'Panel de Control',
-    path: '/',
-    icon: <LayoutGrid size={iconSize} />,
-  },
-  {
-    id: 1,
-    label: 'Activos',
-    tooltip: 'Gestión de Activos',
-    path: '/assets',
-    icon: <Boxes size={iconSize} />,
-  },
-  {
-    id: 'plans',
-    label: 'Planes-PM',
-    tooltip: 'Ver Planes',
-    path: '/plans',
-    icon: <Calendar size={iconSize} />,
-  },
-  {
-    id: 'workorders',
-    label: 'Ordenes de Trabajo',
-    tooltip: 'Ver Ordenes de Trabajo',
-    path: '/workorders',
-    icon: <ClipboardList size={iconSize} />,
-  },
-  {
-    id: 'inspecciones',
-    label: 'Inspecciones',
-    tooltip: 'Ver Inspecciones',
-    path: '/inspecciones',
-    icon: <Search size={iconSize} />,
-  },
-  {
-    id: 'notifications',
-    label: 'Notificaciones',
-    tooltip: 'Revisar Notificaciones',
-    path: '/notifications',
-    icon: <Bell size={iconSize} />,
-  },
-  {
-    id: 'reports',
-    label: 'Reportes y KPIs',
-    tooltip: 'Ver KPIs e información útil',
-    path: '/reports',
-    icon: <BarChart3 size={iconSize} />,
-  },
-];
+import { tabs, iconSize } from '@/constants/index';
 
 /**
  * Generate user initials from a Usuario object
