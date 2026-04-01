@@ -146,21 +146,48 @@ export default function LoginForm() {
 
         {/* Recordarme Checkbox */}
         <div className='flex items-center gap-2'>
-          <input
-            type='checkbox'
+          <button
+            type='button'
+            role='checkbox'
+            aria-checked={rememberMe}
             id='remember_me'
-            checked={rememberMe}
-            onChange={(e) => {
-              setRememberMe(e.target.checked);
-              form.setFieldValue('remember_me', e.target.checked);
+            onClick={() => {
+              const next = !rememberMe;
+              setRememberMe(next);
+              form.setFieldValue('remember_me', next);
             }}
-            className='border-shGray-600 bg-shGray-800 text-shPrimary-500 focus:ring-shPrimary-500 h-4 w-4 rounded focus:ring-offset-0'
-          />
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all duration-200 ${
+              rememberMe
+                ? 'border-shPrimary-500 bg-shPrimary-500 text-white'
+                : 'border-shGray-600 bg-shGray-800 hover:border-shGray-500'
+            }`}
+          >
+            {rememberMe && (
+              <svg
+                className='h-3 w-3'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+                strokeWidth={3}
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  d='M5 13l4 4L19 7'
+                />
+              </svg>
+            )}
+          </button>
           <label
             htmlFor='remember_me'
-            className='text-shGray-400 cursor-pointer text-sm'
+            className='text-shGray-400 cursor-pointer text-sm select-none'
+            onClick={() => {
+              const next = !rememberMe;
+              setRememberMe(next);
+              form.setFieldValue('remember_me', next);
+            }}
           >
-            Recordarme
+            Recordarme por 30 días
           </label>
         </div>
 
