@@ -26,7 +26,20 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             // refresh → retry. This handler only fires for edge cases where
             // a 401 somehow bypassed the interceptor (e.g. direct fetch,
             // third-party library, or interceptor bug).
-            if (error instanceof Error && error.message.includes('401')) {
+            const errorMessage = error instanceof Error ? error.message : '';
+
+            // "Sesión comprometida" — replay attack detected by backend
+            if (errorMessage.includes('Sesión comprometida')) {
+              logout();
+              toast.error(
+                'Sesión comprometida. Por seguridad, inicie sesión nuevamente.',
+              );
+              window.location.href = '/login';
+              return;
+            }
+
+            // Normal 401 — token expired
+            if (errorMessage.includes('401')) {
               logout();
               toast.error(
                 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',

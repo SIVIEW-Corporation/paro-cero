@@ -9,6 +9,7 @@ export const loginSchema = z.object({
     .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
     .regex(/\d/, 'Debe contener al menos un número')
     .regex(/[\W_]/, 'Debe contener al menos un carácter especial'),
+  remember_me: z.boolean().optional().default(false),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

@@ -74,6 +74,7 @@ export async function logoutAction() {
 export async function refreshTokenAction(): Promise<{
   success: boolean;
   accessToken?: string;
+  error?: string;
 }> {
   const cookieStore = await cookies();
 
@@ -93,9 +94,18 @@ export async function refreshTokenAction(): Promise<{
     );
 
     if (!response.ok) {
+      // Try to extract error message from response body
+      let errorMessage: string | undefined;
+      try {
+        const errorData = (await response.json()) as { message?: string };
+        errorMessage = errorData.message;
+      } catch {
+        // Response wasn't JSON, ignore
+      }
+
       cookieStore.delete('access_token');
       cookieStore.delete('refresh_token');
-      return { success: false };
+      return { success: false, error: errorMessage };
     }
 
     const data = (await response.json()) as {

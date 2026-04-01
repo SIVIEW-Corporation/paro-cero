@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
 import { toast } from 'sonner';
 import * as motion from 'motion/react-client';
+import { useState } from 'react';
 
 import { loginSchema } from '@/lib/auth-schema';
 import { useLoginMutation } from '@/hooks/use-login-mutation';
@@ -11,11 +12,13 @@ import { useLoginMutation } from '@/hooks/use-login-mutation';
 export default function LoginForm() {
   const router = useRouter();
   const mutation = useLoginMutation();
+  const [rememberMe, setRememberMe] = useState(false);
 
   const form = useForm({
     defaultValues: {
       email: '',
       password: '',
+      remember_me: false,
     },
     onSubmit: async ({ value }) => {
       mutation.mutate(value, {
@@ -140,6 +143,26 @@ export default function LoginForm() {
             </div>
           )}
         />
+
+        {/* Recordarme Checkbox */}
+        <div className='flex items-center gap-2'>
+          <input
+            type='checkbox'
+            id='remember_me'
+            checked={rememberMe}
+            onChange={(e) => {
+              setRememberMe(e.target.checked);
+              form.setFieldValue('remember_me', e.target.checked);
+            }}
+            className='border-shGray-600 bg-shGray-800 text-shPrimary-500 focus:ring-shPrimary-500 h-4 w-4 rounded focus:ring-offset-0'
+          />
+          <label
+            htmlFor='remember_me'
+            className='text-shGray-400 cursor-pointer text-sm'
+          >
+            Recordarme
+          </label>
+        </div>
 
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}

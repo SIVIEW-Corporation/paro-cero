@@ -59,7 +59,9 @@ async function doRefresh(): Promise<string> {
     const result = await refreshTokenAction();
 
     if (!result.success || !result.accessToken) {
-      throw new Error('Token refresh failed — no valid token returned');
+      const errorMessage =
+        result.error || 'Token refresh failed — no valid token returned';
+      throw new Error(errorMessage);
     }
 
     // Update the Zustand store with the new access token
@@ -67,7 +69,35 @@ async function doRefresh(): Promise<string> {
 
     return result.accessToken;
   } catch (error) {
-    // Refresh failed — clear cookies and store, then redirect
+    // Check if this is a "Sesión comprometida" (replay attack detection) error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isCompromisedSession = errorMessage.includes('Sesión comprometida');
+
+    if (isCompromisedSession && typeof window !== 'undefined') {
+      // Show toast before redirect — user needs to re-login
+      // Dynamic import to avoid SSR issues with toast
+      import('sonner').then(({ toast }) => {
+        toast.error(
+          'Sesión comprometida. Por seguridad, inicie sesión nuevamente.',
+        );
+      });
+
+      // Clear cookies and store immediately
+      try {
+        await clearAuthCookiesAction();
+      } catch {
+        // Ignore cleanup errors
+      }
+      useAuthStore.getState().logout();
+
+      // Redirect to login — do NOT retry the original request
+      window.location.href = '/login';
+
+      // Throw a non-retryable error
+      throw new Error('Sesión comprometida');
+    }
+
+    // Normal refresh failure (e.g., token expired) — clear cookies and store
     try {
       await clearAuthCookiesAction();
     } catch {
