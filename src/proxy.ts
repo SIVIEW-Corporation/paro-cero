@@ -16,7 +16,7 @@ export function proxy(request: NextRequest) {
     );
   }
 
-  if (!token && isProtectedRoute) {
+  if (!token && isProtectedRoute && !isAuthRoute) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 

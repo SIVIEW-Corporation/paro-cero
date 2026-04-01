@@ -1,5 +1,4 @@
 export const tabPaths = [
-  '/',
   '/assets',
   '/plans',
   '/workorders',
