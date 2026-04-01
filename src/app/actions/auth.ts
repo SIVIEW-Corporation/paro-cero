@@ -54,14 +54,11 @@ export async function refreshTokenAction(): Promise<{
       return { success: false };
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      },
-    );
+    const response = await fetch(`${process.env.API_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
 
     if (!response.ok) {
       cookieStore.delete('access_token');
