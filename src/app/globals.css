@@ -171,15 +171,3 @@ body {
 .custom-select:active {
   background-color: #f9fafb;
 }
-
-.bg-pattern {
-  background-color: #12110f;
-  opacity: 0.4;
-  background-image:
-    radial-gradient(#12110f 0.5px, transparent 0.5px),
-    radial-gradient(#351f09 0.5px, #12110f 0.5px);
-  background-size: 20px 20px;
-  background-position:
-    0 0,
-    10px 10px;
-}

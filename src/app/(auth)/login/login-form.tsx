@@ -147,7 +147,7 @@ export default function LoginForm() {
             <button
               type='submit'
               disabled={!canSubmit || mutation.isPending}
-              className='bg-shPrimary-500 hover:bg-shPrimary-400 shadow-shPrimary-800/10 mt-4 w-full cursor-pointer rounded-lg py-3 font-semibold text-white shadow-md transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:shadow-none'
+              className='bg-shPrimary-500 hover:bg-shPrimary-400 shadow-shPrimary-800/10 mt-4 w-full cursor-pointer rounded-lg py-3 font-semibold text-white shadow-md transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:shadow-none'
             >
               {mutation.isPending || isSubmitting ? (
                 <span className='flex items-center justify-center gap-2'>

@@ -80,7 +80,7 @@ export default function Navbar() {
       <nav className='flex w-full max-w-[1540px] items-center justify-between'>
         <Link href='/' scroll={false}>
           <Image
-            src='/PM0-512.png'
+            src='/PM0-logo.webp'
             alt='PM0 logo'
             title='PM0 logo'
             width={40}

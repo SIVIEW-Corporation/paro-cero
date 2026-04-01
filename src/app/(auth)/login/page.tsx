@@ -14,20 +14,22 @@ export default function LoginPage() {
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className='bg-shPrimary-800/50 relative flex w-full flex-col items-center justify-center overflow-hidden p-12 text-white lg:w-5/12'
         >
-          <div className='bg-pattern absolute inset-0 opacity-10' />
           <div className='relative z-20 flex flex-col items-center text-center'>
-            <div className='from-shPrimary-800/50 mb-8 hidden rounded-2xl bg-linear-to-t to-black/25 p-4 brightness-105 backdrop-blur-sm md:p-6 lg:block'>
+            <div className='from-shPrimary-700/50 mb-8 hidden rounded-2xl bg-linear-to-t to-black/25 p-3 brightness-105 backdrop-blur-sm md:p-4 lg:block'>
               <Image
-                src='/PM0-512.png'
+                src='/PM0-logo.webp'
                 alt='Logo PM0'
                 height={120}
                 width={120}
-                className='h-20 w-auto'
+                className='h-20 w-auto rounded-xl'
                 priority
               />
             </div>
-            <h1 className='max-w-md text-2xl leading-tight font-bold tracking-tight md:text-3xl lg:text-4xl'>
-              Portal para Gestión de Mantenimiento
+            <h1 className='font-inter text-shPrimary-200 max-w-md text-xl leading-tight font-bold tracking-tight md:text-2xl lg:text-3xl'>
+              <span className='from-shPrimary-300 to-shPrimary-200 bg-linear-to-t via-white/85 bg-clip-text text-3xl text-transparent md:text-4xl lg:text-5xl'>
+                PM0
+              </span>{' '}
+              <br /> Gestión de Mantenimiento
             </h1>{' '}
             <p className='text-shPrimary-200 mt-6 max-w-sm md:text-lg'>
               Control inteligente y seguro de tus activos
@@ -46,7 +48,7 @@ export default function LoginPage() {
           {/* Mobile Logo (only visible on small screens) */}
           <div className='relative z-20 mb-8 lg:hidden'>
             <Image
-              src='/PM0-512.png'
+              src='/PM0-logo.webp'
               alt='Logo PM0'
               height={64}
               width={64}
