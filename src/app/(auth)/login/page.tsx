@@ -16,7 +16,7 @@ export default function LoginPage() {
         >
           <div className='bg-pattern absolute inset-0 opacity-10' />
           <div className='relative z-20 flex flex-col items-center text-center'>
-            <div className='from-shPrimary-800/50 mb-8 hidden rounded-2xl bg-linear-to-t to-black/25 p-4 brightness-105 backdrop-blur-sm md:block md:p-6'>
+            <div className='from-shPrimary-800/50 mb-8 hidden rounded-2xl bg-linear-to-t to-black/25 p-4 brightness-105 backdrop-blur-sm md:p-6 lg:block'>
               <Image
                 src='/PM0-512.png'
                 alt='Logo PM0'
