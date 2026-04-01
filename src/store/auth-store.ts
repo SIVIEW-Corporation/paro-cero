@@ -16,12 +16,15 @@ export type UserType = (typeof USER_TYPES)[keyof typeof USER_TYPES];
 export interface User {
   id: string;
   email: string;
-  name: string;
-  company: string;
+  full_name: string;
+  company_id: string;
   role: UserType;
-  area?: string;
-  job_title?: string;
-  image?: string;
+  area?: string | null;
+  job_title?: string | null;
+  profile_image?: string | null;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string | null;
 }
 
 interface AuthState {

@@ -17,8 +17,8 @@ import { tabs, iconSize } from '@/constants/index';
  * Generate user initials from a User object
  * Returns uppercase initials of first and last word of the name field
  */
-function getUserInitials(user: { name: string }): string {
-  const words = user.name.trim().split(/\s+/);
+function getUserInitials(user: { full_name: string }): string {
+  const words = user.full_name.trim().split(/\s+/);
   if (words.length === 1) {
     return words[0].substring(0, 2).toUpperCase();
   }
@@ -134,7 +134,7 @@ export default function Navbar() {
                   {/* User Info */}
                   <div className='border-shGray-600 border-b px-3 py-3'>
                     <p className='text-shGray-100 truncate text-sm font-semibold'>
-                      {user.name}
+                      {user.full_name}
                     </p>
                     <p className='text-shGray-400 truncate text-xs'>
                       {user.email}
@@ -214,7 +214,7 @@ export default function Navbar() {
               </div>
               <div className='text-center'>
                 <p className='text-shGray-100 text-sm font-semibold'>
-                  {user.name}
+                  {user.full_name}
                 </p>
                 <p className='text-shPrimary-400 text-xs font-medium'>
                   {getRoleLabel(user.role)}
