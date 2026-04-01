@@ -10,16 +10,20 @@ export function useLoginMutation() {
   const setRefreshToken = useAuthStore((state) => state.setRefreshToken);
 
   return useMutation({
-    mutationFn: (credentials: LoginInput) => authService.login(credentials),
-    onSuccess: async (data) => {
-      // Store user and tokens in Zustand
+    mutationFn: async (credentials: LoginInput) => {
+      // 1. Call login API
+      const data = await authService.login(credentials);
+
+      // 2. Store user and tokens in Zustand
       setUser(data.user);
       setAccessToken(data.access_token);
       setRefreshToken(data.refresh_token);
 
-      // Set both httpOnly cookies via server actions
+      // 3. Set both httpOnly cookies via server actions
       await setAuthTokenAction(data.access_token);
       await setRefreshTokenAction(data.refresh_token);
+
+      return data;
     },
   });
 }
