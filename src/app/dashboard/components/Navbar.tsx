@@ -3,22 +3,22 @@
 import { useState, useRef, useEffect } from 'react';
 // Next.js
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/cn';
-// Store
-import { useAuthStore } from '@/app/stores/use-auth-store';
-// Types and Consts
-import type { Usuario } from '@/app/data/types';
+// Store & Hooks
+import { useAuthStore } from '@/store/auth-store';
+import { useLogoutMutation } from '@/hooks/use-logout-mutation';
+// Constants
 import { tabs, iconSize } from '@/constants/index';
 
 /**
- * Generate user initials from a Usuario object
- * Returns uppercase initials of first and last word of the nombre field
+ * Generate user initials from a User object
+ * Returns uppercase initials of first and last word of the name field
  */
-function getUserInitials(user: Usuario): string {
-  const words = user.nombre.trim().split(/\s+/);
+function getUserInitials(user: { name: string }): string {
+  const words = user.name.trim().split(/\s+/);
   if (words.length === 1) {
     return words[0].substring(0, 2).toUpperCase();
   }
@@ -29,13 +29,16 @@ function getUserInitials(user: Usuario): string {
 /**
  * Get role display label in Spanish
  */
-function getRoleLabel(rol: Usuario['rol']): string {
-  const labels: Record<Usuario['rol'], string> = {
+function getRoleLabel(role: string): string {
+  const labels: Record<string, string> = {
     admin: 'Administrador',
     supervisor: 'Supervisor',
     tecnico: 'Técnico',
+    operator: 'Operador',
+    viewer: 'Visor',
+    superadmin: 'Super Administrador',
   };
-  return labels[rol];
+  return labels[role] || role;
 }
 
 export default function Navbar() {
@@ -44,13 +47,12 @@ export default function Navbar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const pathname = usePathname();
-  const router = useRouter();
 
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
+  const logoutMutation = useLogoutMutation();
 
   const handleLogout = () => {
-    logout();
-    router.push('/login');
+    logoutMutation.mutate();
   };
 
   // Close user menu when clicking outside
@@ -132,13 +134,13 @@ export default function Navbar() {
                   {/* User Info */}
                   <div className='border-shGray-600 border-b px-3 py-3'>
                     <p className='text-shGray-100 truncate text-sm font-semibold'>
-                      {user.nombre}
+                      {user.name}
                     </p>
                     <p className='text-shGray-400 truncate text-xs'>
                       {user.email}
                     </p>
                     <p className='text-shPrimary-400 mt-0.5 text-xs font-medium'>
-                      {getRoleLabel(user.rol)}
+                      {getRoleLabel(user.role)}
                     </p>
                   </div>
                   {/* Logout Option */}
@@ -212,10 +214,10 @@ export default function Navbar() {
               </div>
               <div className='text-center'>
                 <p className='text-shGray-100 text-sm font-semibold'>
-                  {user.nombre}
+                  {user.name}
                 </p>
                 <p className='text-shPrimary-400 text-xs font-medium'>
-                  {getRoleLabel(user.rol)}
+                  {getRoleLabel(user.role)}
                 </p>
               </div>
               <button
