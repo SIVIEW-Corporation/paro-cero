@@ -5,6 +5,7 @@ import { useCreateUserMutation } from '@/app/(portal)/users/hooks/use-newOperato
 import { newUserSchema } from './lib/new-user-schema';
 import * as motion from 'motion/react-client';
 import { Mail, User, Briefcase, MapPin, Shield, UserPlus } from 'lucide-react';
+import Button from '@/global-components/Button';
 import { cn } from '@/lib/utils';
 import { FormField, PasswordField } from '@/global-components/form-field';
 
@@ -259,46 +260,16 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             transition={{ delay: 0.5, duration: 0.3 }}
             className='flex items-center justify-end gap-3 pt-2'
           >
-            <button
+            <Button
               type='submit'
               disabled={createUser.isPending}
-              className={cn(
-                'flex items-center gap-2 rounded-lg px-6 py-2.5 font-medium text-white transition-all',
-                'bg-shPrimary-600 hover:bg-shPrimary-500 active:scale-[0.98]',
-                'disabled:bg-shPrimary-800 disabled:cursor-not-allowed disabled:opacity-60',
-                'focus:ring-shPrimary-400/50 focus:ring-offset-shGray-900 focus:ring-2 focus:ring-offset-2 focus:outline-none',
-              )}
+              loading={createUser.isPending}
+              loadingText='Creando...'
+              icon={<UserPlus size={18} />}
+              scale='102'
             >
-              {createUser.isPending ? (
-                <>
-                  <svg
-                    className='h-4 w-4 animate-spin'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                  >
-                    <circle
-                      className='opacity-25'
-                      cx='12'
-                      cy='12'
-                      r='10'
-                      stroke='currentColor'
-                      strokeWidth='4'
-                    />
-                    <path
-                      className='opacity-75'
-                      fill='currentColor'
-                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z'
-                    />
-                  </svg>
-                  <span>Creando...</span>
-                </>
-              ) : (
-                <>
-                  <UserPlus size={18} />
-                  <span>Crear usuario</span>
-                </>
-              )}
-            </button>
+              Crear usuario
+            </Button>
           </motion.div>
         </form>
       </motion.div>

@@ -12,6 +12,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   tooltip?: string;
   icon?: React.ReactNode;
   loading?: boolean;
+  loadingText?: string;
   scale?: '102' | '105' | '110';
   shadowSize?: 'sm' | 'md' | 'lg' | 'none';
   fullWidth?: boolean;
@@ -82,6 +83,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       tooltip,
       icon,
       loading,
+      loadingText,
       scale = '105',
       shadowSize = 'sm',
       fullWidth,
@@ -117,7 +119,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {icon && <span className='flex-none shrink-0 grow-0'>{icon}</span>}
         {children && <span>{children}</span>}
-        {loading && <Loader2 className='size-5 animate-spin' />}
+        {loading && (
+          <>
+            <Loader2 className='size-5 animate-spin' />
+            {loadingText && <span>{loadingText}</span>}
+          </>
+        )}
       </button>
     );
   },

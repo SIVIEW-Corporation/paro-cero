@@ -10,6 +10,7 @@ import { Mail, Lock } from 'lucide-react';
 import { loginSchema } from '@/lib/auth-schema';
 import { useLoginMutation } from '@/hooks/use-login-mutation';
 import { FormField, PasswordField } from '@/global-components/form-field';
+import Button from '@/global-components/Button';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -140,39 +141,16 @@ export default function LoginForm() {
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit, isSubmitting]) => (
-            <button
+            <Button
               type='submit'
-              disabled={!canSubmit || mutation.isPending}
-              className='bg-shPrimary-500 hover:bg-shPrimary-400 shadow-shPrimary-800/10 mt-4 w-full cursor-pointer rounded-lg py-3 font-semibold text-white shadow-md transition-all duration-300 hover:shadow-lg disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:shadow-none'
+              disabled={!canSubmit}
+              loading={mutation.isPending}
+              loadingText='Validando...'
+              fullWidth
+              scale='102'
             >
-              {mutation.isPending || isSubmitting ? (
-                <span className='flex items-center justify-center gap-2'>
-                  <svg
-                    className='h-4 w-4 animate-spin text-white'
-                    xmlns='http://www.w3.org/2000/svg'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                  >
-                    <circle
-                      className='opacity-25'
-                      cx='12'
-                      cy='12'
-                      r='10'
-                      stroke='currentColor'
-                      strokeWidth='4'
-                    ></circle>
-                    <path
-                      className='opacity-75'
-                      fill='currentColor'
-                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                    ></path>
-                  </svg>
-                  Validando...
-                </span>
-              ) : (
-                'Iniciar Sesión'
-              )}
-            </button>
+              Iniciar Sesión
+            </Button>
           )}
         />
       </form>
