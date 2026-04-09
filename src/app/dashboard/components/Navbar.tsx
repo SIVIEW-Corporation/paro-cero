@@ -85,6 +85,7 @@ export default function Navbar() {
             title='PM0 logo'
             width={40}
             height={40}
+            loading='eager'
           />
         </Link>
 
@@ -179,7 +180,7 @@ export default function Navbar() {
 
         {/* Expandible Menu --- Mobile (xl:hidden = visible from lg to xl) */}
         <div
-          className={`text-shGray-300 bg-shBackground absolute top-full left-0 z-50 flex w-full flex-col items-center overflow-y-scroll pt-10 pb-40 transition duration-300 ease-in-out xl:hidden ${isOpen ? 'h-dvh opacity-100' : 'h-0 opacity-0'}`}
+          className={`text-shGray-300 bg-shBackground absolute top-full left-0 z-50 flex w-full flex-col items-center overflow-y-scroll pt-10 pb-40 transition duration-300 ease-in-out xl:hidden ${isOpen ? 'h-dvh opacity-100' : 'pointer-events-none h-0 opacity-0'}`}
         >
           {tabs.map((tab) => {
             const isActive = pathname === tab.path;

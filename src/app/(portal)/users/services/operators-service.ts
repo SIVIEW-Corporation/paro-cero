@@ -2,22 +2,7 @@ import { apiClient } from '@/lib/api-client';
 import { NewUserSchema } from '../lib/new-user-schema';
 import { User } from '@/store/auth-store';
 
-export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-  user: User;
-}
-
-export interface RefreshResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-export const authService = {
+export const operatorsService = {
   /**
    * Create operator/viewer user sending data to the backend.
    * Transforms camelCase fields to snake_case for API compatibility.
@@ -41,5 +26,15 @@ export const authService = {
     }
 
     return response.data as User;
+  },
+
+  getOperators: async (): Promise<User[]> => {
+    const response = await apiClient.get<User[]>('/users');
+
+    if (!response.ok) {
+      throw new Error(response.error?.message || 'Error al traer usuarios');
+    }
+
+    return response.data as User[];
   },
 };

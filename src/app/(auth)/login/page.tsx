@@ -22,7 +22,7 @@ export default function LoginPage() {
                 height={120}
                 width={120}
                 className='h-20 w-auto rounded-xl'
-                priority
+                loading='eager'
               />
             </div>
             <h1 className='font-inter text-shPrimary-200 max-w-md text-xl leading-tight font-bold tracking-tight md:text-2xl lg:text-3xl'>
@@ -53,6 +53,7 @@ export default function LoginPage() {
               height={64}
               width={64}
               className='h-16 w-auto object-contain'
+              loading='eager'
             />
           </div>
 

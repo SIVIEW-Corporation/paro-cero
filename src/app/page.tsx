@@ -9,6 +9,7 @@ export default function Page() {
         height={512}
         width={512}
         className='h-64 w-auto object-contain'
+        loading='eager'
       />
     </main>
   );
