@@ -5,9 +5,11 @@ import { useForm } from '@tanstack/react-form';
 import { toast } from 'sonner';
 import * as motion from 'motion/react-client';
 import { useState } from 'react';
+import { Mail, Lock } from 'lucide-react';
 
 import { loginSchema } from '@/lib/auth-schema';
 import { useLoginMutation } from '@/hooks/use-login-mutation';
+import { FormField, PasswordField } from '@/global-components/form-field';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -69,37 +71,13 @@ export default function LoginForm() {
             onChange: loginSchema.shape.email,
           }}
           children={(field) => (
-            <div className='flex flex-col gap-1.5'>
-              <label
-                htmlFor={field.name}
-                className='text-shGray-400 text-sm font-medium'
-              >
-                Correo electrónico
-              </label>
-              <input
-                id={field.name}
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder='ejemplo@winba.com'
-                className={`bg-shGray-800 rounded-lg border px-4 py-2.5 text-zinc-100 transition-all outline-none placeholder:text-zinc-500 ${
-                  field.state.meta.errors.length > 0
-                    ? 'border-red-500 focus:ring-0'
-                    : 'focus:border-shPrimary-400 border-shGray-600 focus:ring-0'
-                }`}
-              />
-              {/* CORRECCIÓN: Mapeo de errores para evitar [object Object] */}
-              {field.state.meta.errors.length > 0 && (
-                <p className='text-xs font-medium text-red-500'>
-                  {field.state.meta.errors
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    .map((err: any) =>
-                      typeof err === 'object' ? err.message : err,
-                    )
-                    .join(', ')}
-                </p>
-              )}
-            </div>
+            <FormField
+              name='email'
+              label='Correo electrónico'
+              placeholder='ejemplo@winba.com'
+              icon={Mail}
+              field={field}
+            />
           )}
         />
 
@@ -109,39 +87,7 @@ export default function LoginForm() {
           validators={{
             onChange: loginSchema.shape.password,
           }}
-          children={(field) => (
-            <div className='flex flex-col gap-1.5'>
-              <label
-                htmlFor={field.name}
-                className='text-shGray-400 text-sm font-medium'
-              >
-                Contraseña
-              </label>
-              <input
-                id={field.name}
-                type='password'
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder='••••••••'
-                className={`bg-shGray-800 rounded-lg border px-4 py-2.5 text-zinc-100 transition-all outline-none placeholder:text-zinc-500 ${
-                  field.state.meta.errors.length > 0
-                    ? 'border-red-500 focus:ring-0'
-                    : 'focus:border-shPrimary-400 border-shGray-600 focus:ring-0'
-                }`}
-              />
-              {field.state.meta.errors.length > 0 && (
-                <p className='text-xs font-medium text-red-500'>
-                  {field.state.meta.errors
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    .map((err: any) =>
-                      typeof err === 'object' ? err.message : err,
-                    )
-                    .join('\n')}
-                </p>
-              )}
-            </div>
-          )}
+          children={(field) => <PasswordField field={field} icon={Lock} />}
         />
 
         {/* Recordarme Checkbox */}
