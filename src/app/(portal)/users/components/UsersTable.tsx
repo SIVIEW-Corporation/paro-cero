@@ -64,17 +64,36 @@ export default function UsersTable() {
   const columns: ColumnDef<User>[] = [
     {
       accessorKey: 'full_name',
-      header: 'Nombre',
+      header: 'Usuario',
       cell: ({ row }) => {
         const fullName = row.original.full_name;
         const displayName =
           fullName.length > 25 ? `${fullName.slice(0, 25)}…` : fullName;
+        const jobTitle = row.original.job_title;
+        return (
+          <div
+            title={fullName}
+            className='truncate text-xs font-black sm:text-sm lg:text-base'
+          >
+            <p className='capitalize'>{displayName}</p>
+            <p className='text-[10px] font-normal text-zinc-500 sm:text-xs lg:text-sm'>
+              {jobTitle}
+            </p>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'area',
+      header: 'Area',
+      cell: ({ row }) => {
+        const jobArea = row.original.area ?? 'N/A';
         return (
           <span
-            title={fullName}
-            className='truncate text-xs font-bold capitalize sm:text-sm lg:text-base'
+            title={jobArea}
+            className='truncate text-xs font-normal text-zinc-300 capitalize sm:text-sm lg:text-base'
           >
-            {displayName}
+            {jobArea}
           </span>
         );
       },
@@ -107,7 +126,7 @@ export default function UsersTable() {
         const dateWithoutHour = formatted.split(',')[0];
         return (
           <span
-            className='text-xs text-zinc-400 sm:text-sm lg:text-base'
+            className='text-xs text-zinc-500 sm:text-sm lg:text-base'
             title={formatted}
           >
             {dateWithoutHour}
