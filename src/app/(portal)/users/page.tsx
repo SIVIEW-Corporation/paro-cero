@@ -9,6 +9,7 @@ import { AnimatePresence } from 'motion/react';
 import Image from 'next/image';
 
 import NewUserForm from './NewUserForm';
+import UsersTable from './components/UsersTable';
 
 export default function Users() {
   const user = useAuthStore((s) => s.user);
@@ -129,7 +130,9 @@ export default function Users() {
               className='h-full w-full'
             >
               {activeTab === 'all-operators' && (
-                <div className='mx-auto max-w-7xl'>All operators view</div>
+                <div className='mx-auto max-w-7xl'>
+                  <UsersTable />
+                </div>
               )}
               {activeTab === 'new-operator' && (
                 <div className='mx-auto max-w-7xl'>

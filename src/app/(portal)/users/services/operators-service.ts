@@ -2,6 +2,14 @@ import { apiClient } from '@/lib/api-client';
 import { NewUserSchema } from '../lib/new-user-schema';
 import { User } from '@/store/auth-store';
 
+export interface PaginatedUsersResponse {
+  items: User[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
 export const operatorsService = {
   /**
    * Create operator/viewer user sending data to the backend.
@@ -36,5 +44,20 @@ export const operatorsService = {
     }
 
     return response.data as User[];
+  },
+
+  getUsers: async (
+    page: number,
+    size: number,
+  ): Promise<PaginatedUsersResponse> => {
+    const response = await apiClient.get<PaginatedUsersResponse>(
+      `/users/?page=${page}&size=${size}`,
+    );
+
+    if (!response.ok) {
+      throw new Error(response.error?.message || 'Error al traer usuarios');
+    }
+
+    return response.data as PaginatedUsersResponse;
   },
 };

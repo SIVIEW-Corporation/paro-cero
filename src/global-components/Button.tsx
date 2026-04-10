@@ -30,8 +30,8 @@ const intentStyles: Record<ButtonIntent, Record<ButtonVariant, string>> = {
   primary: {
     primary:
       'bg-shPrimary-600 hover:bg-shPrimary-500 text-white disabled:bg-shPrimary-400/80',
-    secondary: 'bg-shPrimary-50 text-shPrimary-600 hover:bg-shPrimary-100',
-    ghost: 'hover:text-shPrimary-600 text-zinc-500 hover:bg-shPrimary-50',
+    secondary: 'bg-shPrimary-800 text-shPrimary-400 hover:bg-shPrimary-700',
+    ghost: 'hover:text-shPrimary-400 text-zinc-400 hover:bg-shPrimary-800',
   },
   red: {
     primary: 'bg-red-600 hover:bg-red-500 text-white',
@@ -117,8 +117,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={`${baseStyles} ${variantClass} ${shadowClass} ${scaleClass} ${widthClass} ${className}`}
         {...props}
       >
-        {icon && <span className='flex-none shrink-0 grow-0'>{icon}</span>}
-        {children && <span>{children}</span>}
+        {icon && !loading && (
+          <span className='flex-none shrink-0 grow-0'>{icon}</span>
+        )}
+        {children && !loading && <span>{children}</span>}
         {loading && (
           <>
             <Loader2 className='size-5 animate-spin' />
