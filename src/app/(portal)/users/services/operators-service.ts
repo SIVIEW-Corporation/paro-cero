@@ -50,4 +50,15 @@ export const operatorsService = {
 
     return response.data as PaginatedUsersResponse;
   },
+
+  /**
+   * Delete an operator/viewer user by ID.
+   */
+  deleteOperator: async (id: string): Promise<void> => {
+    const response = await apiClient.delete(`/users/${id}`);
+
+    if (!response.ok) {
+      throw new Error(response.error?.message || 'Error al eliminar usuario');
+    }
+  },
 };

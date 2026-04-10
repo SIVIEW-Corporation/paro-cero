@@ -4,7 +4,7 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
-type ButtonIntent = 'primary' | 'red' | 'green' | 'yellow' | 'orange' | 'zinc';
+type ButtonIntent = 'primary' | 'red' | 'green' | 'blue' | 'purple' | 'zinc';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -13,7 +13,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode;
   loading?: boolean;
   loadingText?: string;
-  scale?: '102' | '105' | '110';
+  scale?: '101' | '102' | '105' | '110';
   shadowSize?: 'sm' | 'md' | 'lg' | 'none';
   fullWidth?: boolean;
   cursor?: string;
@@ -22,41 +22,51 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
     'text-white bg-shPrimary-600 hover:bg-shPrimary-500 disabled:bg-zinc-500',
-  secondary: 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 disabled:bg-zinc-300',
+  secondary: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 disabled:bg-zinc-300',
   ghost: 'bg-transparent text-zinc-500 hover:bg-zinc-100 disabled:bg-zinc-100',
 };
 
 const intentStyles: Record<ButtonIntent, Record<ButtonVariant, string>> = {
   primary: {
     primary:
-      'bg-shPrimary-600 hover:bg-shPrimary-500 text-white disabled:bg-shPrimary-400/80',
-    secondary: 'bg-shPrimary-700 text-shPrimary-400 hover:bg-shPrimary-600',
-    ghost: 'hover:text-shPrimary-400 text-zinc-400 hover:bg-shPrimary-800',
+      'bg-shPrimary-600 hover:bg-shPrimary-500 text-white active:text-black',
+    secondary:
+      'bg-zinc-700 text-shPrimary-400 hover:text-shPrimary-300 hover:bg-shPrimary-700 active:text-white',
+    ghost:
+      'hover:text-shPrimary-300 text-shPrimary-400 hover:bg-shPrimary-800 active:text-white',
   },
   red: {
-    primary: 'bg-red-600 hover:bg-red-500 text-white',
-    secondary: 'bg-red-50 text-red-600 hover:bg-red-100',
-    ghost: 'hover:text-red-600 text-zinc-500 hover:bg-red-50',
+    primary: 'bg-red-900 hover:bg-red-800 text-white active:text-black',
+    secondary:
+      'bg-zinc-700 text-red-400 hover:text-red-200 hover:bg-red-950 active:text-white',
+    ghost: 'hover:text-red-200 text-red-400 hover:bg-red-950 active:text-white',
   },
   green: {
-    primary: 'bg-green-600 hover:bg-green-500 text-white',
-    secondary: 'bg-green-50 text-green-600 hover:bg-green-100',
-    ghost: 'hover:text-green-600 text-zinc-500 hover:bg-green-50',
+    primary: 'bg-emerald-900 hover:bg-emerald-800 text-white active:text-black',
+    secondary:
+      'bg-zinc-700 text-emerald-400 hover:text-emerald-200 hover:bg-emerald-950 active:text-white',
+    ghost:
+      'hover:text-emerald-200 text-emerald-400 hover:bg-emerald-950 active:text-white',
   },
-  yellow: {
-    primary: 'bg-yellow-600 hover:bg-yellow-500 text-white',
-    secondary: 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100',
-    ghost: 'hover:text-yellow-600 text-zinc-500 hover:bg-yellow-50',
+  blue: {
+    primary: 'bg-sky-900 hover:bg-sky-800 text-white active:text-black',
+    secondary:
+      'bg-zinc-700 text-sky-400 hover:text-sky-200 hover:bg-sky-950 active:text-white',
+    ghost: 'hover:text-sky-200 text-sky-400 hover:bg-sky-950 active:text-white',
   },
-  orange: {
-    primary: 'bg-orange-600 hover:bg-orange-500 text-white',
-    secondary: 'bg-orange-50 text-orange-600 hover:bg-orange-100',
-    ghost: 'hover:text-orange-600 text-zinc-500 hover:bg-orange-50',
+  purple: {
+    primary: 'bg-indigo-900 hover:bg-indigo-800 text-white active:text-black',
+    secondary:
+      'bg-zinc-700 text-indigo-400 hover:text-indigo-200 hover:bg-indigo-950 active:text-white',
+    ghost:
+      'hover:text-indigo-200 text-indigo-400 hover:bg-indigo-950 active:text-white',
   },
   zinc: {
-    primary: 'bg-zinc-800 hover:bg-zinc-700 text-white',
-    secondary: 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200',
-    ghost: 'hover:text-zinc-500 text-zinc-500 hover:bg-zinc-100',
+    primary: 'bg-zinc-300 hover:bg-zinc-100 text-black active:text-black',
+    secondary:
+      'bg-zinc-700 text-zinc-300 hover:text-zinc-200 hover:bg-zinc-600 active:text-white',
+    ghost:
+      'hover:text-zinc-200 text-zinc-300 hover:bg-zinc-600 active:text-white',
   },
 };
 
@@ -84,7 +94,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       icon,
       loading,
       loadingText,
-      scale = '105',
+      scale = '102',
       shadowSize = 'sm',
       fullWidth,
       cursor = 'pointer',

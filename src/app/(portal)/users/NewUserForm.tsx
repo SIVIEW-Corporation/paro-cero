@@ -210,7 +210,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
           </div>
 
           {/* Row 3: Area + Job Title */}
-          <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
+          <div className='bg bg- grid grid-cols-1 gap-5 md:grid-cols-2'>
             <motion.div
               custom={4}
               initial='hidden'
@@ -258,7 +258,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.3 }}
-            className='flex items-center justify-end gap-3 pt-2'
+            className='flex items-center justify-end gap-3 pt-3 md:pt-4 lg:pt-6'
           >
             <Button
               type='submit'
@@ -266,7 +266,10 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
               loading={createUser.isPending}
               loadingText='Creando...'
               icon={<UserPlus size={18} />}
-              scale='102'
+              scale='101'
+              variant='secondary'
+              intent='primary'
+              fullWidth={true}
             >
               Crear usuario
             </Button>

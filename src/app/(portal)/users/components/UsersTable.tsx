@@ -17,9 +17,11 @@ import {
 import * as motion from 'motion/react-client';
 import { User } from '@/store/auth-store';
 import Button from '@/global-components/Button';
+import ConfirmModal from './confirm-modal';
 
 import formatDate from '@/utils/format-date';
 import { useOperatorsQuery } from '../hooks/use-users-query';
+import { useDeleteUserMutation } from '../hooks/use-delete-user-mutation';
 
 const roleBadgeStyles: Record<string, { bg: string; text: string }> = {
   operator: { bg: 'bg-blue-600/20', text: 'text-blue-100' },
@@ -27,11 +29,37 @@ const roleBadgeStyles: Record<string, { bg: string; text: string }> = {
   viewer: { bg: 'bg-green-600/20', text: 'text-zinc-100' },
 };
 
+interface ConfirmModalState {
+  isOpen: boolean;
+  userId: string;
+  userName: string;
+}
+
 export default function UsersTable() {
   const [page, setPage] = useState(1);
   const size = 10;
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
+    isOpen: false,
+    userId: '',
+    userName: '',
+  });
 
   const { data, isPending, isFetching, error } = useOperatorsQuery(page, size);
+  const deleteMutation = useDeleteUserMutation();
+
+  const handleDeleteClick = (userId: string, userName: string) => {
+    setConfirmModal({ isOpen: true, userId, userName });
+  };
+
+  const handleCloseModal = () => {
+    setConfirmModal({ isOpen: false, userId: '', userName: '' });
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteMutation.isPending) return;
+    deleteMutation.mutate(confirmModal.userId);
+    handleCloseModal();
+  };
 
   const columns: ColumnDef<User>[] = [
     {
@@ -90,7 +118,7 @@ export default function UsersTable() {
     {
       id: 'actions',
       header: 'Acciones',
-      cell: () => (
+      cell: ({ row }) => (
         <div className='flex items-center gap-2'>
           <button
             type='button'
@@ -105,6 +133,9 @@ export default function UsersTable() {
             aria-label='Eliminar usuario'
             className='cursor-pointer rounded p-1 text-zinc-400 transition-colors hover:scale-105 hover:text-red-400'
             title='Eliminar'
+            onClick={() =>
+              handleDeleteClick(row.original.id, row.original.full_name)
+            }
           >
             <Trash2 size={16} />
           </button>
@@ -257,6 +288,15 @@ export default function UsersTable() {
           </div>
         </div>
       </motion.div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        userName={confirmModal.userName}
+        onCancel={handleCloseModal}
+        onConfirm={handleConfirmDelete}
+        isPending={deleteMutation.isPending}
+      />
     </div>
   );
 }
