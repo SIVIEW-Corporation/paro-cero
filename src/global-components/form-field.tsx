@@ -1,8 +1,9 @@
 'use client';
 
 import * as motion from 'motion/react-client';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { CheckCircle, Lock, type LucideIcon } from 'lucide-react';
+import { CheckCircle, Eye, EyeOff, Lock, type LucideIcon } from 'lucide-react';
 
 interface FormFieldProps {
   name: string;
@@ -10,6 +11,7 @@ interface FormFieldProps {
   placeholder?: string;
   type?: string;
   icon?: LucideIcon;
+  autocomplete?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   field: any;
 }
@@ -20,6 +22,7 @@ export function FormField({
   placeholder = '',
   type = 'text',
   icon: Icon,
+  autocomplete,
   field,
 }: FormFieldProps) {
   const hasError = field.state.meta.errors.length > 0;
@@ -45,11 +48,13 @@ export function FormField({
         </div>
         <input
           id={name}
+          name={name}
           type={type}
           value={field.state.value}
           onBlur={field.handleBlur}
           onChange={(e) => field.handleChange(e.target.value)}
           placeholder={placeholder}
+          autoComplete={autocomplete}
           className={cn(
             'bg-shGray-800 block w-full rounded-lg border py-2.5 pr-4 pl-10 text-zinc-100 transition-all placeholder:text-zinc-500',
             'focus:ring-shPrimary-400/20 outline-none focus:ring-2',
@@ -87,13 +92,18 @@ interface PasswordFieldProps {
   field: any;
   label?: string;
   icon?: LucideIcon;
+  name?: string;
+  autocomplete?: string;
 }
 
 export function PasswordField({
   field,
   label = 'Contraseña',
   icon: Icon = Lock,
+  name,
+  autocomplete,
 }: PasswordFieldProps) {
+  const [isVisible, setIsVisible] = useState(false);
   const hasError = field.state.meta.errors.length > 0;
 
   const requirements = [
@@ -149,19 +159,32 @@ export function PasswordField({
         </div>
         <input
           id='password'
-          type='text'
+          name={name}
+          type={isVisible ? 'text' : 'password'}
           value={field.state.value}
           onBlur={field.handleBlur}
           onChange={(e) => field.handleChange(e.target.value)}
           placeholder='••••••••'
+          autoComplete={autocomplete}
           className={cn(
-            'bg-shGray-800 block w-full rounded-lg border py-2.5 pr-4 pl-10 text-zinc-100 transition-all placeholder:text-zinc-500',
+            'bg-shGray-800 block w-full rounded-lg border py-2.5 pr-10 pl-10 text-zinc-100 transition-all placeholder:text-zinc-500',
             'focus:ring-shPrimary-400/20 outline-none focus:ring-2',
             hasError
               ? 'border-red-500 focus:border-red-500'
               : 'border-shGray-600 focus:border-shPrimary-400 hover:border-shGray-500',
           )}
         />
+        <button
+          type='button'
+          onClick={(e) => {
+            e.preventDefault();
+            setIsVisible((prev) => !prev);
+          }}
+          aria-label={isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          className='text-shGray-500 hover:text-shGray-300 absolute inset-y-0 right-0 flex items-center pr-3 transition-colors'
+        >
+          {isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
       </div>
 
       {/* Requisitos - solo visible cuando hay input y no están todos cumplidos */}

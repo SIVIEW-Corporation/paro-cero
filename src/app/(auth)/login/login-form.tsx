@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
 import { toast } from 'sonner';
 import * as motion from 'motion/react-client';
-import { useState } from 'react';
+// import { useState } from 'react';
 import { Mail, Lock } from 'lucide-react';
 
 import { loginSchema } from '@/lib/auth-schema';
@@ -15,7 +15,7 @@ import Button from '@/global-components/Button';
 export default function LoginForm() {
   const router = useRouter();
   const mutation = useLoginMutation();
-  const [rememberMe, setRememberMe] = useState(false);
+  // const [rememberMe, setRememberMe] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -78,6 +78,7 @@ export default function LoginForm() {
               placeholder='ejemplo@winba.com'
               icon={Mail}
               field={field}
+              autocomplete='username'
             />
           )}
         />
@@ -88,11 +89,18 @@ export default function LoginForm() {
           validators={{
             onChange: loginSchema.shape.password,
           }}
-          children={(field) => <PasswordField field={field} icon={Lock} />}
+          children={(field) => (
+            <PasswordField
+              field={field}
+              icon={Lock}
+              name='password'
+              autocomplete='current-password'
+            />
+          )}
         />
 
         {/* Recordarme Checkbox */}
-        <div className='flex items-center gap-2'>
+        {/* <div className='flex items-center gap-2'>
           <button
             type='button'
             role='checkbox'
@@ -136,11 +144,11 @@ export default function LoginForm() {
           >
             Recordarme por 30 días
           </label>
-        </div>
+        </div> */}
 
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
-          children={([canSubmit, isSubmitting]) => (
+          children={([canSubmit]) => (
             <Button
               type='submit'
               disabled={!canSubmit}
@@ -148,6 +156,7 @@ export default function LoginForm() {
               loadingText='Validando...'
               fullWidth
               scale='102'
+              className='mt-10 lg:mt-12'
             >
               Iniciar Sesión
             </Button>
