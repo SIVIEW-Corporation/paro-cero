@@ -19,7 +19,7 @@ import { User } from '@/store/auth-store';
 import Button from '@/global-components/Button';
 
 import formatDate from '@/utils/format-date';
-import { useUsersQuery } from '../hooks/use-users-query';
+import { useOperatorsQuery } from '../hooks/use-users-query';
 
 const roleBadgeStyles: Record<string, { bg: string; text: string }> = {
   operator: { bg: 'bg-blue-600/20', text: 'text-blue-100' },
@@ -31,18 +31,21 @@ export default function UsersTable() {
   const [page, setPage] = useState(1);
   const size = 10;
 
-  const { data, isPending, isFetching, error } = useUsersQuery(page, size);
+  const { data, isPending, isFetching, error } = useOperatorsQuery(page, size);
 
   const columns: ColumnDef<User>[] = [
     {
       accessorKey: 'full_name',
-      header: 'Usuario',
+      header: 'Nombre',
       cell: ({ row }) => {
         const fullName = row.original.full_name;
         const displayName =
           fullName.length > 25 ? `${fullName.slice(0, 25)}…` : fullName;
         return (
-          <span title={fullName} className='truncate font-semibold'>
+          <span
+            title={fullName}
+            className='truncate text-xs font-bold capitalize sm:text-sm lg:text-base'
+          >
             {displayName}
           </span>
         );
@@ -60,7 +63,7 @@ export default function UsersTable() {
         return (
           <span
             title={role}
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold lg:text-sm ${style.bg} ${style.text}`}
+            className={`-ml-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold sm:-ml-2 lg:text-sm ${style.bg} ${style.text}`}
           >
             {role}
           </span>
@@ -69,13 +72,17 @@ export default function UsersTable() {
     },
     {
       accessorKey: 'created_at',
-      header: 'Fecha de creación',
+      header: 'Agregado',
       cell: ({ row }) => {
         const dateStr = row.original.created_at ?? '';
         const formatted = formatDate(dateStr);
+        const dateWithoutHour = formatted.split(',')[0];
         return (
-          <span className='text-zinc-400' title={formatted}>
-            {formatted}
+          <span
+            className='text-xs text-zinc-400 sm:text-sm lg:text-base'
+            title={formatted}
+          >
+            {dateWithoutHour}
           </span>
         );
       },
@@ -88,7 +95,7 @@ export default function UsersTable() {
           <button
             type='button'
             aria-label='Editar usuario'
-            className='hover:text-shPrimary-600 cursor-pointer rounded p-1 text-zinc-400 transition-colors'
+            className='hover:text-shPrimary-400 cursor-pointer rounded p-1 text-zinc-400 transition-colors hover:scale-105'
             title='Editar'
           >
             <Pencil size={16} />
@@ -96,7 +103,7 @@ export default function UsersTable() {
           <button
             type='button'
             aria-label='Eliminar usuario'
-            className='cursor-pointer rounded p-1 text-zinc-400 transition-colors hover:text-red-600'
+            className='cursor-pointer rounded p-1 text-zinc-400 transition-colors hover:scale-105 hover:text-red-400'
             title='Eliminar'
           >
             <Trash2 size={16} />
@@ -140,17 +147,17 @@ export default function UsersTable() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className='shadow-shPrimary-500/20 bg-shGray-800/60 border-shGray-700/50 overflow-hidden rounded-2xl border shadow-md'
+        className='shadow-shPrimary-500/20 bg-shGray-800/65 border-shGray-700/50 overflow-hidden rounded-2xl border shadow-md'
       >
         <div className='overflow-x-auto'>
           <table className='w-full border-collapse text-left'>
-            <thead className='bg-shPrimary-700/90'>
+            <thead className='bg-shPrimary-800/75'>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className='xs:text-xs px-2 py-3 text-[10px] font-bold text-zinc-200 select-none sm:text-xs md:px-6 md:py-4 md:text-sm'
+                      className='px-2 py-3 text-xs font-bold text-zinc-200 select-none sm:text-sm md:px-6 md:py-4 lg:text-base'
                     >
                       {flexRender(
                         header.column.columnDef.header,
@@ -223,7 +230,7 @@ export default function UsersTable() {
         {/* Pagination Controls */}
         <div className='border-shGray-700/20 flex flex-col items-center justify-between gap-6 border-t px-6 py-6 sm:flex-row sm:gap-3'>
           <div className='flex-1'>
-            <p className='text-[10px] font-medium text-zinc-500 sm:text-xs lg:text-sm'>
+            <p className='text-xs font-medium text-zinc-500 sm:text-sm lg:text-base'>
               Mostrando <span className='font-bold text-zinc-300'>{from}</span>{' '}
               a <span className='font-bold text-zinc-300'>{to}</span> de{' '}
               <span className='text-shPrimary-400 font-bold'>{total}</span>{' '}

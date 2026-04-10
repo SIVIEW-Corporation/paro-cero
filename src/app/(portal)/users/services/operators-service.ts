@@ -36,22 +36,12 @@ export const operatorsService = {
     return response.data as User;
   },
 
-  getOperators: async (): Promise<User[]> => {
-    const response = await apiClient.get<User[]>('/users');
-
-    if (!response.ok) {
-      throw new Error(response.error?.message || 'Error al traer usuarios');
-    }
-
-    return response.data as User[];
-  },
-
-  getUsers: async (
+  getOperators: async (
     page: number,
     size: number,
   ): Promise<PaginatedUsersResponse> => {
     const response = await apiClient.get<PaginatedUsersResponse>(
-      `/users/?page=${page}&size=${size}`,
+      `/users/?page=${page}&size=${size}&include_inactive=false`,
     );
 
     if (!response.ok) {

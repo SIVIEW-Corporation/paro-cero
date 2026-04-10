@@ -30,7 +30,7 @@ const intentStyles: Record<ButtonIntent, Record<ButtonVariant, string>> = {
   primary: {
     primary:
       'bg-shPrimary-600 hover:bg-shPrimary-500 text-white disabled:bg-shPrimary-400/80',
-    secondary: 'bg-shPrimary-800 text-shPrimary-400 hover:bg-shPrimary-700',
+    secondary: 'bg-shPrimary-700 text-shPrimary-400 hover:bg-shPrimary-600',
     ghost: 'hover:text-shPrimary-400 text-zinc-400 hover:bg-shPrimary-800',
   },
   red: {

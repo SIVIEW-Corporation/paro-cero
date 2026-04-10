@@ -80,7 +80,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, duration: 0.4 }}
-        className='border-shGray-700/50 bg-shGray-800/40 rounded-2xl border p-5 backdrop-blur-sm md:p-6'
+        className='shadow-shPrimary-500/20 bg-shGray-800/65 border-shGray-700/50 overflow-hidden rounded-2xl border p-5 shadow-md md:p-6'
       >
         <form
           onSubmit={(e) => {
