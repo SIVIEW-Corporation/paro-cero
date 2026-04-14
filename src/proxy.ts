@@ -4,23 +4,22 @@ import { tabPaths } from './constants/tab-paths';
 
 export function proxy(request: NextRequest) {
   const token = request.cookies.get('access_token')?.value;
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
 
   const isProtectedRoute = tabPaths.some((p) => pathname.startsWith(p));
   const isAuthRoute = pathname === '/login';
-  const isRoot = pathname === '/';
-
-  if (isRoot) {
-    return NextResponse.redirect(
-      new URL(token ? '/dashboard' : '/login', request.url),
-    );
-  }
+  const isLandingRoute = pathname === '/';
+  const hasLandingBypass = searchParams.get('landing') === '1';
 
   if (!token && isProtectedRoute && !isAuthRoute) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
   if (token && isAuthRoute) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  if (token && isLandingRoute && !hasLandingBypass) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
