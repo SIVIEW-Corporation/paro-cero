@@ -155,12 +155,16 @@ interface WorkOrder {
   prioridad: string;
   downtime?: number;
   fechaVen: string;
+  fechaCompromiso?: string | Date;
   asignado: string;
   tipo: string;
   folio: string;
 }
 
 export function Dashboard({ wo }: DashboardProps) {
+  const [pendingLimit, setPendingLimit] = useState<'5' | '10' | '15' | 'all'>(
+    '5',
+  );
   const workOrders = wo as unknown as WorkOrder[];
 
   const open = workOrders.filter(
@@ -172,6 +176,30 @@ export function Dashboard({ wo }: DashboardProps) {
   const upcoming = workOrders.filter((w) =>
     ['pendiente', 'asignada', 'nueva'].includes(w.status),
   );
+
+  const getDueDateTimestamp = (value: string | Date | undefined) => {
+    if (!value) return Number.POSITIVE_INFINITY;
+    if (value instanceof Date) return value.getTime();
+
+    const directTimestamp = Date.parse(value);
+    if (!Number.isNaN(directTimestamp)) return directTimestamp;
+
+    const slashDate = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!slashDate) return Number.POSITIVE_INFINITY;
+
+    const [, day, month, year] = slashDate;
+    return new Date(Number(year), Number(month) - 1, Number(day)).getTime();
+  };
+
+  const upcomingSorted = [...upcoming].sort((a, b) => {
+    const dueA = getDueDateTimestamp(a.fechaVen ?? a.fechaCompromiso);
+    const dueB = getDueDateTimestamp(b.fechaVen ?? b.fechaCompromiso);
+    return dueA - dueB;
+  });
+
+  const visibleCount =
+    pendingLimit === 'all' ? upcomingSorted.length : Number(pendingLimit);
+  const visibleUpcoming = upcomingSorted.slice(0, visibleCount);
 
   return (
     <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
@@ -244,27 +272,48 @@ export function Dashboard({ wo }: DashboardProps) {
               Sin pendientes
             </p>
           ) : (
-            upcoming.map((w) => (
-              <div
-                key={w.id}
-                className='flex items-center justify-between border-b border-slate-800 py-2.5'
-              >
-                <div>
-                  <div className='text-sm font-semibold text-slate-200'>
-                    {w.titulo}
+            <>
+              {visibleUpcoming.map((w) => (
+                <div
+                  key={w.id}
+                  className='flex items-center justify-between border-b border-slate-800 py-2.5'
+                >
+                  <div>
+                    <div className='text-sm font-semibold text-slate-200'>
+                      {w.titulo}
+                    </div>
+                    <div className='mt-0.5 text-xs text-slate-500'>
+                      {w.asignado} · Vence {w.fechaVen}
+                    </div>
                   </div>
-                  <div className='mt-0.5 text-xs text-slate-500'>
-                    {w.asignado} · Vence {w.fechaVen}
+                  <div className='ml-3 flex flex-shrink-0 gap-1.5'>
+                    <Badge
+                      label={
+                        PRL[w.prioridad as keyof typeof PRL] || w.prioridad
+                      }
+                      color={PRC[w.prioridad as keyof typeof PRC] || '#3b82f6'}
+                    />
                   </div>
                 </div>
-                <div className='ml-3 flex flex-shrink-0 gap-1.5'>
-                  <Badge
-                    label={PRL[w.prioridad as keyof typeof PRL] || w.prioridad}
-                    color={PRC[w.prioridad as keyof typeof PRC] || '#3b82f6'}
-                  />
-                </div>
+              ))}
+              <div className='pt-3'>
+                <label className='mb-1 block text-xs text-slate-500'>
+                  Mostrar
+                </label>
+                <select
+                  value={pendingLimit}
+                  onChange={(e) =>
+                    setPendingLimit(e.target.value as '5' | '10' | '15' | 'all')
+                  }
+                  className='bg-shGray-800 w-full rounded-md border border-slate-700 px-2.5 py-1.5 text-sm text-slate-200 focus:border-slate-500 focus:outline-none'
+                >
+                  <option value='5'>5</option>
+                  <option value='10'>10</option>
+                  <option value='15'>15</option>
+                  <option value='all'>Todos</option>
+                </select>
               </div>
-            ))
+            </>
           )}
         </Card>
         <Card>

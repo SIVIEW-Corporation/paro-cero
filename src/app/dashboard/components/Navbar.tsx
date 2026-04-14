@@ -47,6 +47,7 @@ export default function Navbar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const pathname = usePathname();
+  const normalizedPathname = pathname.replace(/\/$/, '') || '/';
 
   const { user } = useAuthStore();
   const logoutMutation = useLogoutMutation();
@@ -78,7 +79,7 @@ export default function Navbar() {
   return (
     <header className='app-topbar bg-shBackground/80 fixed top-0 z-50 grid w-screen place-items-center p-2 backdrop-blur-md sm:p-3 lg:px-4 xl:px-5'>
       <nav className='flex w-full max-w-[1540px] items-center justify-between'>
-        <Link href='/' scroll={false}>
+        <Link href='/dashboard' scroll={false}>
           <Image
             src='/PM0-logo.webp'
             alt='PM0 logo'
@@ -92,7 +93,11 @@ export default function Navbar() {
         {/* Menu --- Desktop */}
         <div className='hidden items-center gap-6 lg:gap-8 xl:flex xl:gap-10'>
           {tabs.map((tab) => {
-            const isActive = pathname === tab.path;
+            const isActive =
+              tab.path === '/dashboard'
+                ? normalizedPathname === '/dashboard'
+                : normalizedPathname === tab.path ||
+                  normalizedPathname.startsWith(`${tab.path}/`);
 
             return (
               <Link
@@ -183,7 +188,11 @@ export default function Navbar() {
           className={`text-shGray-300 bg-shBackground absolute top-full left-0 z-50 flex w-full flex-col items-center overflow-y-scroll pt-10 pb-40 transition duration-300 ease-in-out xl:hidden ${isOpen ? 'h-dvh opacity-100' : 'pointer-events-none h-0 opacity-0'}`}
         >
           {tabs.map((tab) => {
-            const isActive = pathname === tab.path;
+            const isActive =
+              tab.path === '/dashboard'
+                ? normalizedPathname === '/dashboard'
+                : normalizedPathname === tab.path ||
+                  normalizedPathname.startsWith(`${tab.path}/`);
 
             return (
               <Link
