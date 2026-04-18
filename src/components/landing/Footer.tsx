@@ -1,44 +1,6 @@
-const footerColumns = [
-  {
-    title: 'Producto',
-    links: ['Gestion de activos', 'Ordenes de trabajo', 'Preventivo', 'KPIs'],
-  },
-  {
-    title: 'Solucion',
-    links: [
-      'Disponibilidad operacional',
-      'Confiabilidad',
-      'Estandarizacion de inspecciones',
-      'Analitica operacional',
-    ],
-  },
-  {
-    title: 'Recursos',
-    links: [
-      'Guia de implementacion',
-      'Casos de uso',
-      'Webinars',
-      'Centro de ayuda',
-    ],
-  },
-  {
-    title: 'Empresa',
-    links: ['Sobre Paro Cero', 'Equipo', 'Partners', 'Trabaja con nosotros'],
-  },
-  {
-    title: 'Soporte',
-    links: [
-      'Mesa de ayuda',
-      'Estado del servicio',
-      'Canales de contacto',
-      'FAQ',
-    ],
-  },
-  {
-    title: 'Legal',
-    links: ['Terminos y condiciones', 'Privacidad', 'Cookies', 'Seguridad'],
-  },
-] as const;
+import Link from 'next/link';
+
+import { footerNavColumns } from '@/app/(footer-pages)/_content/footer-pages';
 
 export default function Footer() {
   return (
@@ -56,16 +18,16 @@ export default function Footer() {
           </p>
         </div>
 
-        <div className='grid gap-8 sm:grid-cols-2 lg:grid-cols-6'>
-          {footerColumns.map((column) => (
+        <div className='grid gap-8 sm:grid-cols-2 lg:grid-cols-4'>
+          {footerNavColumns.map((column) => (
             <div key={column.title}>
               <h3 className='text-shPrimary-300 mb-3 text-xs font-semibold tracking-[0.16em] uppercase'>
                 {column.title}
               </h3>
               <ul className='text-shGray-400 space-y-2 text-sm'>
                 {column.links.map((link) => (
-                  <li key={link} className='hover:text-shGray-300'>
-                    <a href='#contacto'>{link}</a>
+                  <li key={link.href} className='hover:text-shGray-300'>
+                    <Link href={link.href}>{link.label}</Link>
                   </li>
                 ))}
               </ul>
