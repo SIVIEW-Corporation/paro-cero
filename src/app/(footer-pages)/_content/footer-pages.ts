@@ -584,9 +584,9 @@ export const footerPages: FooterPageContent[] = [
     },
     references: [],
     placeholders: [
-      '[PENDIENTE] Correo oficial de contacto público.',
-      '[PENDIENTE] Horario formal de atención por zona horaria.',
-      '[PENDIENTE] Teléfono o canal directo (si aplica).',
+      'siview.corp@gmail.com Correo oficial de contacto público.',
+      '24/7 Horario formal de atención por zona horaria.',
+      '5537828350 Teléfono o canal directo.',
     ],
   },
   {
@@ -643,7 +643,7 @@ export const footerPages: FooterPageContent[] = [
       'Nota: este contenido requiere revisión legal formal antes de publicarse como versión definitiva.',
     placeholders: [
       '[PENDIENTE] Razón social, domicilio legal y jurisdicción aplicable.',
-      '[PENDIENTE] Correo legal oficial para notificaciones contractuales.',
+      'siview.corp@gmail.com Correo legal oficial para notificaciones contractuales.',
       '[PENDIENTE] Fecha de vigencia y versión aprobada por asesoría legal.',
     ],
   },
