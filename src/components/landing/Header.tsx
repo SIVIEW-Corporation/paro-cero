@@ -8,7 +8,7 @@ const navigation = [
   { href: '#modulos', label: 'Modulos' },
   { href: '#industrias', label: 'Industrias' },
   { href: '#beneficios', label: 'Beneficios' },
-  { href: '#demo', label: 'Demo' },
+  { href: '/demo', label: 'Demo' },
   { href: '#contacto', label: 'Contacto' },
 ] as const;
 
@@ -47,15 +47,15 @@ export default function Header() {
           >
             Iniciar sesion
           </Link>
-          <a
-            href='#demo'
+          <Link
+            href='/demo'
             className={cn(
               landingButtonVariants(),
               'bg-shPrimary-400 text-shBackground hover:bg-shPrimary-300 h-10 px-5 font-semibold',
             )}
           >
             Solicitar demo
-          </a>
+          </Link>
         </div>
 
         <details className='group relative lg:hidden'>
@@ -84,15 +84,15 @@ export default function Header() {
               >
                 Iniciar sesion
               </Link>
-              <a
-                href='#demo'
+              <Link
+                href='/demo'
                 className={cn(
                   landingButtonVariants(),
                   'bg-shPrimary-400 text-shBackground hover:bg-shPrimary-300 h-10 font-semibold',
                 )}
               >
                 Solicitar demo
-              </a>
+              </Link>
             </div>
           </div>
         </details>

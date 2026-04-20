@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 import { landingButtonVariants } from '@/components/landing/button-variants';
 import { cn } from '@/lib/utils';
@@ -32,15 +33,15 @@ export default function Hero() {
             disponibilidad de linea.
           </p>
           <div className='flex flex-wrap items-center gap-3'>
-            <a
-              href='#demo'
+            <Link
+              href='/demo'
               className={cn(
                 landingButtonVariants(),
                 'bg-shPrimary-400 text-shBackground hover:bg-shPrimary-300 h-11 px-6 text-sm font-semibold',
               )}
             >
               Solicitar demo
-            </a>
+            </Link>
             <a
               href='#solucion'
               className={cn(

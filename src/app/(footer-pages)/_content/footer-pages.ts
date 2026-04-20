@@ -38,7 +38,7 @@ const commonCta: FooterPageCta = {
   description:
     'Te ayudamos a priorizar activos críticos, ordenar la ejecución diaria y definir una adopción por etapas medible.',
   primaryLabel: 'Solicitar demo',
-  primaryHref: '/#demo',
+  primaryHref: '/demo',
   secondaryLabel: 'Contactar a Paro Cero',
   secondaryHref: '/empresa/contacto',
 };
@@ -48,7 +48,7 @@ const implementationCta: FooterPageCta = {
   description:
     'Planificamos juntos el arranque operativo para que el equipo use la plataforma desde la primera semana.',
   primaryLabel: 'Solicitar acompañamiento',
-  primaryHref: '/#demo',
+  primaryHref: '/demo',
   secondaryLabel: 'Hablar con el equipo',
   secondaryHref: '/empresa/contacto',
 };
@@ -578,7 +578,7 @@ export const footerPages: FooterPageContent[] = [
       description:
         'Podemos ayudarte a identificar prioridades y armar un plan inicial de implementación en PM0.',
       primaryLabel: 'Ir al formulario de demo',
-      primaryHref: '/#demo',
+      primaryHref: '/demo',
       secondaryLabel: 'Ver guía de implementación',
       secondaryHref: '/recursos/guia-de-implementacion',
     },

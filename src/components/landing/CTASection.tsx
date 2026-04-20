@@ -21,15 +21,15 @@ export default function CTASection() {
           </p>
 
           <div className='mt-8 flex flex-wrap gap-3'>
-            <a
-              href='#contacto'
+            <Link
+              href='/demo'
               className={cn(
                 landingButtonVariants(),
                 'bg-shPrimary-400 text-shBackground hover:bg-shPrimary-300 h-11 px-6 font-semibold',
               )}
             >
               Solicitar demo
-            </a>
+            </Link>
             <Link
               href='/login'
               className={cn(
