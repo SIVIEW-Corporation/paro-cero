@@ -22,6 +22,7 @@ html {
   --color-shBackground: oklch(0.178 0.0043 84.59); /* #12110f */
   --color-shForeground: oklch(0.9702 0 0); /* #f5f5f5 */
 
+  --color-shPrimary-100: oklch(0.98 0.015 51.97); /* #fff5ed */
   --color-shPrimary-200: oklch(0.958 0.0186 51.97); /* #fceee6 */
   --color-shPrimary-300: oklch(0.8786 0.0608 53.84); /* #f8cdb2 */
   --color-shPrimary-400: oklch(0.7602 0.1375 62.92); /* #ee9c4a */
@@ -29,6 +30,7 @@ html {
   --color-shPrimary-600: oklch(0.5097 0.0919 62.43); /* #8b5928 */
   --color-shPrimary-700: oklch(0.3864 0.0696 62.98); /* #5e3b18 */
   --color-shPrimary-800: oklch(0.263 0.048 62.83); /* #351f09 */
+  --color-shPrimary-900: oklch(0.21 0.04 62.83); /* #1f1308 */
 
   --color-shSecondary-200: oklch(0.9558 0.0127 86.83); /* #f4f0e7 */
   --color-shSecondary-300: oklch(0.838 0.0372 87.8); /* #d4c9af */
@@ -45,6 +47,7 @@ html {
   --color-shGray-600: oklch(0.5062 0.006 48.61); /* #686462 */
   --color-shGray-700: oklch(0.3817 0.0044 39.44); /* #454241 */
   --color-shGray-800: oklch(0.2583 0.003 17.35); /* #252323 */
+  --color-shGray-900: oklch(0.195 0.003 17.35); /* #1a1818 */
 
   --font-inter: 'Inter', sans-serif;
   --font-inconsolata: 'Inconsolata', monospace;

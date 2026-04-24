@@ -197,7 +197,7 @@ export default function UsersTable() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className='shadow-shPrimary-500/20 bg-shGray-800/65 border-shGray-700/50 overflow-hidden rounded-2xl border shadow-md'
+        className='shadow-shPrimary-500/20 bg-shGray-900 border-shGray-700/50 overflow-hidden rounded-2xl border shadow-md'
       >
         <div className='overflow-x-auto'>
           <table className='w-full border-collapse text-left'>

@@ -56,11 +56,11 @@ export function FormField({
           placeholder={placeholder}
           autoComplete={autocomplete}
           className={cn(
-            'bg-shGray-800 block w-full rounded-lg border py-2.5 pr-4 pl-10 text-zinc-100 transition-all placeholder:text-zinc-500',
+            'bg-shGray-800 block w-full rounded-lg border py-2.5 pr-4 pl-10 text-zinc-100 transition-all placeholder:text-zinc-600',
             'focus:ring-shPrimary-400/20 outline-none focus:ring-2',
             hasError
               ? 'border-red-500 focus:border-red-500'
-              : 'border-shGray-600 focus:border-shPrimary-400 hover:border-shGray-500',
+              : 'border-shGray-700 focus:border-shPrimary-400 hover:border-shGray-600',
           )}
         />
       </div>
@@ -171,7 +171,7 @@ export function PasswordField({
             'focus:ring-shPrimary-400/20 outline-none focus:ring-2',
             hasError
               ? 'border-red-500 focus:border-red-500'
-              : 'border-shGray-600 focus:border-shPrimary-400 hover:border-shGray-500',
+              : 'border-shGray-700 focus:border-shPrimary-400 hover:border-shGray-600',
           )}
         />
         <button

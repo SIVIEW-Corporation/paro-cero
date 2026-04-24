@@ -65,7 +65,7 @@ export default function Users() {
   // Admin guard — redirect non-admin users
   if (!isAdmin) {
     return (
-      <main className='container mx-auto max-w-7xl pt-2'>
+      <main className='z-10 container max-w-7xl'>
         <div className='flex flex-col items-center justify-center py-16'>
           <h2 className='text-shGray-200 text-xl font-bold'>
             Acceso restringido
@@ -79,7 +79,7 @@ export default function Users() {
   }
 
   return (
-    <main className='container mx-auto max-w-7xl pt-2'>
+    <main className='z-10 container max-w-7xl'>
       <section className='mb-6 md:mb-8 xl:mb-12'>
         <h1 className='font-inter mb-1 text-center text-xl font-bold md:mb-1.5 md:text-2xl xl:text-3xl'>
           Gestionar usuarios

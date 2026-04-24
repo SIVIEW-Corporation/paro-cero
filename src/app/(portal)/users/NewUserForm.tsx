@@ -80,7 +80,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, duration: 0.4 }}
-        className='shadow-shPrimary-500/20 bg-shGray-800/65 border-shGray-700/50 overflow-hidden rounded-2xl border p-5 shadow-md md:p-6'
+        className='shadow-shPrimary-500/20 bg-shGray-900 border-shGray-700/50 overflow-hidden rounded-2xl border p-5 shadow-md md:p-6'
       >
         <form
           onSubmit={(e) => {
@@ -181,7 +181,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                         className={cn(
                           'bg-shGray-800 block w-full appearance-none rounded-lg border py-2.5 pr-10 pl-10 text-zinc-100 transition-all',
                           'focus:ring-shPrimary-400/20 outline-none focus:ring-2',
-                          'border-shGray-600 focus:border-shPrimary-400 hover:border-shGray-500',
+                          'border-shGray-700 focus:border-shPrimary-400 hover:border-shGray-600',
                         )}
                       >
                         <option value='operator'>Operador</option>
