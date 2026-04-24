@@ -26,25 +26,26 @@ const baseOptions = {
     containLabel: true,
   },
   tooltip: {
-    backgroundColor: '#0d1627',
-    borderColor: '#1e3a5f',
-    borderRadius: 6,
+    backgroundColor: '#ffffff',
+    borderColor: '#dde3ea',
+    borderRadius: 8,
+    extraCssText: 'box-shadow: 0 8px 24px rgba(15,23,42,0.12);',
     textStyle: {
-      color: '#e2e8f0',
+      color: '#111827',
       fontSize: 12,
     },
   },
   xAxis: {
-    axisLine: { lineStyle: { color: '#1e3a5f' } },
+    axisLine: { lineStyle: { color: '#dde3ea' } },
     axisTick: { show: false },
-    axisLabel: { color: '#475569', fontSize: 11 },
+    axisLabel: { color: '#667085', fontSize: 11 },
     splitLine: { show: false },
   },
   yAxis: {
     axisLine: { show: false },
     axisTick: { show: false },
-    axisLabel: { color: '#475569', fontSize: 11 },
-    splitLine: { lineStyle: { color: '#1e3a5f', type: 'dashed' as const } },
+    axisLabel: { color: '#667085', fontSize: 11 },
+    splitLine: { lineStyle: { color: '#dde3ea', type: 'dashed' as const } },
   },
 };
 

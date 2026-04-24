@@ -29,7 +29,7 @@ import {
   ModalFooter,
 } from '@/components/ui';
 
-import type { Activo, PlanMantenimiento, OrdenTrabajo } from '@/app/data/types';
+import type { Activo, OrdenTrabajo } from '@/app/data/types';
 
 interface LoginScreenProps {
   onLogin: () => void;
@@ -161,6 +161,14 @@ interface WorkOrder {
   folio: string;
 }
 
+const chartColors = {
+  info: '#2563eb',
+  success: '#16a34a',
+  warning: '#d89b2b',
+  danger: '#dc2626',
+  muted: '#94a3b8',
+};
+
 export function Dashboard({ wo }: DashboardProps) {
   const [pendingLimit, setPendingLimit] = useState<'5' | '10' | '15' | 'all'>(
     '5',
@@ -213,35 +221,35 @@ export function Dashboard({ wo }: DashboardProps) {
           label='OT Abiertas'
           value={open}
           sub='ordenes activas'
-          color='#f59e0b'
+          color={chartColors.warning}
           icon={<span>📂</span>}
         />
         <KpiCard
           label='OT Vencidas'
           value={overdue}
           sub='requieren atencion'
-          color='#ef4444'
+          color={chartColors.danger}
           icon={<span>⏰</span>}
         />
         <KpiCard
           label='Completadas'
           value={completed}
           sub='este mes'
-          color='#22c55e'
+          color={chartColors.success}
           icon={<span>✅</span>}
         />
         <KpiCard
           label='Cumplimiento PM'
           value='68%'
           sub='meta: 90%'
-          color='#3b82f6'
+          color={chartColors.info}
           icon={<span>📊</span>}
         />
         <KpiCard
           label='Horas de Paro'
           value={`${Math.round(totalDownMin / 60)}h`}
           sub='acumuladas'
-          color='#f97316'
+          color={chartColors.warning}
           icon={<span>⚠</span>}
         />
       </div>
@@ -252,7 +260,7 @@ export function Dashboard({ wo }: DashboardProps) {
           <EChartsArea
             data={complianceData}
             dataKey='val'
-            color='#3b82f6'
+            color={chartColors.info}
             name='Cumplimiento %'
             height={200}
             yDomain={[0, 100]}
@@ -276,13 +284,13 @@ export function Dashboard({ wo }: DashboardProps) {
               {visibleUpcoming.map((w) => (
                 <div
                   key={w.id}
-                  className='flex items-center justify-between border-b border-slate-800 py-2.5'
+                  className='border-app-border-soft flex items-center justify-between border-b py-3 last:border-b-0'
                 >
                   <div>
-                    <div className='text-sm font-semibold text-slate-200'>
+                    <div className='text-app-text-primary text-sm font-semibold'>
                       {w.titulo}
                     </div>
-                    <div className='mt-0.5 text-xs text-slate-500'>
+                    <div className='text-app-text-secondary mt-0.5 text-xs'>
                       {w.asignado} · Vence {w.fechaVen}
                     </div>
                   </div>
@@ -291,13 +299,15 @@ export function Dashboard({ wo }: DashboardProps) {
                       label={
                         PRL[w.prioridad as keyof typeof PRL] || w.prioridad
                       }
-                      color={PRC[w.prioridad as keyof typeof PRC] || '#3b82f6'}
+                      color={
+                        PRC[w.prioridad as keyof typeof PRC] || chartColors.info
+                      }
                     />
                   </div>
                 </div>
               ))}
               <div className='pt-3'>
-                <label className='mb-1 block text-xs text-slate-500'>
+                <label className='text-app-text-secondary mb-1 block text-xs font-medium'>
                   Mostrar
                 </label>
                 <select
@@ -305,7 +315,7 @@ export function Dashboard({ wo }: DashboardProps) {
                   onChange={(e) =>
                     setPendingLimit(e.target.value as '5' | '10' | '15' | 'all')
                   }
-                  className='bg-shGray-800 w-full rounded-md border border-slate-700 px-2.5 py-1.5 text-sm text-slate-200 focus:border-slate-500 focus:outline-none'
+                  className='border-app-border-soft bg-app-surface text-app-text-primary focus:border-app-brand w-full rounded-md border px-2.5 py-1.5 text-sm focus:outline-none'
                 >
                   <option value='5'>5</option>
                   <option value='10'>10</option>
@@ -321,25 +331,29 @@ export function Dashboard({ wo }: DashboardProps) {
           {topFallas.map((f, i) => (
             <div
               key={i}
-              className='flex items-center justify-between border-b border-slate-800 py-2.5'
+              className='border-app-border-soft flex items-center justify-between border-b py-3 last:border-b-0'
             >
               <div className='flex items-center gap-3'>
                 <span
                   className='w-4.5 text-center font-mono text-xs font-extrabold'
                   style={{
                     color:
-                      i === 0 ? '#ef4444' : i === 1 ? '#f97316' : '#475569',
+                      i === 0
+                        ? chartColors.danger
+                        : i === 1
+                          ? chartColors.warning
+                          : chartColors.muted,
                   }}
                 >
                   {i + 1}
                 </span>
-                <span className='text-sm text-slate-200'>{f.asset}</span>
+                <span className='text-app-text-primary text-sm'>{f.asset}</span>
               </div>
               <div className='flex items-center gap-3'>
-                <span className='font-mono text-xs font-bold text-red-500'>
+                <span className='text-app-danger font-mono text-xs font-bold'>
                   {f.count} fallas
                 </span>
-                <span className='font-mono text-xs text-orange-500'>
+                <span className='text-app-text-secondary font-mono text-xs'>
                   {f.down}h
                 </span>
               </div>
@@ -376,26 +390,32 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
     const assetWOs = wo.filter((w) => w.activoId === selected.id);
     const assetPlans = PLANS.filter((p) => p.activoId === selected.id);
     return (
-      <div className='h-full overflow-y-auto p-7'>
+      <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
         <BtnBack onClick={() => setSelected(null)} />
-        <div className='mb-6 flex items-start justify-between border-b border-slate-700 pb-5'>
+        <div className='border-app-border-soft mb-6 flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-start sm:justify-between'>
           <div>
-            <div className='mb-1.5 font-mono text-xs tracking-wider text-amber-500'>
+            <div className='text-app-brand-dark mb-1.5 font-mono text-xs tracking-wider'>
               {selected.code}
             </div>
-            <h1 className='text-2xl font-extrabold tracking-tight text-slate-100'>
+            <h1 className='text-app-text-primary text-2xl font-extrabold tracking-tight'>
               {selected.name}
             </h1>
-            <p className='mt-1 text-sm text-slate-500'>{selected.area}</p>
+            <p className='text-app-text-secondary mt-1 text-sm'>
+              {selected.area}
+            </p>
           </div>
           <div className='flex flex-wrap justify-end gap-2'>
             <Badge
               label={STL[selected.status] || selected.status}
-              color={STC[selected.status as keyof typeof STC] || '#3b82f6'}
+              color={
+                STC[selected.status as keyof typeof STC] || chartColors.info
+              }
             />
             <Badge
               label={'Criticidad ' + selected.criticidad}
-              color={CRC[selected.criticidad as keyof typeof CRC] || '#3b82f6'}
+              color={
+                CRC[selected.criticidad as keyof typeof CRC] || chartColors.info
+              }
             />
           </div>
         </div>
@@ -416,7 +436,7 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
           </Card>
           <Card className='flex flex-col items-center justify-center gap-3.5'>
             <CardTitle>Acceso Rapido QR</CardTitle>
-            <div className='bg-shGray-800 flex h-28 w-28 items-center justify-center rounded-2xl border border-slate-700'>
+            <div className='border-app-border-soft bg-app-surface-subtle flex h-28 w-28 items-center justify-center rounded-2xl border'>
               <svg width='88' height='88' viewBox='0 0 88 88'>
                 <rect
                   x='2'
@@ -424,38 +444,38 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
                   width='36'
                   height='36'
                   fill='none'
-                  stroke='#f59e0b'
+                  stroke='#d89b2b'
                   strokeWidth='3'
                 />
-                <rect x='12' y='12' width='16' height='16' fill='#f59e0b' />
+                <rect x='12' y='12' width='16' height='16' fill='#d89b2b' />
                 <rect
                   x='50'
                   y='2'
                   width='36'
                   height='36'
                   fill='none'
-                  stroke='#f59e0b'
+                  stroke='#d89b2b'
                   strokeWidth='3'
                 />
-                <rect x='60' y='12' width='16' height='16' fill='#f59e0b' />
+                <rect x='60' y='12' width='16' height='16' fill='#d89b2b' />
                 <rect
                   x='2'
                   y='50'
                   width='36'
                   height='36'
                   fill='none'
-                  stroke='#f59e0b'
+                  stroke='#d89b2b'
                   strokeWidth='3'
                 />
-                <rect x='12' y='60' width='16' height='16' fill='#f59e0b' />
-                <rect x='50' y='50' width='10' height='10' fill='#f59e0b' />
-                <rect x='68' y='50' width='10' height='10' fill='#f59e0b' />
-                <rect x='50' y='68' width='10' height='10' fill='#f59e0b' />
-                <rect x='68' y='68' width='10' height='10' fill='#f59e0b' />
-                <rect x='59' y='59' width='10' height='10' fill='#1e3a5f' />
+                <rect x='12' y='60' width='16' height='16' fill='#d89b2b' />
+                <rect x='50' y='50' width='10' height='10' fill='#d89b2b' />
+                <rect x='68' y='50' width='10' height='10' fill='#d89b2b' />
+                <rect x='50' y='68' width='10' height='10' fill='#d89b2b' />
+                <rect x='68' y='68' width='10' height='10' fill='#d89b2b' />
+                <rect x='59' y='59' width='10' height='10' fill='#cbd5e1' />
               </svg>
             </div>
-            <div className='font-mono text-xs text-amber-500'>
+            <div className='text-app-text-secondary font-mono text-xs'>
               apex.app/{selected.code}
             </div>
             <BtnGhost onClick={() => {}}>Descargar QR</BtnGhost>
@@ -491,7 +511,7 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
                   <Td>
                     <Badge
                       label={p.activo ? 'Activo' : 'Inactivo'}
-                      color={p.activo ? '#22c55e' : '#64748b'}
+                      color={p.activo ? chartColors.success : chartColors.muted}
                     />
                   </Td>
                 </tr>
@@ -524,13 +544,19 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
                       label={
                         w.tipo === 'preventivo' ? 'Preventivo' : 'Correctivo'
                       }
-                      color={w.tipo === 'preventivo' ? '#3b82f6' : '#ef4444'}
+                      color={
+                        w.tipo === 'preventivo'
+                          ? chartColors.info
+                          : chartColors.danger
+                      }
                     />
                   </Td>
                   <Td>
                     <Badge
                       label={STL[w.status] || w.status}
-                      color={STC[w.status as keyof typeof STC] || '#3b82f6'}
+                      color={
+                        STC[w.status as keyof typeof STC] || chartColors.info
+                      }
                     />
                   </Td>
                   <Td mono>
@@ -604,7 +630,7 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
           {filtered.map((a) => (
             <tr
               key={a.id}
-              className='hover:bg-shGray-600 cursor-pointer transition-colors'
+              className='hover:bg-app-surface-subtle cursor-pointer transition-colors'
             >
               <Td mono>{a.code}</Td>
               <Td bold>{a.name}</Td>
@@ -612,7 +638,7 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
               <Td>
                 <Badge
                   label={STL[a.status as keyof typeof STL] || a.status}
-                  color={STC[a.status as keyof typeof STC] || '#3b82f6'}
+                  color={STC[a.status as keyof typeof STC] || chartColors.info}
                 />
               </Td>
               <Td>
@@ -620,7 +646,9 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
                   label={
                     a.criticidad.charAt(0).toUpperCase() + a.criticidad.slice(1)
                   }
-                  color={CRC[a.criticidad as keyof typeof CRC] || '#3b82f6'}
+                  color={
+                    CRC[a.criticidad as keyof typeof CRC] || chartColors.info
+                  }
                 />
               </Td>
               <Td>

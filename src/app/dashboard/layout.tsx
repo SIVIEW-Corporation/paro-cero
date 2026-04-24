@@ -6,9 +6,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className='w-full overflow-x-hidden'>
+    <div className='auth-shell bg-app-bg text-app-text-primary w-full overflow-x-hidden'>
       <Navbar />
-      <main className='container max-w-7xl pt-16'>{children}</main>
+      <main className='container max-w-7xl pt-20 pb-8'>{children}</main>
     </div>
   );
 }

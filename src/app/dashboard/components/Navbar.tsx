@@ -77,7 +77,7 @@ export default function Navbar() {
   }, [isUserMenuOpen]);
 
   return (
-    <header className='app-topbar bg-shBackground/80 fixed top-0 z-50 grid w-screen place-items-center p-2 backdrop-blur-md sm:p-3 lg:px-4 xl:px-5'>
+    <header className='app-topbar border-app-border-soft bg-app-surface/92 fixed top-0 z-50 grid w-screen place-items-center border-b p-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)] backdrop-blur-md sm:p-3 lg:px-4 xl:px-5'>
       <nav className='flex w-full max-w-[1540px] items-center justify-between'>
         <Link href='/dashboard' scroll={false}>
           <Image
@@ -105,10 +105,11 @@ export default function Navbar() {
                 title={tab.tooltip}
                 key={tab.id}
                 className={cn(
-                  'flex items-center gap-1 text-sm font-normal transition duration-200',
-                  isActive && 'text-shPrimary-400 cursor-default',
+                  'flex items-center gap-1 rounded-lg px-2.5 py-2 text-sm font-medium transition duration-200',
+                  isActive &&
+                    'bg-app-brand-soft text-app-brand-dark cursor-default',
                   !isActive &&
-                    'text-shGray-400 active:text-shPrimary-500 cursor-pointer hover:text-white hover:underline',
+                    'text-app-text-secondary hover:bg-app-surface-subtle hover:text-app-text-primary cursor-pointer',
                 )}
                 scroll={false}
               >
@@ -125,34 +126,34 @@ export default function Navbar() {
               {/* User Avatar Button */}
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className='bg-shGray-800 hover:bg-shGray-700 hover:ring-shPrimary-500/50 focus:ring-shPrimary-500 hidden h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 hover:ring-2 focus:ring-2 focus:outline-none xl:flex'
+                className='border-app-border-soft bg-app-surface-subtle hover:border-app-border hover:bg-app-brand-soft hover:ring-app-brand/15 focus:ring-app-brand/30 hidden h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 hover:ring-2 focus:ring-2 focus:outline-none xl:flex'
                 aria-label='User menu'
                 aria-expanded={isUserMenuOpen}
               >
-                <span className='text-shPrimary-400 text-sm font-bold'>
+                <span className='text-app-brand-dark text-sm font-bold'>
                   {getUserInitials(user)}
                 </span>
               </button>
 
               {/* Dropdown Menu */}
               {isUserMenuOpen && (
-                <div className='bg-shGray-800 border-shGray-600 absolute top-full right-0 z-50 mt-2 w-56 rounded-xl border'>
+                <div className='border-app-border-soft bg-app-surface absolute top-full right-0 z-50 mt-2 w-56 rounded-xl border shadow-lg shadow-slate-900/8'>
                   {/* User Info */}
-                  <div className='border-shGray-600 border-b px-3 py-3'>
-                    <p className='text-shGray-100 truncate text-sm font-semibold'>
+                  <div className='border-app-border-soft border-b px-3 py-3'>
+                    <p className='text-app-text-primary truncate text-sm font-semibold'>
                       {user.full_name}
                     </p>
-                    <p className='text-shGray-400 truncate text-xs'>
+                    <p className='text-app-text-secondary truncate text-xs'>
                       {user.email}
                     </p>
-                    <p className='text-shPrimary-400 mt-0.5 text-xs font-medium'>
+                    <p className='text-app-brand-dark mt-0.5 text-xs font-medium'>
                       {getRoleLabel(user.role)}
                     </p>
                   </div>
                   {/* Logout Option */}
                   <button
                     onClick={handleLogout}
-                    className='text-shGray-300 hover:bg-shGray-700 flex w-full items-center gap-2 px-3 py-2.5 text-sm transition-colors hover:text-white'
+                    className='text-app-text-secondary hover:bg-app-surface-subtle hover:text-app-text-primary flex w-full items-center gap-2 px-3 py-2.5 text-sm transition-colors'
                   >
                     <LogOut size={iconSize} />
                     <span>Cerrar Sesión</span>
@@ -164,20 +165,20 @@ export default function Navbar() {
 
           {/* Hamburger Button --- Mobile (hidden on xl+) */}
           <button
-            className='border-shGray-800 h-12 rounded-xl border p-3 transition-all duration-300 ease-in-out xl:hidden'
+            className='border-app-border-soft bg-app-surface h-12 rounded-xl border p-3 transition-all duration-300 ease-in-out xl:hidden'
             onClick={() => setIsOpen(!isOpen)}
             aria-label='Toggle menu'
           >
             {isOpen ? (
               <span className='relative block w-5 transition-all duration-300 ease-in-out'>
-                <span className='bg-shGray-300 absolute top-1/2 left-0 h-0.5 w-full rotate-45 transform' />
-                <span className='bg-shGray-300 absolute top-1/2 left-0 h-0.5 w-full -rotate-45 transform' />
+                <span className='bg-app-text-primary absolute top-1/2 left-0 h-0.5 w-full rotate-45 transform' />
+                <span className='bg-app-text-primary absolute top-1/2 left-0 h-0.5 w-full -rotate-45 transform' />
               </span>
             ) : (
               <span className='block w-5 space-y-1.5 transition-all duration-300 ease-in-out'>
-                <span className='bg-shGray-300 block h-0.5 w-full'></span>
-                <span className='bg-shGray-300 block h-0.5 w-full'></span>
-                <span className='bg-shGray-300 block h-0.5 w-full'></span>
+                <span className='bg-app-text-primary block h-0.5 w-full'></span>
+                <span className='bg-app-text-primary block h-0.5 w-full'></span>
+                <span className='bg-app-text-primary block h-0.5 w-full'></span>
               </span>
             )}
           </button>
@@ -185,7 +186,7 @@ export default function Navbar() {
 
         {/* Expandible Menu --- Mobile (xl:hidden = visible from lg to xl) */}
         <div
-          className={`text-shGray-300 bg-shBackground absolute top-full left-0 z-50 flex w-full flex-col items-center overflow-y-scroll pt-10 pb-40 transition duration-300 ease-in-out xl:hidden ${isOpen ? 'h-dvh opacity-100' : 'pointer-events-none h-0 opacity-0'}`}
+          className={`bg-app-surface text-app-text-secondary absolute top-full left-0 z-50 flex w-full flex-col items-center overflow-y-scroll pt-10 pb-40 transition duration-300 ease-in-out xl:hidden ${isOpen ? 'h-dvh opacity-100' : 'pointer-events-none h-0 opacity-0'}`}
         >
           {tabs.map((tab) => {
             const isActive =
@@ -200,10 +201,11 @@ export default function Navbar() {
                 title={tab.tooltip}
                 key={tab.id}
                 className={cn(
-                  'duration:200 my-5 flex items-center gap-2 text-base font-normal transition-all',
-                  isActive && 'text-shPrimary-400 cursor-default',
+                  'duration:200 my-2 flex items-center gap-2 rounded-lg px-4 py-3 text-base font-medium transition-all',
+                  isActive &&
+                    'bg-app-brand-soft text-app-brand-dark cursor-default',
                   !isActive &&
-                    'text-shGray-400 active:text-shPrimary-500 cursor-pointer hover:text-white hover:underline',
+                    'text-app-text-secondary hover:bg-app-surface-subtle hover:text-app-text-primary cursor-pointer',
                 )}
                 scroll={false}
                 onClick={() => setIsOpen(false)}
@@ -216,17 +218,17 @@ export default function Navbar() {
 
           {/* User section in mobile menu */}
           {user && (
-            <div className='border-shGray-700 mt-6 flex flex-col items-center gap-4 border-t pt-6'>
-              <div className='bg-shGray-800 flex h-14 w-14 items-center justify-center rounded-full'>
-                <span className='text-shPrimary-400 text-lg font-bold'>
+            <div className='border-app-border-soft mt-6 flex flex-col items-center gap-4 border-t pt-6'>
+              <div className='border-app-border-soft bg-app-surface-subtle flex h-14 w-14 items-center justify-center rounded-full border'>
+                <span className='text-app-brand-dark text-lg font-bold'>
                   {getUserInitials(user)}
                 </span>
               </div>
               <div className='text-center'>
-                <p className='text-shGray-100 text-sm font-semibold'>
+                <p className='text-app-text-primary text-sm font-semibold'>
                   {user.full_name}
                 </p>
-                <p className='text-shPrimary-400 text-xs font-medium'>
+                <p className='text-app-brand-dark text-xs font-medium'>
                   {getRoleLabel(user.role)}
                 </p>
               </div>
@@ -235,7 +237,7 @@ export default function Navbar() {
                   setIsOpen(false);
                   handleLogout();
                 }}
-                className='border-shGray-600 text-shGray-300 hover:bg-shGray-800 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors hover:text-white'
+                className='border-app-border-soft text-app-text-secondary hover:bg-app-surface-subtle hover:text-app-text-primary flex items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors'
               >
                 <LogOut size={iconSize} />
                 <span>Cerrar Sesión</span>

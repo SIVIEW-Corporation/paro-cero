@@ -22,20 +22,20 @@ export default function ConfirmModal({
 
   return (
     <div
-      className='fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4'
+      className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'
       onClick={onCancel}
     >
       <div
-        className='shadow-shPrimary-800/70 bg-shGray-800 border-shGray-700 w-full max-w-md rounded-2xl border shadow-md'
+        className='border-app-border-soft bg-app-surface w-full max-w-md rounded-2xl border shadow-lg'
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className='border-shGray-700/50 flex items-center justify-between border-b px-6 py-4'>
-          <h2 className='text-lg font-bold text-white'>¿Eliminar usuario?</h2>
+        <div className='border-app-border-soft flex items-center justify-between border-b px-6 py-4'>
+          <h2 className='text-app-text-primary text-lg font-bold'>¿Eliminar usuario?</h2>
           <button
             type='button'
             onClick={onCancel}
-            className='cursor-pointer rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-white'
+            className='cursor-pointer rounded p-1 text-app-text-muted transition-colors hover:bg-app-surface-subtle hover:text-app-text-primary'
             aria-label='Cerrar'
           >
             <X size={18} />
@@ -44,18 +44,18 @@ export default function ConfirmModal({
 
         {/* Body */}
         <div className='px-6 py-5'>
-          <p className='text-zinc-300'>
+          <p className='text-app-text-secondary'>
             ¿Estás seguro de eliminar a{' '}
-            <span className='font-bold text-white'>{userName}</span>? <br />
+            <span className='font-bold text-app-text-primary'>{userName}</span>? <br />
             Esta acción no se puede deshacer.
           </p>
         </div>
 
         {/* Footer */}
-        <div className='border-shGray-700/50 flex gap-3 border-t px-6 py-4'>
+        <div className='border-app-border-soft flex gap-3 border-t px-6 py-4'>
           <Button
             variant='secondary'
-            intent='zinc'
+            intent='primary'
             onClick={onCancel}
             disabled={isPending}
             fullWidth

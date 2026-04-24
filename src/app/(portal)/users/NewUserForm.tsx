@@ -60,7 +60,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
           transition={{ delay: 0.1, duration: 0.4 }}
           className='mb-1 flex items-center gap-2'
         >
-          <h2 className='font-inter text-shGray-100 text-lg font-bold md:text-xl xl:text-2xl'>
+          <h2 className='font-inter text-app-text-primary text-lg font-bold md:text-xl xl:text-2xl'>
             Nuevo usuario
           </h2>
         </motion.div>
@@ -68,7 +68,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.15, duration: 0.3 }}
-          className='text-shGray-500 font-inter text-sm'
+          className='text-app-text-secondary font-inter text-sm'
         >
           Completa el formulario para registrar un nuevo usuario en la
           plataforma.
@@ -80,7 +80,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, duration: 0.4 }}
-        className='shadow-shPrimary-500/20 bg-shGray-800/65 border-shGray-700/50 overflow-hidden rounded-2xl border p-5 shadow-md md:p-6'
+        className='border-app-border-soft bg-app-surface overflow-hidden rounded-2xl border p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:p-6'
       >
         <form
           onSubmit={(e) => {
@@ -161,12 +161,12 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                   <div className='group relative'>
                     <label
                       htmlFor='role'
-                      className='text-shGray-400 group-focus-within:text-shPrimary-400 mb-1.5 block text-xs font-medium tracking-wide uppercase transition-colors'
+                      className='text-app-text-muted group-focus-within:text-app-brand mb-1.5 block text-xs font-medium tracking-wide uppercase transition-colors'
                     >
                       Rol
                     </label>
                     <div className='relative'>
-                      <div className='text-shGray-500 group-focus-within:text-shPrimary-400 pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 transition-colors'>
+                      <div className='text-app-text-muted group-focus-within:text-app-brand pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 transition-colors'>
                         <Shield size={16} />
                       </div>
                       <select
@@ -179,9 +179,9 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                           )
                         }
                         className={cn(
-                          'bg-shGray-800 block w-full appearance-none rounded-lg border py-2.5 pr-10 pl-10 text-zinc-100 transition-all',
-                          'focus:ring-shPrimary-400/20 outline-none focus:ring-2',
-                          'border-shGray-600 focus:border-shPrimary-400 hover:border-shGray-500',
+                          'bg-app-surface block w-full appearance-none rounded-lg border border-app-border px-3 py-2.5 pl-10 text-app-text-primary transition-all',
+                          'focus:ring-app-brand/20 outline-none focus:ring-2',
+                          'border-app-border-soft focus:border-app-brand hover:border-app-border',
                         )}
                       >
                         <option value='operator'>Operador</option>
@@ -189,7 +189,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                       </select>
                       <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
                         <svg
-                          className='text-shGray-500 h-4 w-4'
+                          className='text-app-text-muted h-4 w-4'
                           fill='none'
                           viewBox='0 0 24 24'
                           stroke='currentColor'

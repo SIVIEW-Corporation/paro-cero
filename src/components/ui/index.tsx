@@ -1,6 +1,40 @@
 'use client';
 
-import React, { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+
+const ui = {
+  surface: 'var(--app-surface, #ffffff)',
+  surfaceSubtle: 'var(--app-surface-subtle, #f8fafc)',
+  surfaceMuted: 'var(--app-surface-muted, #eef2f7)',
+  textPrimary: 'var(--app-text-primary, #111827)',
+  textSecondary: 'var(--app-text-secondary, #667085)',
+  textMuted: 'var(--app-text-muted, #94a3b8)',
+  borderSoft: 'var(--app-border-soft, #dde3ea)',
+  border: 'var(--app-border, #cbd5e1)',
+  brand: 'var(--app-brand, #d89b2b)',
+  brandDark: 'var(--app-brand-dark, #b7791f)',
+  brandSoft: 'var(--app-brand-soft, #fff4db)',
+  shadowCard: 'var(--app-shadow-card, 0 1px 2px rgb(15 23 42 / 0.04))',
+};
+
+function getBadgeTone(color: string) {
+  const normalized = color.toLowerCase();
+
+  if (['#22c55e', '#16a34a'].includes(normalized)) {
+    return { background: '#dcfce7', color: '#166534', border: '#bbf7d0' };
+  }
+  if (['#ef4444', '#dc2626'].includes(normalized)) {
+    return { background: '#fee2e2', color: '#991b1b', border: '#fecaca' };
+  }
+  if (['#3b82f6', '#2563eb', '#1d4ed8', '#0d9488'].includes(normalized)) {
+    return { background: '#dbeafe', color: '#1d4ed8', border: '#bfdbfe' };
+  }
+  if (['#f59e0b', '#f97316', '#d89b2b', '#b7791f'].includes(normalized)) {
+    return { background: '#fef3c7', color: '#b7791f', border: '#fde68a' };
+  }
+
+  return { background: '#eef2f7', color: '#667085', border: '#dde3ea' };
+}
 
 interface BadgeProps {
   label: string;
@@ -8,17 +42,19 @@ interface BadgeProps {
 }
 
 export function Badge({ label, color }: BadgeProps) {
+  const tone = getBadgeTone(color);
+
   return (
     <span
       style={{
         fontSize: 11,
-        padding: '2px 9px',
-        borderRadius: 4,
+        padding: '3px 9px',
+        borderRadius: 999,
         fontWeight: 700,
-        letterSpacing: '0.04em',
-        background: color + '20',
-        color,
-        border: `1px solid ${color}40`,
+        letterSpacing: '0.02em',
+        background: tone.background,
+        color: tone.color,
+        border: `1px solid ${tone.border}`,
         whiteSpace: 'nowrap',
         fontFamily: 'monospace',
       }}
@@ -40,17 +76,19 @@ export function KpiCard({
   label,
   value,
   sub,
-  color = '#3b82f6',
+  color = '#2563eb',
   icon,
 }: KpiCardProps) {
+  const tone = getBadgeTone(color);
+
   return (
     <div
       style={{
-        background: '#0d1627',
-        border: '1px solid #1e3a5f',
-        borderRadius: 10,
+        background: ui.surface,
+        border: `1px solid ${ui.borderSoft}`,
+        borderRadius: 14,
         padding: '18px 20px',
-        borderTop: `3px solid ${color}`,
+        boxShadow: ui.shadowCard,
         minWidth: 0,
       }}
     >
@@ -59,13 +97,13 @@ export function KpiCard({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
-          marginBottom: 10,
+          marginBottom: 12,
         }}
       >
         <div
           style={{
             fontSize: 11,
-            color: '#64748b',
+            color: ui.textSecondary,
             fontWeight: 700,
             letterSpacing: '0.07em',
             textTransform: 'uppercase',
@@ -74,13 +112,29 @@ export function KpiCard({
         >
           {label}
         </div>
-        {icon && <span style={{ fontSize: 18 }}>{icon}</span>}
+        {icon && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 30,
+              height: 30,
+              borderRadius: 10,
+              background: tone.background,
+              color: tone.color,
+              fontSize: 14,
+            }}
+          >
+            {icon}
+          </span>
+        )}
       </div>
       <div
         style={{
-          fontSize: 32,
+          fontSize: 30,
           fontWeight: 800,
-          color,
+          color: ui.textPrimary,
           fontFamily: 'monospace',
           lineHeight: 1,
           marginBottom: 6,
@@ -88,7 +142,7 @@ export function KpiCard({
       >
         {value}
       </div>
-      {sub && <div style={{ fontSize: 11, color: '#475569' }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 12, color: ui.textMuted }}>{sub}</div>}
     </div>
   );
 }
@@ -101,16 +155,16 @@ export function Th({ children }: ThProps) {
   return (
     <th
       style={{
-        padding: '10px 14px',
+        padding: '11px 14px',
         textAlign: 'left',
         fontSize: 11,
         fontWeight: 700,
-        color: '#64748b',
+        color: ui.textSecondary,
         letterSpacing: '0.07em',
         textTransform: 'uppercase',
-        borderBottom: '1px solid #1e3a5f',
+        borderBottom: `1px solid ${ui.borderSoft}`,
         whiteSpace: 'nowrap',
-        background: '#0a1628',
+        background: ui.surfaceSubtle,
       }}
     >
       {children}
@@ -128,12 +182,12 @@ export function Td({ children, mono, bold }: TdProps) {
   return (
     <td
       style={{
-        padding: '11px 14px',
+        padding: '12px 14px',
         fontSize: 13,
-        color: bold ? '#f1f5f9' : '#cbd5e1',
-        borderBottom: '1px solid #0d1f38',
+        color: bold ? ui.textPrimary : ui.textSecondary,
+        borderBottom: `1px solid ${ui.borderSoft}`,
         fontFamily: mono ? 'monospace' : 'inherit',
-        fontWeight: bold ? 600 : 400,
+        fontWeight: bold ? 650 : 400,
       }}
     >
       {children}
@@ -149,54 +203,14 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, sub, action }: PageHeaderProps) {
   return (
-    <div
-      className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0'
-      style={{
-        marginBottom: 24,
-        paddingBottom: 20,
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        background:
-          'linear-gradient(90deg, rgba(251,191,36,0.03) 0%, transparent 100%)',
-        padding: '16px 20px',
-        marginLeft: -20,
-        marginRight: -20,
-        borderRadius: '8px 8px 0 0',
-      }}
-    >
+    <div className='border-app-border-soft mb-6 flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center sm:justify-between'>
       <div>
-        <h1
-          style={{
-            fontSize: 22,
-            fontWeight: 800,
-            color: '#f8fafc',
-            letterSpacing: '-0.02em',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
-        >
-          <span
-            style={{
-              display: 'inline-block',
-              width: 4,
-              height: 22,
-              background: 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)',
-              borderRadius: 2,
-            }}
-          />
+        <h1 className='text-app-text-primary flex items-center gap-3 text-2xl font-bold tracking-tight'>
+          <span className='bg-app-brand inline-block h-6 w-1 rounded-full' />
           {title}
         </h1>
         {sub && (
-          <p
-            style={{
-              fontSize: 13,
-              color: '#64748b',
-              marginTop: 6,
-              marginLeft: 16,
-            }}
-          >
-            {sub}
-          </p>
+          <p className='text-app-text-secondary mt-1.5 ml-4 text-sm'>{sub}</p>
         )}
       </div>
       {action}
@@ -206,7 +220,7 @@ export function PageHeader({ title, sub, action }: PageHeaderProps) {
 
 interface CardProps {
   children: ReactNode;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   className?: string;
 }
 
@@ -215,10 +229,11 @@ export function Card({ children, style: s, className }: CardProps) {
     <div
       className={className}
       style={{
-        background: '#0d1627',
-        border: '1px solid #1e3a5f',
-        borderRadius: 10,
+        background: ui.surface,
+        border: `1px solid ${ui.borderSoft}`,
+        borderRadius: 14,
         padding: '18px 20px',
+        boxShadow: ui.shadowCard,
         ...s,
       }}
     >
@@ -237,7 +252,7 @@ export function CardTitle({ children }: CardTitleProps) {
       style={{
         fontSize: 11,
         fontWeight: 700,
-        color: '#64748b',
+        color: ui.textSecondary,
         letterSpacing: '0.07em',
         textTransform: 'uppercase',
         marginBottom: 14,
@@ -260,13 +275,14 @@ export function RowData({ label, value }: RowDataProps) {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '8px 0',
-        borderBottom: '1px solid #0d1f38',
+        gap: 16,
+        padding: '9px 0',
+        borderBottom: `1px solid ${ui.borderSoft}`,
         fontSize: 13,
       }}
     >
-      <span style={{ color: '#64748b' }}>{label}</span>
-      <span style={{ color: '#e2e8f0', fontWeight: 500 }}>{value}</span>
+      <span style={{ color: ui.textSecondary }}>{label}</span>
+      <span style={{ color: ui.textPrimary, fontWeight: 600 }}>{value}</span>
     </div>
   );
 }
@@ -283,18 +299,18 @@ export function BtnPrimary({ children, onClick, disabled }: BtnPrimaryProps) {
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: disabled ? '#64748b' : '#f59e0b',
-        color: '#000',
+        background: disabled ? ui.surfaceMuted : ui.brandDark,
+        color: disabled ? ui.textMuted : '#ffffff',
         fontWeight: 700,
         fontSize: 13,
         padding: '9px 18px',
-        borderRadius: 7,
-        border: 'none',
+        borderRadius: 9,
+        border: disabled ? `1px solid ${ui.borderSoft}` : 'none',
         cursor: disabled ? 'not-allowed' : 'pointer',
-        letterSpacing: '0.02em',
+        letterSpacing: '0.01em',
         whiteSpace: 'nowrap',
         fontFamily: 'inherit',
-        opacity: disabled ? 0.6 : 1,
+        opacity: disabled ? 0.85 : 1,
       }}
     >
       {children}
@@ -312,13 +328,13 @@ export function BtnGhost({ children, onClick }: BtnGhostProps) {
     <button
       onClick={onClick}
       style={{
-        background: 'none',
-        border: '1px solid #1e3a5f',
-        color: '#94a3b8',
+        background: ui.surface,
+        border: `1px solid ${ui.border}`,
+        color: ui.textSecondary,
         fontSize: 12,
-        fontWeight: 600,
+        fontWeight: 650,
         padding: '6px 14px',
-        borderRadius: 6,
+        borderRadius: 9,
         cursor: 'pointer',
         whiteSpace: 'nowrap',
         fontFamily: 'inherit',
@@ -338,10 +354,10 @@ export function BtnBack({ onClick }: BtnBackProps) {
     <button
       onClick={onClick}
       style={{
-        background: 'none',
-        border: '1px solid #1e3a5f',
-        color: '#94a3b8',
-        borderRadius: 6,
+        background: ui.surface,
+        border: `1px solid ${ui.border}`,
+        color: ui.textSecondary,
+        borderRadius: 9,
         padding: '7px 16px',
         fontSize: 13,
         cursor: 'pointer',
@@ -365,7 +381,9 @@ interface DataTableProps {
 export function DataTable({ head, children }: DataTableProps) {
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table
+        style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}
+      >
         <thead>
           <tr>
             {head.map((h, i) => (
@@ -391,7 +409,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.75)',
+        background: 'rgb(15 23 42 / 0.34)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -408,7 +426,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
             marginBottom: 22,
           }}
         >
-          <h2 style={{ fontSize: 17, fontWeight: 800, color: '#f1f5f9' }}>
+          <h2 style={{ fontSize: 17, fontWeight: 800, color: ui.textPrimary }}>
             {title}
           </h2>
           <button
@@ -416,7 +434,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
             style={{
               background: 'none',
               border: 'none',
-              color: '#64748b',
+              color: ui.textMuted,
               fontSize: 22,
               cursor: 'pointer',
               lineHeight: 1,
@@ -444,7 +462,7 @@ export function Field({ label, children }: FieldProps) {
         style={{
           fontSize: 11,
           fontWeight: 700,
-          color: '#64748b',
+          color: ui.textSecondary,
           letterSpacing: '0.07em',
           textTransform: 'uppercase',
           display: 'block',
@@ -460,7 +478,7 @@ export function Field({ label, children }: FieldProps) {
 
 interface ModalFooterProps {
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   confirmLabel?: string;
 }
 
@@ -475,10 +493,10 @@ export function ModalFooter({
         onClick={onCancel}
         style={{
           flex: 1,
-          background: 'none',
-          border: '1px solid #1e3a5f',
-          color: '#94a3b8',
-          borderRadius: 6,
+          background: ui.surface,
+          border: `1px solid ${ui.border}`,
+          color: ui.textSecondary,
+          borderRadius: 8,
           padding: 10,
           fontSize: 13,
           cursor: 'pointer',
@@ -491,10 +509,10 @@ export function ModalFooter({
         onClick={onConfirm}
         style={{
           flex: 1,
-          background: '#f59e0b',
-          color: '#000',
+          background: ui.brandDark,
+          color: '#ffffff',
           fontWeight: 700,
-          borderRadius: 6,
+          borderRadius: 8,
           padding: 10,
           fontSize: 13,
           border: 'none',

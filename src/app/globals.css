@@ -6,6 +6,71 @@
   --radius: 0.625rem;
 }
 
+.auth-shell {
+  --app-bg: #f5f7fa;
+  --app-surface: #ffffff;
+  --app-surface-subtle: #f8fafc;
+  --app-surface-muted: #eef2f7;
+  --app-text-primary: #111827;
+  --app-text-secondary: #667085;
+  --app-text-muted: #94a3b8;
+  --app-border-soft: #dde3ea;
+  --app-border: #cbd5e1;
+  --app-brand: #d89b2b;
+  --app-brand-dark: #b7791f;
+  --app-brand-soft: #fff4db;
+  --app-success: #16a34a;
+  --app-success-soft: #dcfce7;
+  --app-warning: #d89b2b;
+  --app-warning-soft: #fef3c7;
+  --app-danger: #dc2626;
+  --app-danger-soft: #fee2e2;
+  --app-info: #2563eb;
+  --app-info-soft: #dbeafe;
+  --app-shadow-card:
+    0 0 0 1px rgb(15 23 42 / 0.04), 0 1px 2px -1px rgb(15 23 42 / 0.08),
+    0 2px 4px rgb(15 23 42 / 0.04);
+
+  min-height: 100dvh;
+  background: var(--app-bg);
+  color: var(--app-text-primary);
+}
+
+.auth-shell input,
+.auth-shell select,
+.auth-shell textarea {
+  width: 100%;
+  border: 1px solid var(--app-border-soft);
+  border-radius: 0.5rem;
+  background: var(--app-surface);
+  color: var(--app-text-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.625rem 0.75rem;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.auth-shell input::placeholder,
+.auth-shell textarea::placeholder {
+  color: var(--app-text-muted);
+}
+
+.auth-shell input:focus,
+.auth-shell select:focus,
+.auth-shell textarea:focus {
+  border-color: var(--app-brand);
+  box-shadow: 0 0 0 3px rgb(216 155 43 / 0.14);
+}
+
+.auth-shell textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
 html {
   scroll-padding-top: 64px;
 }
@@ -45,6 +110,27 @@ html {
   --color-shGray-600: oklch(0.5062 0.006 48.61); /* #686462 */
   --color-shGray-700: oklch(0.3817 0.0044 39.44); /* #454241 */
   --color-shGray-800: oklch(0.2583 0.003 17.35); /* #252323 */
+
+  --color-app-bg: var(--app-bg);
+  --color-app-surface: var(--app-surface);
+  --color-app-surface-subtle: var(--app-surface-subtle);
+  --color-app-surface-muted: var(--app-surface-muted);
+  --color-app-text-primary: var(--app-text-primary);
+  --color-app-text-secondary: var(--app-text-secondary);
+  --color-app-text-muted: var(--app-text-muted);
+  --color-app-border-soft: var(--app-border-soft);
+  --color-app-border: var(--app-border);
+  --color-app-brand: var(--app-brand);
+  --color-app-brand-dark: var(--app-brand-dark);
+  --color-app-brand-soft: var(--app-brand-soft);
+  --color-app-success: var(--app-success);
+  --color-app-success-soft: var(--app-success-soft);
+  --color-app-warning: var(--app-warning);
+  --color-app-warning-soft: var(--app-warning-soft);
+  --color-app-danger: var(--app-danger);
+  --color-app-danger-soft: var(--app-danger-soft);
+  --color-app-info: var(--app-info);
+  --color-app-info-soft: var(--app-info-soft);
 
   --font-inter: 'Inter', sans-serif;
   --font-inconsolata: 'Inconsolata', monospace;
@@ -118,14 +204,14 @@ body {
   appearance: none;
 
   /* 2. Reset de bordes y fondos para Safari */
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  background-color: var(--app-surface, #ffffff);
+  border: 1px solid var(--app-border-soft, #dde3ea);
   border-radius: 8px;
 
   font-size: 12px;
 
   padding: 8px 48px 8px 12px;
-  color: #4b5563;
+  color: var(--app-text-primary, #111827);
   width: 100%;
   cursor: pointer;
   outline: none;
@@ -157,7 +243,7 @@ body {
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   /* flecha */
-  border-top: 6px solid var(--shPrimary-400);
+  border-top: 6px solid var(--app-text-muted, #94a3b8);
 
   transform: translateY(-50%);
   pointer-events: none;
@@ -169,5 +255,5 @@ body {
 }
 
 .custom-select:active {
-  background-color: #f9fafb;
+  background-color: var(--app-surface-subtle, #f8fafc);
 }

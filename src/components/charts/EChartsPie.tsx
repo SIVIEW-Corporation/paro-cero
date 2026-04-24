@@ -23,11 +23,12 @@ export function EChartsPie({
   const options = {
     tooltip: {
       trigger: 'item' as const,
-      backgroundColor: '#0d1627',
-      borderColor: '#1e3a5f',
-      borderRadius: 6,
+      backgroundColor: '#ffffff',
+      borderColor: '#dde3ea',
+      borderRadius: 8,
+      extraCssText: 'box-shadow: 0 8px 24px rgba(15,23,42,0.12);',
       textStyle: {
-        color: '#e2e8f0',
+        color: '#111827',
         fontSize: 12,
       },
     },
@@ -35,7 +36,7 @@ export function EChartsPie({
       ? {
           orient: 'horizontal' as const,
           bottom: 0,
-          textStyle: { color: '#94a3b8', fontSize: 12 },
+          textStyle: { color: '#667085', fontSize: 12 },
           icon: 'circle' as const,
           itemWidth: 8,
           itemHeight: 8,
@@ -50,11 +51,13 @@ export function EChartsPie({
           itemStyle: { color: d.color },
         })),
         radius: ['15%', '70%'],
-        roseType: 'radius' as const,
+        roseType: false as const,
         center: ['50%', '45%'],
         avoidLabelOverlap: true,
         itemStyle: {
-          borderRadius: 5,
+          borderRadius: 4,
+          borderColor: '#ffffff',
+          borderWidth: 2,
         },
         label: {
           show: true,
@@ -62,19 +65,19 @@ export function EChartsPie({
           formatter: '{d}%',
           fontSize: 12,
           fontWeight: 'bold' as const,
-          color: '#fff',
+          color: '#ffffff',
         },
         emphasis: {
           label: {
             show: true,
             fontSize: 13,
             fontWeight: 'bold' as const,
-            color: '#fff',
+            color: '#ffffff',
           },
           itemStyle: {
-            shadowBlur: 10,
+            shadowBlur: 8,
             shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)',
+            shadowColor: 'rgba(15, 23, 42, 0.16)',
           },
         },
         labelLine: {
