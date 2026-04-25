@@ -23,10 +23,25 @@ import formatDate from '@/utils/format-date';
 import { useOperatorsQuery } from '../hooks/use-users-query';
 import { useDeleteUserMutation } from '../hooks/use-delete-user-mutation';
 
-const roleBadgeStyles: Record<string, { bg: string; text: string; border: string }> = {
-  operator: { bg: 'bg-app-brand-soft', text: 'text-app-brand-dark', border: 'border-app-brand-soft' },
-  admin: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
-  viewer: { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-200' },
+const roleBadgeStyles: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
+  operator: {
+    bg: 'bg-app-brand-soft',
+    text: 'text-app-brand-dark',
+    border: 'border-app-brand-soft',
+  },
+  admin: {
+    bg: 'bg-purple-100',
+    text: 'text-purple-700',
+    border: 'border-purple-200',
+  },
+  viewer: {
+    bg: 'bg-emerald-100',
+    text: 'text-emerald-700',
+    border: 'border-emerald-200',
+  },
 };
 
 interface ConfirmModalState {
@@ -75,8 +90,8 @@ export default function UsersTable() {
             title={fullName}
             className='truncate text-xs font-black sm:text-sm lg:text-base'
           >
-            <p className='capitalize text-app-text-primary'>{displayName}</p>
-            <p className='text-[10px] font-normal text-app-text-muted sm:text-xs lg:text-sm'>
+            <p className='text-app-text-primary capitalize'>{displayName}</p>
+            <p className='text-app-text-muted text-[10px] font-normal sm:text-xs lg:text-sm'>
               {jobTitle}
             </p>
           </div>
@@ -91,7 +106,7 @@ export default function UsersTable() {
         return (
           <span
             title={jobArea}
-            className='truncate text-xs font-normal text-app-text-secondary capitalize sm:text-sm lg:text-base'
+            className='text-app-text-secondary truncate text-xs font-normal capitalize sm:text-sm lg:text-base'
           >
             {jobArea}
           </span>
@@ -127,7 +142,7 @@ export default function UsersTable() {
         const dateWithoutHour = formatted.split(',')[0];
         return (
           <span
-            className='text-xs text-app-text-muted sm:text-sm lg:text-base'
+            className='text-app-text-muted text-xs sm:text-sm lg:text-base'
             title={formatted}
           >
             {dateWithoutHour}
@@ -143,7 +158,7 @@ export default function UsersTable() {
           <button
             type='button'
             aria-label='Editar usuario'
-            className='hover:text-app-brand cursor-pointer rounded p-1 text-app-text-muted transition-colors hover:scale-105'
+            className='hover:text-app-brand text-app-text-muted cursor-pointer rounded p-1 transition-colors hover:scale-105'
             title='Editar'
           >
             <Pencil size={16} />
@@ -151,7 +166,7 @@ export default function UsersTable() {
           <button
             type='button'
             aria-label='Eliminar usuario'
-            className='cursor-pointer rounded p-1 text-app-text-muted transition-colors hover:scale-105 hover:text-red-500'
+            className='text-app-text-muted cursor-pointer rounded p-1 transition-colors hover:scale-105 hover:text-red-500'
             title='Eliminar'
             onClick={() =>
               handleDeleteClick(row.original.id, row.original.full_name)
@@ -184,7 +199,7 @@ export default function UsersTable() {
         <div className='mb-4 rounded-full bg-red-100 p-3 text-red-600'>
           <AlertCircle size={32} />
         </div>
-        <p className='text-lg font-bold text-app-text-primary'>
+        <p className='text-app-text-primary text-lg font-bold'>
           Error al cargar usuarios
         </p>
         <p className='text-app-text-secondary'>{error.message}</p>
@@ -198,7 +213,7 @@ export default function UsersTable() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className='border-app-border-soft bg-app-surface overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)]'
+        className='shadow-shPrimary-500/20 bg-shGray-900 border-shGray-700/50 overflow-hidden rounded-2xl border shadow-md'
       >
         <div className='overflow-x-auto'>
           <table className='w-full border-collapse text-left'>
@@ -208,7 +223,7 @@ export default function UsersTable() {
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className='px-2 py-3 text-xs font-bold text-app-text-secondary select-none sm:text-sm md:px-6 md:py-4 lg:text-base'
+                      className='text-app-text-secondary px-2 py-3 text-xs font-bold select-none sm:text-sm md:px-6 md:py-4 lg:text-base'
                     >
                       {flexRender(
                         header.column.columnDef.header,
@@ -231,7 +246,7 @@ export default function UsersTable() {
                     >
                       {[...Array(4)].map((_, j) => (
                         <td key={j} className='px-6 py-5'>
-                          <div className='h-4 rounded bg-app-surface-subtle' />
+                          <div className='bg-app-surface-subtle h-4 rounded' />
                         </td>
                       ))}
                     </motion.tr>
@@ -270,10 +285,10 @@ export default function UsersTable() {
             animate={{ opacity: 1, scale: 1 }}
             className='bg-app-surface flex flex-col items-center justify-center py-20 text-center'
           >
-            <div className='mb-4 rounded-full bg-app-surface-subtle p-4'>
+            <div className='bg-app-surface-subtle mb-4 rounded-full p-4'>
               <AlertCircle size={32} className='text-app-text-muted' />
             </div>
-            <p className='mb-2 text-sm font-bold text-app-text-primary md:text-base lg:text-lg'>
+            <p className='text-app-text-primary mb-2 text-sm font-bold md:text-base lg:text-lg'>
               No se encontraron usuarios
             </p>
           </motion.div>
@@ -282,10 +297,11 @@ export default function UsersTable() {
         {/* Pagination Controls */}
         <div className='border-app-border-soft flex flex-col items-center justify-between gap-6 border-t px-6 py-6 sm:flex-row sm:gap-3'>
           <div className='flex-1'>
-            <p className='text-xs font-medium text-app-text-muted sm:text-sm lg:text-base'>
-              Mostrando <span className='font-bold text-app-text-secondary'>{from}</span>{' '}
-              a <span className='font-bold text-app-text-secondary'>{to}</span> de{' '}
-              <span className='text-app-brand font-bold'>{total}</span>{' '}
+            <p className='text-app-text-muted text-xs font-medium sm:text-sm lg:text-base'>
+              Mostrando{' '}
+              <span className='text-app-text-secondary font-bold'>{from}</span>{' '}
+              a <span className='text-app-text-secondary font-bold'>{to}</span>{' '}
+              de <span className='text-app-brand font-bold'>{total}</span>{' '}
               usuarios
             </p>
           </div>

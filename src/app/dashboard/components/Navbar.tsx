@@ -77,7 +77,7 @@ export default function Navbar() {
   }, [isUserMenuOpen]);
 
   return (
-    <header className='app-topbar border-app-border-soft bg-app-surface/92 fixed top-0 z-50 grid w-screen place-items-center border-b p-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)] backdrop-blur-md sm:p-3 lg:px-4 xl:px-5'>
+    <header className='app-topbar bg-shBackground/15 fixed top-0 z-50 grid w-screen place-items-center p-2 backdrop-blur-lg sm:p-3 lg:px-4 xl:px-5'>
       <nav className='flex w-full max-w-[1540px] items-center justify-between'>
         <Link href='/dashboard' scroll={false}>
           <Image

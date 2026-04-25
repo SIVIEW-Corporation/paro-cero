@@ -64,25 +64,30 @@ export default function Users() {
   // Admin guard — redirect non-admin users
   if (!isAdmin) {
     return (
-      <div className='flex h-full items-center justify-center p-4'>
-        <div className='text-center'>
-          <h2 className='text-app-text-primary text-xl font-bold'>
+      <main className='z-10 container max-w-7xl'>
+        <div className='flex flex-col items-center justify-center py-16'>
+          <h2 className='text-shGray-200 text-xl font-bold'>
             Acceso restringido
           </h2>
           <p className='text-app-text-secondary mt-2 text-sm'>
             Solo los administradores pueden crear usuarios.
           </p>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
-      <PageHeader
-        title='Gestionar usuarios'
-        sub='Crear, editar y eliminar perfiles · Asignar roles y permisos'
-      />
+    <main className='z-10 container max-w-7xl'>
+      <section className='mb-6 md:mb-8 xl:mb-12'>
+        <h1 className='font-inter mb-1 text-center text-xl font-bold md:mb-1.5 md:text-2xl xl:text-3xl'>
+          Gestionar usuarios
+        </h1>
+        <p className='text-shGray-500 font-inter text-center text-xs md:text-sm xl:text-base'>
+          Aquí podrás crear, editar y eliminar perfiles. También podrás asignar
+          roles y permisos.
+        </p>
+      </section>
 
       <section className='w-full overflow-x-auto'>
         <div className='border-app-border-soft flex min-w-max items-center gap-1 border-b px-4 md:min-w-0 md:gap-3'>
@@ -137,6 +142,6 @@ export default function Users() {
           </AnimatePresence>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

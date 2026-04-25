@@ -28,24 +28,33 @@ export function FormField({
   const hasError = field.state.meta.errors.length > 0;
 
   return (
-    <div className='group relative'>
+    <div className='group'>
       <label
         htmlFor={name}
-        className='text-shGray-400 group-focus-within:text-shPrimary-400 mb-1.5 block text-xs font-medium tracking-wide uppercase transition-colors'
+        className='text-shGray-600 group-focus-within:text-shPrimary-500 mb-1.5 block text-xs font-medium transition-colors duration-300'
       >
         {label}
       </label>
-      <div className='relative'>
-        <div
-          className={cn(
-            'pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 transition-colors',
-            hasError
-              ? 'text-red-400'
-              : 'text-shGray-500 group-focus-within:text-shPrimary-400',
-          )}
-        >
-          {Icon && <Icon size={16} />}
-        </div>
+      <div
+        className={cn(
+          'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
+          hasError
+            ? 'border-red-500'
+            : 'border-shGray-300 focus-within:border-shPrimary-400 group-focus-within:ring-shPrimary-400/20 group-focus-within:ring-2',
+        )}
+      >
+        {Icon && (
+          <div
+            className={cn(
+              'flex w-12 shrink-0 items-center justify-center transition-colors',
+              hasError
+                ? 'text-red-500'
+                : 'text-shGray-400 group-focus-within:text-shPrimary-400',
+            )}
+          >
+            <Icon size={16} />
+          </div>
+        )}
         <input
           id={name}
           name={name}
@@ -56,11 +65,8 @@ export function FormField({
           placeholder={placeholder}
           autoComplete={autocomplete}
           className={cn(
-            'bg-shGray-800 block w-full rounded-lg border py-2.5 pr-4 pl-10 text-zinc-100 transition-all placeholder:text-zinc-500',
-            'focus:ring-shPrimary-400/20 outline-none focus:ring-2',
-            hasError
-              ? 'border-red-500 focus:border-red-500'
-              : 'border-shGray-600 focus:border-shPrimary-400 hover:border-shGray-500',
+            'text-shGray-900 placeholder:text-shGray-400 flex-1 border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!',
+            !Icon && 'pl-4',
           )}
         />
       </div>
@@ -142,17 +148,24 @@ export function PasswordField({
     <div className='group relative'>
       <label
         htmlFor='password'
-        className='text-shGray-400 group-focus-within:text-shPrimary-400 mb-1.5 block text-xs font-medium tracking-wide uppercase transition-colors'
+        className='text-shGray-600 group-focus-within:text-shPrimary-500 mb-1.5 block text-xs font-medium transition-colors duration-300'
       >
         {label}
       </label>
-      <div className='relative'>
+      <div
+        className={cn(
+          'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
+          hasError
+            ? 'border-red-500'
+            : 'border-shGray-300 focus-within:border-shPrimary-400 focus-within:ring-shPrimary-400/20 focus-within:ring-2',
+        )}
+      >
         <div
           className={cn(
-            'pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 transition-colors',
+            'flex w-12 shrink-0 items-center justify-center transition-colors',
             hasError
-              ? 'text-red-400'
-              : 'text-shGray-500 group-focus-within:text-shPrimary-400',
+              ? 'text-red-500'
+              : 'text-shGray-400 group-focus-within:text-shPrimary-400',
           )}
         >
           <Icon size={16} />
@@ -167,11 +180,8 @@ export function PasswordField({
           placeholder='••••••••'
           autoComplete={autocomplete}
           className={cn(
-            'bg-shGray-800 block w-full rounded-lg border py-2.5 pr-10 pl-10 text-zinc-100 transition-all placeholder:text-zinc-500',
-            'focus:ring-shPrimary-400/20 outline-none focus:ring-2',
-            hasError
-              ? 'border-red-500 focus:border-red-500'
-              : 'border-shGray-600 focus:border-shPrimary-400 hover:border-shGray-500',
+            'text-shGray-900 placeholder:text-shGray-400 flex-1 border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!',
+            !Icon && 'pl-4',
           )}
         />
         <button
@@ -181,7 +191,7 @@ export function PasswordField({
             setIsVisible((prev) => !prev);
           }}
           aria-label={isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-          className='text-shGray-500 hover:text-shGray-300 absolute inset-y-0 right-0 flex items-center pr-3 transition-colors'
+          className='text-shGray-400 hover:text-shGray-700 flex w-12 shrink-0 cursor-pointer items-center justify-center transition-colors'
         >
           {isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>

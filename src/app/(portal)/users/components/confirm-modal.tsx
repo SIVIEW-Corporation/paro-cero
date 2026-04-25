@@ -31,11 +31,13 @@ export default function ConfirmModal({
       >
         {/* Header */}
         <div className='border-app-border-soft flex items-center justify-between border-b px-6 py-4'>
-          <h2 className='text-app-text-primary text-lg font-bold'>¿Eliminar usuario?</h2>
+          <h2 className='text-app-text-primary text-lg font-bold'>
+            ¿Eliminar usuario?
+          </h2>
           <button
             type='button'
             onClick={onCancel}
-            className='cursor-pointer rounded p-1 text-app-text-muted transition-colors hover:bg-app-surface-subtle hover:text-app-text-primary'
+            className='text-app-text-muted hover:bg-app-surface-subtle hover:text-app-text-primary cursor-pointer rounded p-1 transition-colors'
             aria-label='Cerrar'
           >
             <X size={18} />
@@ -46,7 +48,8 @@ export default function ConfirmModal({
         <div className='px-6 py-5'>
           <p className='text-app-text-secondary'>
             ¿Estás seguro de eliminar a{' '}
-            <span className='font-bold text-app-text-primary'>{userName}</span>? <br />
+            <span className='text-app-text-primary font-bold'>{userName}</span>?{' '}
+            <br />
             Esta acción no se puede deshacer.
           </p>
         </div>

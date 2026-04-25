@@ -80,7 +80,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, duration: 0.4 }}
-        className='border-app-border-soft bg-app-surface overflow-hidden rounded-2xl border p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:p-6'
+        className='shadow-shPrimary-500/20 bg-shGray-200 border-shGray-400/50 overflow-hidden rounded-2xl border p-5 shadow-md md:p-6'
       >
         <form
           onSubmit={(e) => {
@@ -158,15 +158,20 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
               <form.Field
                 name='role'
                 children={(field) => (
-                  <div className='group relative'>
+                  <div className='group'>
                     <label
                       htmlFor='role'
-                      className='text-app-text-muted group-focus-within:text-app-brand mb-1.5 block text-xs font-medium tracking-wide uppercase transition-colors'
+                      className='text-shGray-600 group-focus-within:text-shPrimary-500 mb-1.5 block text-xs font-medium transition-colors duration-300'
                     >
                       Rol
                     </label>
-                    <div className='relative'>
-                      <div className='text-app-text-muted group-focus-within:text-app-brand pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 transition-colors'>
+                    <div
+                      className={cn(
+                        'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
+                        'border-shGray-300 focus-within:border-shPrimary-400 focus-within:ring-shPrimary-400/20 focus-within:ring-2',
+                      )}
+                    >
+                      <div className='text-shGray-400 group-focus-within:text-shPrimary-400 flex w-12 shrink-0 items-center justify-center transition-colors'>
                         <Shield size={16} />
                       </div>
                       <select
@@ -178,18 +183,14 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                             () => e.target.value as 'operator' | 'viewer',
                           )
                         }
-                        className={cn(
-                          'bg-app-surface block w-full appearance-none rounded-lg border border-app-border px-3 py-2.5 pl-10 text-app-text-primary transition-all',
-                          'focus:ring-app-brand/20 outline-none focus:ring-2',
-                          'border-app-border-soft focus:border-app-brand hover:border-app-border',
-                        )}
+                        className='text-shGray-900 placeholder:text-shGray-400 flex-1 appearance-none border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!'
                       >
                         <option value='operator'>Operador</option>
                         <option value='viewer'>Visor</option>
                       </select>
-                      <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
+                      <div className='text-shGray-400 flex w-12 shrink-0 items-center justify-center'>
                         <svg
-                          className='text-app-text-muted h-4 w-4'
+                          className='h-4 w-4'
                           fill='none'
                           viewBox='0 0 24 24'
                           stroke='currentColor'
@@ -210,7 +211,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
           </div>
 
           {/* Row 3: Area + Job Title */}
-          <div className='bg bg- grid grid-cols-1 gap-5 md:grid-cols-2'>
+          <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
             <motion.div
               custom={4}
               initial='hidden'
