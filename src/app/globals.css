@@ -6,7 +6,8 @@
   --radius: 0.625rem;
 }
 
-.auth-shell {
+.auth-shell,
+.public-shell {
   --app-bg: #f5f7fa;
   --app-surface: #ffffff;
   --app-surface-subtle: #f8fafc;
@@ -34,6 +35,45 @@
   min-height: 100dvh;
   background: var(--app-bg);
   color: var(--app-text-primary);
+}
+
+.public-shell {
+  overflow-x: hidden;
+}
+
+.como-funciona-shell {
+  --app-bg: #12110f;
+  --app-surface: #1d1b16;
+  --app-surface-subtle: #252323;
+  --app-surface-muted: #3d3930;
+  --app-text-primary: #f5f5f5;
+  --app-text-secondary: #d4c9af;
+  --app-text-muted: #8d8885;
+  --app-border-soft: rgb(244 240 231 / 0.12);
+  --app-border: rgb(248 205 178 / 0.28);
+  --app-brand: #ee9c4a;
+  --app-brand-dark: #f8cdb2;
+  --app-brand-soft: rgb(238 156 74 / 0.14);
+}
+
+.public-reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .public-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 640ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 640ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .public-reveal[data-visible='true'] {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .auth-shell input,

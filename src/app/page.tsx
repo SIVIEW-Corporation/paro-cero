@@ -9,7 +9,7 @@ import ModulesSection from '@/components/landing/ModulesSection';
 
 export default function Page() {
   return (
-    <main className='bg-shBackground text-shGray-200 overflow-x-hidden'>
+    <main className='public-shell bg-app-bg text-app-text-primary'>
       <Header />
       <Hero />
       <BenefitsSection />

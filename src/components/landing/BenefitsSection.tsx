@@ -1,3 +1,5 @@
+import ScrollReveal from '@/components/landing/ScrollReveal';
+
 const benefits = [
   {
     title: 'Disponibilidad operacional sostenible',
@@ -20,28 +22,30 @@ export default function BenefitsSection() {
   return (
     <section
       id='beneficios'
-      className='border-shGray-700/60 scroll-mt-24 border-b'
+      className='border-app-border-soft bg-app-surface scroll-mt-24 border-b'
     >
       <div className='container py-20'>
-        <div className='mb-10 max-w-2xl space-y-3'>
-          <p className='text-shPrimary-300 text-xs font-semibold tracking-[0.2em] uppercase'>
+        <ScrollReveal className='mb-10 max-w-2xl space-y-3'>
+          <p className='text-app-brand text-xs font-semibold tracking-[0.2em] uppercase'>
             Beneficios
           </p>
-          <h2 className='text-shGray-200 text-3xl font-semibold md:text-4xl'>
+          <h2 className='text-app-text-primary text-3xl font-semibold md:text-4xl'>
             Menos paradas, mas control sobre tus activos.
           </h2>
-        </div>
+        </ScrollReveal>
 
         <div className='grid gap-8 md:grid-cols-3'>
-          {benefits.map((item) => (
-            <article key={item.title} className='space-y-3'>
-              <h3 className='text-shGray-200 text-xl font-semibold'>
-                {item.title}
-              </h3>
-              <p className='text-shGray-400 leading-relaxed'>
-                {item.description}
-              </p>
-            </article>
+          {benefits.map((item, index) => (
+            <ScrollReveal key={item.title} delay={index * 80}>
+              <article className='border-app-border-soft bg-app-surface-subtle hover:border-app-border h-full rounded-2xl border p-6 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/10'>
+                <h3 className='text-app-text-primary text-xl font-semibold'>
+                  {item.title}
+                </h3>
+                <p className='text-app-text-secondary mt-3 leading-relaxed'>
+                  {item.description}
+                </p>
+              </article>
+            </ScrollReveal>
           ))}
         </div>
       </div>

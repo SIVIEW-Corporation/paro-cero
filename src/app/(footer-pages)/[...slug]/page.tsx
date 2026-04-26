@@ -6,6 +6,10 @@ import {
   getFooterPageBySlug,
 } from '@/app/(footer-pages)/_content/footer-pages';
 import FooterPageTemplate from '@/app/(footer-pages)/_components/footer-page-template';
+import ComoFuncionaTemplate from '@/app/(footer-pages)/_components/ComoFuncionaTemplate';
+import GuiaImplementacionTemplate from '@/app/(footer-pages)/_components/GuiaImplementacionTemplate';
+import PreguntasFrecuentesTemplate from '@/app/(footer-pages)/_components/PreguntasFrecuentesTemplate';
+import SobreParoCeroTemplate from '@/app/(footer-pages)/_components/SobreParoCeroTemplate';
 
 interface FooterPageRouteProps {
   params: Promise<{
@@ -44,6 +48,22 @@ export default async function FooterPageRoute({
 
   if (!page) {
     notFound();
+  }
+
+  if (page.customTemplate === 'como-funciona') {
+    return <ComoFuncionaTemplate page={page} />;
+  }
+
+  if (page.customTemplate === 'guia-de-implementacion') {
+    return <GuiaImplementacionTemplate page={page} />;
+  }
+
+  if (page.customTemplate === 'preguntas-frecuentes') {
+    return <PreguntasFrecuentesTemplate page={page} />;
+  }
+
+  if (page.customTemplate === 'sobre-paro-cero') {
+    return <SobreParoCeroTemplate page={page} />;
   }
 
   return <FooterPageTemplate page={page} />;

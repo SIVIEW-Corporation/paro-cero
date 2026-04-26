@@ -1,3 +1,5 @@
+import ScrollReveal from '@/components/landing/ScrollReveal';
+
 const steps = [
   {
     step: '01',
@@ -23,34 +25,33 @@ export default function HowItWorksSection() {
   return (
     <section
       id='solucion'
-      className='border-shGray-700/60 scroll-mt-24 border-b'
+      className='border-app-border-soft bg-app-surface scroll-mt-24 border-b'
     >
       <div className='container py-20'>
-        <div className='mb-10 max-w-2xl space-y-3'>
-          <p className='text-shPrimary-300 text-xs font-semibold tracking-[0.2em] uppercase'>
+        <ScrollReveal className='mb-10 max-w-2xl space-y-3'>
+          <p className='text-app-brand text-xs font-semibold tracking-[0.2em] uppercase'>
             Como funciona
           </p>
-          <h2 className='text-shGray-200 text-3xl font-semibold md:text-4xl'>
+          <h2 className='text-app-text-primary text-3xl font-semibold md:text-4xl'>
             De los datos de campo a decisiones de mantenimiento en minutos.
           </h2>
-        </div>
+        </ScrollReveal>
 
         <ol className='grid gap-8 md:grid-cols-3'>
-          {steps.map((item) => (
-            <li
-              key={item.step}
-              className='border-shGray-700/80 bg-shGray-800/20 rounded-xl border p-6'
-            >
-              <p className='text-shPrimary-300 mb-4 text-sm font-semibold tracking-[0.16em]'>
-                PASO {item.step}
-              </p>
-              <h3 className='text-shGray-200 mb-2 text-xl font-semibold'>
-                {item.title}
-              </h3>
-              <p className='text-shGray-400 leading-relaxed'>
-                {item.description}
-              </p>
-            </li>
+          {steps.map((item, index) => (
+            <ScrollReveal key={item.step} delay={index * 90}>
+              <li className='border-app-border-soft bg-app-surface-subtle hover:border-app-border h-full rounded-xl border p-6 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/10'>
+                <p className='text-app-brand mb-4 text-sm font-semibold tracking-[0.16em]'>
+                  PASO {item.step}
+                </p>
+                <h3 className='text-app-text-primary mb-2 text-xl font-semibold'>
+                  {item.title}
+                </h3>
+                <p className='text-app-text-secondary leading-relaxed'>
+                  {item.description}
+                </p>
+              </li>
+            </ScrollReveal>
           ))}
         </ol>
       </div>

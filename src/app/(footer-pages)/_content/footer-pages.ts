@@ -7,6 +7,7 @@ export interface FooterPageSection {
   title: string;
   description: string;
   bullets: string[];
+  note?: string;
 }
 
 export interface FooterPageCta {
@@ -31,6 +32,11 @@ export interface FooterPageContent {
   references: FooterPageReference[];
   placeholders?: string[];
   legalNotice?: string;
+  customTemplate?:
+    | 'como-funciona'
+    | 'guia-de-implementacion'
+    | 'preguntas-frecuentes'
+    | 'sobre-paro-cero';
 }
 
 const commonCta: FooterPageCta = {
@@ -40,16 +46,6 @@ const commonCta: FooterPageCta = {
   primaryLabel: 'Solicitar demo',
   primaryHref: '/demo',
   secondaryLabel: 'Contactar a Paro Cero',
-  secondaryHref: '/empresa/contacto',
-};
-
-const implementationCta: FooterPageCta = {
-  title: 'Implementá PM0 con foco en resultados',
-  description:
-    'Planificamos juntos el arranque operativo para que el equipo use la plataforma desde la primera semana.',
-  primaryLabel: 'Solicitar acompañamiento',
-  primaryHref: '/demo',
-  secondaryLabel: 'Hablar con el equipo',
   secondaryHref: '/empresa/contacto',
 };
 
@@ -322,38 +318,95 @@ export const footerPages: FooterPageContent[] = [
     category: 'Recursos',
     title: 'Cómo funciona',
     subtitle:
-      'Flujo operativo completo de PM0 para pasar de datos dispersos a ejecución controlada',
+      'De mantenimiento reactivo a una operación controlada, trazable y medible',
     intro:
-      'PM0 ordena el proceso de mantenimiento industrial en un circuito claro: activos, órdenes, preventivo, inspecciones cuando aplica y KPIs para cerrar el aprendizaje.',
+      'PM0 transforma mantenimiento industrial ordenando el trabajo alrededor de activos, ejecución en campo, evidencia técnica y seguimiento operativo. No agrega otra pantalla: instala una forma más disciplinada de controlar la operación.',
     sections: [
       {
-        title: 'Paso 1: activos y contexto técnico',
+        title: 'Antes de PM0',
         description:
-          'Todo comienza con una base sólida de activos para evitar ejecución sin contexto.',
+          'El mantenimiento funciona, pero depende demasiado de memoria, urgencia y criterio aislado.',
         bullets: [
-          'Alta de equipos con criticidad, ubicación y jerarquía funcional.',
-          'Registro de historial técnico como insumo para decisiones.',
-          'Estandarización de datos para trabajo entre áreas.',
+          'Paros no planeados que se atienden sin causa raíz documentada.',
+          'Órdenes, reportes y pendientes repartidos entre Excel, papel y mensajes.',
+          'Activos críticos sin historial técnico confiable ni trazabilidad de intervención.',
+          'Tareas reactivas que desplazan rutinas preventivas y saturan al equipo.',
+          'Decisiones tomadas con percepción operativa, no con datos comparables.',
         ],
       },
       {
-        title: 'Paso 2: órdenes y preventivo',
+        title: 'Qué cambia con PM0',
         description:
-          'Las necesidades de mantenimiento se convierten en trabajo ejecutable y medible.',
+          'El equipo pasa de apagar urgencias a controlar un flujo operativo con evidencia.',
         bullets: [
-          'Creación y seguimiento de órdenes con responsables y prioridad.',
-          'Planificación preventiva por frecuencia y criticidad.',
-          'Coordinación con operación para minimizar impacto productivo.',
+          'Los activos quedan ordenados por ubicación, criticidad e historial.',
+          'El mantenimiento se ejecuta con responsables, prioridades y seguimiento.',
+          'Cada intervención deja evidencia útil para auditoría, análisis y mejora.',
+          'El preventivo deja de ser un calendario aislado y se conecta con ejecución real.',
+          'La operación gana visibilidad para priorizar recursos donde más impactan.',
         ],
       },
       {
-        title: 'Paso 3: inspecciones y KPIs/reportes',
+        title: 'Flujo operativo PM0',
         description:
-          'El cierre del ciclo usa evidencia de campo para medir y ajustar el sistema.',
+          'La transformación se sostiene en tres movimientos operativos simples.',
         bullets: [
-          'Inspecciones aplicadas cuando la estrategia lo requiere.',
-          'Consolidación de cumplimiento, backlog y tendencias.',
-          'Reportes accionables para reuniones operativas y decisiones.',
+          '1. Estructurar activos para que el trabajo tenga contexto técnico.',
+          '2. Ejecutar mantenimiento con trazabilidad de tareas, responsables y evidencia.',
+          '3. Medir resultados para ajustar prioridades, rutinas y decisiones.',
+        ],
+      },
+      {
+        title: 'Paso 1: Estructuración de activos',
+        description:
+          'PM0 construye una base operativa donde cada equipo tiene contexto técnico y prioridad clara.',
+        bullets: [
+          'Activos organizados por planta, área, sistema, criticidad y condición operativa.',
+          'Historial técnico concentrado para dejar de depender de memoria individual.',
+          'Criterios comunes para que mantenimiento, supervisión y operación hablen el mismo idioma.',
+        ],
+      },
+      {
+        title: 'Paso 2: Ejecución de mantenimiento',
+        description:
+          'Las necesidades se convierten en trabajo planificado, asignado y verificable en campo.',
+        bullets: [
+          'Órdenes con prioridad, responsable, estado y evidencia de cierre.',
+          'Rutinas preventivas sostenibles según criticidad, frecuencia y capacidad del equipo.',
+          'Seguimiento del backlog para separar lo urgente, lo crítico y lo postergable.',
+        ],
+      },
+      {
+        title: 'Paso 3: Medición y mejora',
+        description:
+          'Lo ejecutado se convierte en información de gestión para corregir desvíos y mejorar el plan.',
+        bullets: [
+          'Lectura de cumplimiento preventivo, correctivos, atrasos y reincidencias.',
+          'Indicadores conectados con activos reales, no reportes manuales armados tarde.',
+          'Base objetiva para reuniones de producción, mantenimiento y gerencia.',
+        ],
+      },
+      {
+        title: 'Impacto operativo',
+        description:
+          'Cuando el proceso se sostiene, el impacto aparece en continuidad, control y calidad de decisión.',
+        bullets: [
+          'Menos paros sin causa identificada.',
+          'Mayor trazabilidad de intervención, responsables y evidencia.',
+          'Mejor priorización por criticidad, recurrencia e impacto productivo.',
+          'Decisiones con evidencia para mantenimiento, producción y gerencia.',
+        ],
+      },
+      {
+        title: 'Qué no es PM0',
+        description:
+          'PM0 no intenta maquillar una operación desordenada. Está diseñado para ordenar cómo se trabaja.',
+        bullets: [
+          'PM0 no es solo checklist.',
+          'No es solo registro de órdenes.',
+          'No es un dashboard bonito para mirar indicadores sin cambiar la ejecución.',
+          'No reemplaza el criterio técnico del equipo; lo vuelve visible, trazable y comparable.',
+          'PM0 es una capa de control operativo para mantenimiento industrial.',
         ],
       },
     ],
@@ -366,8 +419,17 @@ export const footerPages: FooterPageContent[] = [
       'El flujo PM0 está diseñado para reducir fricción entre planificación y campo.',
       'Cada etapa deja trazabilidad para mejorar decisiones semana a semana.',
     ],
-    cta: implementationCta,
+    cta: {
+      title: 'Convierte mantenimiento en control operativo',
+      description:
+        'Revisamos tu flujo actual de activos, órdenes, preventivo y trazabilidad para identificar si PM0 puede generar impacto operativo real.',
+      primaryLabel: 'Solicitar evaluación operativa',
+      primaryHref: '/demo',
+      secondaryLabel: 'Ver planes',
+      secondaryHref: '/precios',
+    },
     references: resourcesReferences,
+    customTemplate: 'como-funciona',
   },
   {
     slug: ['recursos', 'guia-de-implementacion'],
@@ -379,7 +441,7 @@ export const footerPages: FooterPageContent[] = [
       'Esta guía resume una secuencia recomendada para implementar PM0 en mantenimiento industrial minimizando fricción y acelerando valor temprano.',
     sections: [
       {
-        title: 'Arranque y modelado operativo',
+        title: '01 — Arranque y modelado operativo',
         description:
           'El levantamiento inicial define calidad de datos y velocidad de adopción posterior.',
         bullets: [
@@ -389,7 +451,7 @@ export const footerPages: FooterPageContent[] = [
         ],
       },
       {
-        title: 'Diseño de ejecución diaria',
+        title: '02 — Diseño de ejecución diaria',
         description:
           'Se construye una estructura de trabajo compatible con la realidad de campo.',
         bullets: [
@@ -399,7 +461,7 @@ export const footerPages: FooterPageContent[] = [
         ],
       },
       {
-        title: 'Adopción e indicadores iniciales',
+        title: '03 — Adopción e indicadores iniciales',
         description:
           'El éxito depende de uso sostenido y seguimiento de métricas desde el inicio.',
         bullets: [
@@ -418,175 +480,204 @@ export const footerPages: FooterPageContent[] = [
       'La implementación recomendada prioriza primero orden operativo, luego profundidad analítica.',
       'El objetivo es generar resultados visibles temprano para sostener adopción.',
     ],
-    cta: implementationCta,
+    cta: {
+      title: 'Implementa PM0 con orden desde el inicio',
+      description:
+        'Podemos ayudarte a estructurar el arranque operativo para tu planta.',
+      primaryLabel: 'Solicitar evaluación operativa',
+      primaryHref: '/demo',
+      secondaryLabel: 'Ver precios',
+      secondaryHref: '/precios',
+    },
     references: resourcesReferences,
+    customTemplate: 'guia-de-implementacion',
   },
   {
     slug: ['recursos', 'preguntas-frecuentes'],
     category: 'Recursos',
     title: 'Preguntas frecuentes',
-    subtitle:
-      'Respuestas concretas para adopción de PM0 en equipos industriales',
+    subtitle: 'Respuestas concretas para evaluación e implementación de PM0',
     intro:
-      'Agrupamos las consultas más comunes por categoría para facilitar evaluación, implementación y uso diario de PM0.',
-    sections: [
-      {
-        title: 'Acceso y activos',
-        description:
-          'Dudas frecuentes durante onboarding de usuarios y carga de información técnica.',
-        bullets: [
-          'Acceso: alta de usuarios por rol y permisos acordes a responsabilidades.',
-          'Activos: importación inicial y mantenimiento de inventario técnico.',
-          'Activos: manejo de criticidad para priorización de mantenimiento.',
-        ],
-      },
-      {
-        title: 'Órdenes y mantenimiento preventivo',
-        description:
-          'Consultas vinculadas a la ejecución cotidiana de mantenimiento.',
-        bullets: [
-          'Órdenes de trabajo: creación, asignación, prioridades y cierre técnico.',
-          'Mantenimiento preventivo: configuración de frecuencias y cumplimiento PM.',
-          'Mantenimiento preventivo: ajuste de planes según resultados de campo.',
-        ],
-      },
-      {
-        title: 'Reportes y soporte',
-        description:
-          'Cómo usar datos de PM0 para seguimiento y mejora de operación.',
-        bullets: [
-          'Reportes: lectura de cumplimiento, backlog y tendencias operativas.',
-          'Reportes: definición de indicadores iniciales para seguimiento semanal.',
-          'Soporte: canales de contacto para consultas funcionales y operativas.',
-        ],
-      },
-    ],
-    industrialUseCases: [
-      'Equipos nuevos en PM0 que necesitan una base común para resolver dudas rápidas.',
-      'Responsables de implementación que preparan capacitaciones por perfil.',
-      'Líderes de mantenimiento que buscan estandarizar criterios de uso.',
-    ],
-    pm0Connection: [
-      'La página de preguntas frecuentes está organizada por acceso, activos, órdenes, preventivo, reportes y soporte para resolver lo crítico primero.',
-      'El contenido se puede ampliar conforme aparezcan nuevas preguntas reales de operación.',
-    ],
-    cta: implementationCta,
-    references: resourcesReferences,
+      'Agrupamos las consultas más comunes para facilitar la evaluación y toma de decisiones.',
+    customTemplate: 'preguntas-frecuentes',
+    sections: [],
+    industrialUseCases: [],
+    pm0Connection: [],
+    cta: {
+      title: '¿Tienes más preguntas?',
+      description: 'Podemos ayudarte a evaluar si PM0 aplica a tu operación.',
+      primaryLabel: 'Contactar a Paro Cero',
+      primaryHref: '/empresa/contacto',
+      secondaryLabel: 'Ver demo primero',
+      secondaryHref: '/demo',
+    },
+    references: [],
   },
   {
     slug: ['empresa', 'sobre-paro-cero'],
     category: 'Empresa',
-    title: 'Sobre Paro Cero',
-    subtitle: 'Por qué existe PM0 y qué problema industrial buscamos resolver',
-    intro:
-      'Paro Cero nace para ayudar a equipos industriales a reducir paros no planificados mediante ejecución disciplinada, trazabilidad y decisiones operativas con datos.',
-    sections: [
-      {
-        title: 'El problema que vemos en planta',
-        description:
-          'Muchas operaciones conviven con datos dispersos, baja trazabilidad y priorización reactiva de mantenimiento.',
-        bullets: [
-          'Información crítica repartida en planillas, chats y memoria de personas clave.',
-          'Dificultad para sostener cumplimiento preventivo bajo presión operativa.',
-          'Poca visibilidad para decidir en base a tendencias y no urgencias.',
-        ],
-      },
-      {
-        title: 'Por qué existe PM0',
-        description:
-          'Construimos PM0 para transformar mantenimiento en un sistema operativo consistente y medible.',
-        bullets: [
-          'Unificar activos, órdenes, preventivo e indicadores en un flujo único.',
-          'Reducir fricción entre mantenimiento, operación y supervisión.',
-          'Generar evidencia útil para decisiones técnicas y de gestión.',
-        ],
-      },
-      {
-        title: 'Visión y enfoque',
-        description:
-          'Nuestro foco está en industria y operación real, con diseño pragmático orientado a adopción.',
-        bullets: [
-          'Resolver necesidades concretas de campo antes que features cosméticas.',
-          'Escalar desde quick wins hasta una gestión robusta de mantenimiento.',
-          'Trabajar junto al cliente para iterar con impacto operativo medible.',
-        ],
-      },
-    ],
-    industrialUseCases: [
-      'Empresas que quieren profesionalizar mantenimiento sin frenar la operación diaria.',
-      'Equipos que necesitan trazar decisiones técnicas frente a auditoría interna.',
-      'Operaciones que buscan un partner enfocado en industria, no en software genérico.',
-    ],
-    pm0Connection: [
-      'PM0 refleja la visión de Paro Cero: menos improvisación y más decisiones trazables.',
-      'El producto evoluciona con feedback operativo para sostener valor en planta.',
-    ],
-    cta: commonCta,
-    references: [],
-  },
-  {
-    slug: ['empresa', 'contacto'],
-    category: 'Empresa',
-    title: 'Contacto',
+    title: 'Paro Cero',
     subtitle:
-      'Canales para consultas comerciales, implementación y acompañamiento operativo',
+      'Control operativo para mantenimiento industrial, construido desde la realidad de planta',
     intro:
-      'Si querés evaluar PM0 o necesitás coordinar una conversación técnica, este es el punto de contacto para el equipo de Paro Cero.',
+      'Paro Cero nace para ordenar mantenimiento industrial, reducir paros no planeados y convertir actividad dispersa en control operativo. PM0 no intenta decorar una operación desordenada: estructura activos, rutinas, órdenes, evidencias e indicadores para que mantenimiento pueda decidir con trazabilidad.',
     sections: [
       {
-        title: 'Cómo contactar',
+        title: 'El problema real en planta',
         description:
-          'Priorizamos una respuesta ordenada según tipo de consulta para agilizar el siguiente paso.',
+          'En muchas plantas el mantenimiento funciona por esfuerzo humano, no por sistema. La operación responde, resuelve y sigue produciendo, pero cada paro no planeado vuelve a exponer la misma fragilidad: información incompleta, decisiones urgentes y poca memoria técnica acumulada.',
         bullets: [
-          'Formulario de contacto desde la landing para solicitud de demo.',
-          'Canal de correo para consultas comerciales y de implementación.',
-          'Espacios de reunión para revisión de contexto operativo.',
+          'Paros no planeados atendidos con velocidad, pero sin evidencia suficiente para evitar repetición.',
+          'Excel, papel, chats y conversaciones de turno conviviendo como fuentes paralelas de verdad.',
+          'Activos críticos sin historial confiable de fallas, intervenciones, repuestos y decisiones.',
+          'Preventivos desplazados por urgencias porque la carga real y el backlog no están visibles.',
+          'Dependencia de memoria individual para saber qué pasó, qué se hizo y qué quedó pendiente.',
         ],
+        note: 'El costo no aparece solo cuando la línea se detiene. También aparece cuando la planta pierde trazabilidad sobre cómo llegó a ese punto.',
       },
       {
-        title: 'Tipos de consulta',
+        title: 'El insight: por qué falla mantenimiento',
         description:
-          'Podés escribirnos según el objetivo de tu equipo y etapa del proyecto.',
+          'El problema no es solamente falta de software. Una herramienta nueva no corrige por sí sola una operación sin estructura. Lo que suele faltar es disciplina de ejecución, criterios comunes de prioridad y visibilidad suficiente para conectar el trabajo diario con decisiones de gestión.',
         bullets: [
-          'Evaluación de PM0 para una planta o múltiples sitios.',
-          'Plan de implementación y adopción por etapas.',
-          'Alineación inicial de indicadores y enfoque de mejora.',
+          'Si la criticidad no está definida, todo compite contra todo y gana la urgencia más ruidosa.',
+          'Si la orden se cierra sin evidencia, el historial no aprende y el próximo diagnóstico arranca de cero.',
+          'Si el preventivo vive separado de la ejecución real, se convierte en calendario, no en control.',
+          'Si los indicadores se arman tarde o a mano, llegan cuando el desvío ya impactó producción.',
         ],
+        note: 'Mantenimiento mejora cuando la operación deja registro útil mientras trabaja, no cuando alguien reconstruye la historia al final del mes.',
       },
       {
-        title: 'Disponibilidad y respuesta',
+        title: 'Qué es PM0 realmente',
         description:
-          'Mantenemos un esquema de atención transparente y ajustable a cada proyecto.',
+          'PM0 es una capa de control operativo para mantenimiento industrial. Ordena la base técnica, convierte necesidades en trabajo ejecutable y transforma cada intervención en evidencia para decidir mejor.',
         bullets: [
-          'Respuesta inicial en días hábiles para nuevos contactos.',
-          'Coordinación de reuniones según disponibilidad de ambas partes.',
-          'Escalamiento de temas críticos durante implementación acordada.',
+          'Estructura activos por ubicación, criticidad, contexto técnico e historial operativo.',
+          'Organiza rutinas preventivas para que tengan frecuencia, responsable, seguimiento y cierre.',
+          'Gestiona órdenes de trabajo con prioridad, estado, evidencias y trazabilidad de ejecución.',
+          'Conecta actividad de campo con indicadores de cumplimiento, backlog, reincidencia y control.',
+          'Reduce la distancia entre planificación, técnicos, supervisión y decisiones de gerencia.',
         ],
+        note: 'PM0 no reemplaza el criterio técnico del equipo. Lo hace visible, comparable y reutilizable.',
+      },
+      {
+        title: 'Filosofía de producto',
+        description:
+          'Construimos PM0 con una convicción concreta: una plataforma industrial debe empezar por lo esencial y sostener adopción en campo. Si el sistema no ayuda al técnico, al planificador y al supervisor en el trabajo diario, no sirve como sistema de control.',
+        bullets: [
+          'Empezar con activos críticos, no con inventarios perfectos que nunca llegan a operación.',
+          'Priorizar flujos simples que el equipo pueda sostener durante presión productiva real.',
+          'Acompañar adopción por etapas, con foco en hábitos de carga, cierre y revisión.',
+          'Medir desde el inicio para detectar cumplimiento, atrasos y puntos de fricción.',
+          'Agregar profundidad solo cuando la base operativa ya está funcionando.',
+        ],
+        note: 'La madurez no se impone con complejidad. Se construye con una secuencia que la planta pueda ejecutar.',
+      },
+      {
+        title: 'La visión',
+        description:
+          'Queremos plantas con mantenimiento trazable, preventivo y controlado. Operaciones donde el conocimiento no dependa de recordar quién atendió una falla, sino de evidencia disponible para aprender, priorizar y prevenir.',
+        bullets: [
+          'Menos dependencia de memoria individual y más conocimiento institucional accesible.',
+          'Menos mantenimiento reactivo como modo normal de trabajo y más prevención verificable.',
+          'Menos discusiones por percepción y más decisiones respaldadas por historial operativo.',
+          'Menos datos dispersos y más continuidad entre turnos, áreas y sitios.',
+          'Más control sobre lo que se planifica, se ejecuta, se cierra y se mejora.',
+        ],
+        note: 'Paro Cero busca ser una herramienta diaria de control operativo, no una carga administrativa más.',
       },
     ],
     industrialUseCases: [
-      'Empresas que quieren validar fit funcional antes de iniciar un piloto.',
-      'Responsables de mantenimiento que necesitan una hoja de ruta de adopción.',
-      'Equipos directivos que evalúan impacto operativo y alcance de implementación.',
+      'Plantas con paros recurrentes que necesitan identificar patrones con evidencia.',
+      'Equipos que todavía dependen de Excel, papel o comunicación informal para coordinar mantenimiento.',
+      'Operaciones con activos críticos sin historial técnico confiable.',
+      'Organizaciones que quieren estandarizar ejecución entre turnos, áreas o sitios.',
     ],
     pm0Connection: [
-      'El contacto inicial busca entender contexto operativo antes de proponer alcance.',
-      'La conversación se orienta a resultados medibles y plan de ejecución realista.',
+      'PM0 cierra el ciclo operativo: activos, rutinas, órdenes, evidencias e indicadores conectados.',
+      'La trazabilidad no es un módulo adicional. Es la base para reducir reacción y sostener mejora real.',
     ],
     cta: {
-      title: 'Contanos tu contexto operativo',
+      title: 'Evaluemos el control operativo de tu mantenimiento',
       description:
-        'Podemos ayudarte a identificar prioridades y armar un plan inicial de implementación en PM0.',
-      primaryLabel: 'Ir al formulario de demo',
+        'Revisamos cómo hoy gestionás activos, preventivos, órdenes, evidencias e indicadores para detectar si PM0 puede ordenar tu operación y reducir paros no planeados.',
+      primaryLabel: 'Solicitar evaluación operativa',
       primaryHref: '/demo',
       secondaryLabel: 'Ver guía de implementación',
       secondaryHref: '/recursos/guia-de-implementacion',
     },
     references: [],
+    customTemplate: 'sobre-paro-cero',
+  },
+  {
+    slug: ['empresa', 'contacto'],
+    category: 'Empresa',
+    title: 'Contacto operativo',
+    subtitle: 'Evaluación de Paro Cero en tu operación industrial',
+    intro:
+      'Si estás evaluando PM0 para tu planta, este es el punto de entrada para entender tu operación y determinar si tiene sentido implementarlo.',
+    sections: [
+      {
+        title: '¿Tiene sentido implementar PM0 en tu operación?',
+        description:
+          'Este punto de entrada está pensado para operaciones industriales donde todavía existen brechas claras de control, trazabilidad o mantenimiento preventivo.',
+        bullets: [
+          'Tienes paros no planeados sin trazabilidad clara.',
+          'El mantenimiento se gestiona en Excel, papel o sistemas dispersos.',
+          'No tienes visibilidad real del desempeño de tus activos.',
+          'Tu equipo de mantenimiento opera de forma reactiva.',
+          'Buscas estructurar mantenimiento preventivo.',
+        ],
+        note: 'Si tu operación ya tiene control total y trazabilidad consolidada, probablemente PM0 no es necesario.',
+      },
+      {
+        title: 'Qué obtienes en la primera conversación',
+        description:
+          'La primera conversación busca entender el estado real de tu operación, no vender una solución genérica.',
+        bullets: [
+          'Diagnóstico inicial de tu operación.',
+          'Identificación de puntos críticos en mantenimiento.',
+          'Evaluación de si PM0 aplica para tu caso.',
+          'Recomendación del siguiente paso (demo o implementación).',
+        ],
+      },
+      {
+        title: 'Cómo funciona el proceso',
+        description:
+          'El proceso está diseñado para validar fit operativo antes de avanzar a una demo o implementación.',
+        bullets: [
+          '1. Envío del formulario con contexto básico.',
+          '2. Revisión interna del equipo PM0.',
+          '3. Primera conversación (30–45 min).',
+          '4. Definición de siguiente paso.',
+        ],
+      },
+      {
+        title: 'Canal de contacto',
+        description:
+          'La comunicación inicia desde el formulario de evaluación.',
+        bullets: [
+          'entender tu operación antes de responder',
+          'priorizar correctamente el seguimiento',
+          'asignar un enfoque técnico desde el inicio',
+        ],
+      },
+    ],
+    industrialUseCases: [],
+    pm0Connection: [],
+    cta: {
+      title: 'Inicia evaluación de tu operación',
+      description:
+        'Podemos ayudarte a identificar dónde estás perdiendo eficiencia y si PM0 realmente tiene sentido para tu planta.',
+      primaryLabel: 'Solicitar evaluación',
+      primaryHref: '/demo',
+      secondaryLabel: 'Ver demo primero',
+      secondaryHref: '/demo',
+    },
+    references: [],
     placeholders: [
       'siview.corp@gmail.com Correo oficial de contacto público.',
-      '24/7 Horario formal de atención por zona horaria.',
-      '5537828350 Teléfono o canal directo.',
+      '5537828350 Teléfono de contacto.',
     ],
   },
   {
@@ -808,6 +899,7 @@ export const footerNavColumns = [
         label: 'Preguntas frecuentes',
         href: '/recursos/preguntas-frecuentes',
       },
+      { label: 'Blog', href: '/blog' },
     ],
   },
   {

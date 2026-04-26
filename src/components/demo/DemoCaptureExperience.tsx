@@ -10,6 +10,7 @@ import DemoCaptureForm, {
 } from '@/components/demo/DemoCaptureForm';
 import type { DemoLeadField } from '@/components/demo/demo-lead-schema';
 import DemoVideoPanel from '@/components/demo/DemoVideoPanel';
+import ScrollReveal from '@/components/landing/ScrollReveal';
 
 type DemoFormFieldErrors = Partial<Record<DemoLeadField, string>>;
 
@@ -43,31 +44,35 @@ export default function DemoCaptureExperience() {
   };
 
   return (
-    <section className='pb-20'>
+    <section className='bg-app-bg py-14 md:py-20'>
       <div className='container'>
         <div className='mx-auto max-w-6xl'>
-          <div className='mb-10 max-w-3xl space-y-4'>
-            <p className='text-shPrimary-300 text-xs font-semibold tracking-[0.22em] uppercase'>
+          <ScrollReveal className='mb-10 max-w-3xl space-y-4'>
+            <p className='text-app-brand text-xs font-semibold tracking-[0.22em] uppercase'>
               Solicitar demo
             </p>
-            <h1 className='text-shGray-200 text-3xl leading-tight font-bold sm:text-4xl lg:text-5xl'>
+            <h1 className='text-app-text-primary text-3xl leading-tight font-bold sm:text-4xl lg:text-5xl'>
               Conoce PM0 en un recorrido enfocado en resultados operativos
               reales
             </h1>
-            <p className='text-shGray-300 text-base leading-relaxed sm:text-lg'>
+            <p className='text-app-text-secondary text-base leading-relaxed sm:text-lg'>
               Mostramos como equipos industriales centralizan mantenimiento,
               trazabilidad y priorizacion para reducir paradas no planificadas.
             </p>
-          </div>
+          </ScrollReveal>
 
           <div className='grid gap-6 lg:grid-cols-2'>
-            <DemoCaptureForm
-              onSubmit={handleSubmit}
-              submitStatus={submitStatus}
-              submitError={submitError}
-              serverFieldErrors={serverFieldErrors}
-            />
-            <DemoVideoPanel isUnlocked={isUnlocked} leadName={leadName} />
+            <ScrollReveal>
+              <DemoCaptureForm
+                onSubmit={handleSubmit}
+                submitStatus={submitStatus}
+                submitError={submitError}
+                serverFieldErrors={serverFieldErrors}
+              />
+            </ScrollReveal>
+            <ScrollReveal delay={90}>
+              <DemoVideoPanel isUnlocked={isUnlocked} leadName={leadName} />
+            </ScrollReveal>
           </div>
         </div>
       </div>

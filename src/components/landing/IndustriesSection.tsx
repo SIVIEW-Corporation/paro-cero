@@ -1,3 +1,5 @@
+import ScrollReveal from '@/components/landing/ScrollReveal';
+
 const industries = [
   {
     name: 'Manufactura continua',
@@ -25,31 +27,30 @@ export default function IndustriesSection() {
   return (
     <section
       id='industrias'
-      className='border-shGray-700/60 scroll-mt-24 border-b'
+      className='border-app-border-soft bg-app-bg scroll-mt-24 border-b'
     >
       <div className='container py-20'>
-        <div className='mb-10 max-w-2xl space-y-3'>
-          <p className='text-shPrimary-300 text-xs font-semibold tracking-[0.2em] uppercase'>
+        <ScrollReveal className='mb-10 max-w-2xl space-y-3'>
+          <p className='text-app-brand text-xs font-semibold tracking-[0.2em] uppercase'>
             Industrias y casos de uso
           </p>
-          <h2 className='text-shGray-200 text-3xl font-semibold md:text-4xl'>
+          <h2 className='text-app-text-primary text-3xl font-semibold md:text-4xl'>
             Diseñado para operaciones donde cada minuto cuenta.
           </h2>
-        </div>
+        </ScrollReveal>
 
         <div className='grid gap-7 md:grid-cols-2'>
-          {industries.map((industry) => (
-            <article
-              key={industry.name}
-              className='border-shGray-700 space-y-2 border-t pt-5'
-            >
-              <h3 className='text-shGray-200 text-xl font-semibold'>
-                {industry.name}
-              </h3>
-              <p className='text-shGray-400 leading-relaxed'>
-                {industry.useCase}
-              </p>
-            </article>
+          {industries.map((industry, index) => (
+            <ScrollReveal key={industry.name} delay={index * 70}>
+              <article className='border-app-border-soft bg-app-surface hover:border-app-border h-full space-y-2 rounded-2xl border p-6 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/10'>
+                <h3 className='text-app-text-primary text-xl font-semibold'>
+                  {industry.name}
+                </h3>
+                <p className='text-app-text-secondary leading-relaxed'>
+                  {industry.useCase}
+                </p>
+              </article>
+            </ScrollReveal>
           ))}
         </div>
       </div>

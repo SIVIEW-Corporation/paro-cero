@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function DemoPage() {
   return (
-    <main className='bg-shBackground text-shGray-200 overflow-x-hidden'>
+    <main className='public-shell bg-app-bg text-app-text-primary'>
       <DemoTopBar />
       <DemoCaptureExperience />
       <Footer />
