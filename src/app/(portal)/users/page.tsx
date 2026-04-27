@@ -7,7 +7,6 @@ import * as motion from 'motion/react-client';
 import { AnimatePresence } from 'motion/react';
 import Image from 'next/image';
 
-import { PageHeader } from '@/components/ui';
 import NewUserForm from './NewUserForm';
 import UsersTable from './components/UsersTable';
 
@@ -64,9 +63,9 @@ export default function Users() {
   // Admin guard — redirect non-admin users
   if (!isAdmin) {
     return (
-      <main className='z-10 container max-w-7xl'>
+      <main className='z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
         <div className='flex flex-col items-center justify-center py-16'>
-          <h2 className='text-shGray-200 text-xl font-bold'>
+          <h2 className='text-app-text-primary text-xl font-bold'>
             Acceso restringido
           </h2>
           <p className='text-app-text-secondary mt-2 text-sm'>
@@ -78,38 +77,36 @@ export default function Users() {
   }
 
   return (
-    <main className='z-10 container max-w-7xl'>
-      <section className='mb-6 md:mb-8 xl:mb-12'>
-        <h1 className='font-inter mb-1 text-center text-xl font-bold md:mb-1.5 md:text-2xl xl:text-3xl'>
+    <main className='z-10 container mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8'>
+      <section className='mb-6 md:mb-8'>
+        <h1 className='font-inter text-app-text-primary mb-1 text-2xl font-semibold tracking-[-0.02em] md:text-3xl'>
           Gestionar usuarios
         </h1>
-        <p className='text-shGray-500 font-inter text-center text-xs md:text-sm xl:text-base'>
+        <p className='text-app-text-secondary font-inter max-w-2xl text-sm leading-6 md:text-base'>
           Aquí podrás crear, editar y eliminar perfiles. También podrás asignar
           roles y permisos.
         </p>
       </section>
 
       <section className='w-full overflow-x-auto'>
-        <div className='border-app-border-soft flex min-w-max items-center gap-1 border-b px-4 md:min-w-0 md:gap-3'>
+        <div className='border-app-border-soft flex min-w-max items-center gap-1 border-b md:min-w-0 md:gap-3'>
           {tabs.map((tab) => (
             <button
               key={tab.id}
               title={tab.label}
-              className={`relative flex shrink-0 cursor-pointer items-center gap-2 px-3 py-3 font-medium transition-colors duration-200 md:px-6 md:py-4 ${
+              className={`focus-visible:ring-app-brand focus-visible:ring-offset-app-bg relative flex shrink-0 cursor-pointer items-center gap-2 rounded-t-lg px-3 py-3 text-sm font-semibold transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:px-5 md:py-4 ${
                 activeTab === tab.id
-                  ? 'text-app-brand'
-                  : 'text-app-text-muted hover:text-app-text-secondary'
+                  ? 'text-app-brand-dark'
+                  : 'text-app-text-secondary hover:bg-app-surface-subtle hover:text-app-text-primary'
               }`}
               onClick={() => handleTabChange(tab.id)}
             >
-              {tab.icon}
-              <span className='hidden md:inline'>
-                <h2>{tab.label}</h2>
-              </span>
+              <span className='size-5 shrink-0'>{tab.icon}</span>
+              <span className='hidden md:inline'>{tab.label}</span>
               {activeTab === tab.id && (
                 <motion.div
                   layoutId='underline'
-                  className='bg-app-brand absolute right-0 bottom-0 left-0 h-[2px]'
+                  className='bg-app-brand absolute right-0 bottom-0 left-0 h-0.5'
                 />
               )}
             </button>
@@ -117,7 +114,7 @@ export default function Users() {
         </div>
       </section>
 
-      <section className='w-full flex-1 shrink-0 grow p-4 md:px-6'>
+      <section className='w-full flex-1 shrink-0 grow pt-4 md:pt-6'>
         <div className='relative h-full w-full'>
           <AnimatePresence mode='wait'>
             <motion.div

@@ -1,7 +1,6 @@
 'use client';
 
 import { X } from 'lucide-react';
-import Button from '@/global-components/Button';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -22,7 +21,7 @@ export default function ConfirmModal({
 
   return (
     <div
-      className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'
+      className='bg-app-text-primary/35 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm'
       onClick={onCancel}
     >
       <div
@@ -37,7 +36,7 @@ export default function ConfirmModal({
           <button
             type='button'
             onClick={onCancel}
-            className='text-app-text-muted hover:bg-app-surface-subtle hover:text-app-text-primary cursor-pointer rounded p-1 transition-colors'
+            className='text-app-text-muted hover:bg-app-surface-subtle hover:text-app-text-primary focus-visible:ring-app-brand focus-visible:ring-offset-app-surface inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
             aria-label='Cerrar'
           >
             <X size={18} />
@@ -56,26 +55,22 @@ export default function ConfirmModal({
 
         {/* Footer */}
         <div className='border-app-border-soft flex gap-3 border-t px-6 py-4'>
-          <Button
-            variant='secondary'
-            intent='primary'
+          <button
+            type='button'
             onClick={onCancel}
             disabled={isPending}
-            fullWidth
+            className='border-app-border-soft bg-app-surface text-app-text-secondary hover:bg-app-surface-subtle hover:text-app-text-primary focus-visible:ring-app-brand focus-visible:ring-offset-app-surface inline-flex w-full cursor-pointer items-center justify-center rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60'
           >
             Cancelar
-          </Button>
-          <Button
-            variant='primary'
-            intent='red'
+          </button>
+          <button
+            type='button'
             onClick={onConfirm}
             disabled={isPending}
-            loading={isPending}
-            loadingText='Eliminando'
-            fullWidth
+            className='bg-app-danger text-app-surface focus-visible:ring-app-danger focus-visible:ring-offset-app-surface inline-flex w-full cursor-pointer items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60'
           >
-            Eliminar
-          </Button>
+            {isPending ? 'Eliminando' : 'Eliminar'}
+          </button>
         </div>
       </div>
     </div>

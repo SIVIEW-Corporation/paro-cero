@@ -53,6 +53,15 @@ import {
 
 import type { OrdenTrabajo } from '@/app/data/types';
 
+const workOrderFilterPillBase =
+  'inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg border px-3.5 text-xs font-bold transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-app-brand focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg focus-visible:outline-none';
+const workOrderFilterPillActive =
+  'border-app-brand bg-app-brand-soft text-app-brand-dark hover:bg-app-brand-soft';
+const workOrderFilterPillInactive =
+  'border-app-border-soft bg-app-surface text-app-text-secondary hover:border-app-border hover:bg-app-surface-subtle hover:text-app-text-primary';
+const workOrderSelectClassName =
+  'h-9 w-full min-w-0 rounded-lg border border-app-border-soft bg-app-surface px-3 text-xs font-bold text-app-text-primary transition-[background-color,border-color,box-shadow] duration-150 outline-none focus:border-app-brand focus:shadow-[0_0_0_3px_rgb(216_155_43_/_0.14)] sm:w-auto sm:min-w-[210px]';
+
 export function PlansScreen() {
   const [plans, setPlans] = useState(PLANS);
   const [selected, setSelected] = useState<(typeof PLANS)[number] | null>(null);
@@ -873,9 +882,9 @@ export function WorkOrdersScreen({
             alignItems: 'flex-start',
             marginBottom: 24,
             paddingBottom: 20,
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            borderBottom: '1px solid #dde3ea',
             background:
-              'linear-gradient(90deg, rgba(251,191,36,0.03) 0%, transparent 100%)',
+              'linear-gradient(90deg, rgba(255,244,219,0.9) 0%, transparent 100%)',
             padding: '16px 20px',
             margin: '0 -20px 24px -20px',
             borderRadius: '8px 8px 0 0',
@@ -886,7 +895,7 @@ export function WorkOrdersScreen({
               style={{
                 fontSize: 11,
                 fontFamily: 'monospace',
-                color: '#f59e0b',
+                color: '#b7791f',
                 marginBottom: 5,
                 letterSpacing: '0.05em',
               }}
@@ -897,7 +906,7 @@ export function WorkOrdersScreen({
               style={{
                 fontSize: 22,
                 fontWeight: 800,
-                color: '#f8fafc',
+                color: '#111827',
                 letterSpacing: '-0.02em',
                 display: 'flex',
                 alignItems: 'center',
@@ -910,7 +919,7 @@ export function WorkOrdersScreen({
                   width: 4,
                   height: 22,
                   background:
-                    'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)',
+                    'linear-gradient(180deg, #d89b2b 0%, #b7791f 100%)',
                   borderRadius: 2,
                 }}
               />
@@ -920,7 +929,7 @@ export function WorkOrdersScreen({
               <p
                 style={{
                   fontSize: 13,
-                  color: '#64748b',
+                  color: '#667085',
                   marginTop: 6,
                   marginLeft: 16,
                 }}
@@ -952,14 +961,7 @@ export function WorkOrdersScreen({
           </div>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 16,
-            marginBottom: 16,
-          }}
-        >
+        <div className='mb-4 grid grid-cols-1 gap-4 md:grid-cols-2'>
           <Card>
             <CardTitle>Datos de la Orden</CardTitle>
             <RowData label='Asignado a' value={curWo.tecnicoNombre} />
@@ -997,7 +999,7 @@ export function WorkOrdersScreen({
                 <div
                   style={{
                     fontSize: 11,
-                    color: '#64748b',
+                    color: '#667085',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -1006,7 +1008,7 @@ export function WorkOrdersScreen({
                 >
                   Descripción del problema
                 </div>
-                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.6 }}>
                   {descripcionProblema}
                 </p>
               </div>
@@ -1016,7 +1018,7 @@ export function WorkOrdersScreen({
                 <div
                   style={{
                     fontSize: 11,
-                    color: '#64748b',
+                    color: '#667085',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -1025,7 +1027,7 @@ export function WorkOrdersScreen({
                 >
                   Descripción del servicio
                 </div>
-                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.6 }}>
                   {descripcionServicio}
                 </p>
               </div>
@@ -1034,7 +1036,7 @@ export function WorkOrdersScreen({
               <div
                 style={{
                   fontSize: 11,
-                  color: '#64748b',
+                  color: '#667085',
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em',
@@ -1043,7 +1045,7 @@ export function WorkOrdersScreen({
               >
                 Gasto económico
               </div>
-              <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+              <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.6 }}>
                 {curWo.gastoDinero ? 'Sí' : 'No'}
                 {curWo.gastoDinero
                   ? ` · $${(curWo.montoGastado || 0).toLocaleString('es-MX', {
@@ -1057,7 +1059,7 @@ export function WorkOrdersScreen({
               <div
                 style={{
                   fontSize: 11,
-                  color: '#64748b',
+                  color: '#667085',
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em',
@@ -1066,7 +1068,7 @@ export function WorkOrdersScreen({
               >
                 Refacción o consumible
               </div>
-              <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+              <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.6 }}>
                 {curWo.usoRefaccionConsumible ? 'Sí' : 'No'}
               </p>
             </div>
@@ -1075,7 +1077,7 @@ export function WorkOrdersScreen({
                 <div
                   style={{
                     fontSize: 11,
-                    color: '#64748b',
+                    color: '#667085',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -1084,7 +1086,7 @@ export function WorkOrdersScreen({
                 >
                   Detalle de refacción o consumible
                 </div>
-                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.6 }}>
                   {curWo.refaccionConsumibleDetalle || 'No especificado'}
                 </p>
               </div>
@@ -1094,7 +1096,7 @@ export function WorkOrdersScreen({
                 <div
                   style={{
                     fontSize: 11,
-                    color: '#64748b',
+                    color: '#667085',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -1103,7 +1105,7 @@ export function WorkOrdersScreen({
                 >
                   Causa Raiz
                 </div>
-                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.6 }}>
                   {curWo.causa}
                 </p>
               </div>
@@ -1113,7 +1115,7 @@ export function WorkOrdersScreen({
                 <div
                   style={{
                     fontSize: 11,
-                    color: '#64748b',
+                    color: '#667085',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -1122,7 +1124,7 @@ export function WorkOrdersScreen({
                 >
                   Accion Tomada
                 </div>
-                <p style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
+                <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.6 }}>
                   {curWo.accion}
                 </p>
               </div>
@@ -1133,7 +1135,7 @@ export function WorkOrdersScreen({
               !curWo.usoRefaccionConsumible &&
               !curWo.causa &&
               !curWo.accion && (
-                <p style={{ fontSize: 13, color: '#475569' }}>
+                <p style={{ fontSize: 13, color: '#94a3b8' }}>
                   Sin descripciones registradas.
                 </p>
               )}
@@ -1154,24 +1156,11 @@ export function WorkOrdersScreen({
               <button
                 key={s}
                 onClick={() => changeStatus(curWo.id, s)}
-                style={{
-                  background:
-                    curWo.status === s
-                      ? (STC[s as keyof typeof STC] || '#3b82f6') + '33'
-                      : '#060e20',
-                  border: `1.5px solid ${curWo.status === s ? STC[s as keyof typeof STC] || '#3b82f6' : '#1e3a5f'}`,
-                  color:
-                    curWo.status === s
-                      ? STC[s as keyof typeof STC] || '#3b82f6'
-                      : '#64748b',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  padding: '7px 16px',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  fontFamily: 'inherit',
-                }}
+                className={`${workOrderFilterPillBase} ${
+                  curWo.status === s
+                    ? workOrderFilterPillActive
+                    : workOrderFilterPillInactive
+                }`}
               >
                 {STL[s as keyof typeof STL] || s}
               </button>
@@ -1194,22 +1183,14 @@ export function WorkOrdersScreen({
         }
       />
 
-      <div
-        style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}
-      >
+      <div className='mb-4 flex flex-wrap gap-2'>
         <button
           onClick={() => setFilter('')}
-          style={{
-            background: !filterStatus ? '#f59e0b22' : '#0d1627',
-            border: `1.5px solid ${!filterStatus ? '#f59e0b' : '#1e3a5f'}`,
-            color: !filterStatus ? '#f59e0b' : '#64748b',
-            fontSize: 12,
-            fontWeight: 700,
-            padding: '6px 14px',
-            borderRadius: 5,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-          }}
+          className={`${workOrderFilterPillBase} ${
+            !filterStatus
+              ? workOrderFilterPillActive
+              : workOrderFilterPillInactive
+          }`}
         >
           Todas ({wo.length})
         </button>
@@ -1217,23 +1198,11 @@ export function WorkOrdersScreen({
           <button
             key={s}
             onClick={() => setFilter(s)}
-            style={{
-              background:
-                filterStatus === s
-                  ? (STC[s as keyof typeof STC] || '#3b82f6') + '22'
-                  : '#0d1627',
-              border: `1.5px solid ${filterStatus === s ? STC[s as keyof typeof STC] || '#3b82f6' : '#1e3a5f'}`,
-              color:
-                filterStatus === s
-                  ? STC[s as keyof typeof STC] || '#3b82f6'
-                  : '#64748b',
-              fontSize: 12,
-              fontWeight: 700,
-              padding: '6px 14px',
-              borderRadius: 5,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
+            className={`${workOrderFilterPillBase} ${
+              filterStatus === s
+                ? workOrderFilterPillActive
+                : workOrderFilterPillInactive
+            }`}
           >
             {STL[s as keyof typeof STL] || s} ({n})
           </button>
@@ -1241,17 +1210,7 @@ export function WorkOrdersScreen({
         <select
           value={filterActivoId}
           onChange={(e) => setFilterActivoId(e.target.value)}
-          style={{
-            background: '#0d1627',
-            border: '1.5px solid #1e3a5f',
-            color: '#cbd5e1',
-            fontSize: 12,
-            fontWeight: 700,
-            padding: '6px 10px',
-            borderRadius: 5,
-            fontFamily: 'inherit',
-            minWidth: 210,
-          }}
+          className={workOrderSelectClassName}
         >
           <option value=''>Todos los activos</option>
           {ASSETS.map((asset) => (
@@ -1278,13 +1237,8 @@ export function WorkOrdersScreen({
           {filtered.map((w) => (
             <tr
               key={w.id}
+              className='bg-app-surface transition-colors hover:bg-app-surface-subtle'
               style={{ cursor: 'pointer' }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = '#0f2040')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = 'transparent')
-              }
             >
               <Td mono>{w.folio}</Td>
               <Td bold>{w.titulo}</Td>
@@ -1477,7 +1431,7 @@ export function WorkOrdersScreen({
                 gap: 8,
                 alignItems: 'center',
                 fontSize: 13,
-                color: '#cbd5e1',
+                color: '#667085',
               }}
             >
               <input
@@ -1499,7 +1453,7 @@ export function WorkOrdersScreen({
                 gap: 8,
                 alignItems: 'center',
                 fontSize: 13,
-                color: '#cbd5e1',
+                color: '#667085',
               }}
             >
               <input

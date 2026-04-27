@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import { User } from '@/store/auth-store';
-import Button from '@/global-components/Button';
 import ConfirmModal from './confirm-modal';
 
 import formatDate from '@/utils/format-date';
@@ -28,21 +27,24 @@ const roleBadgeStyles: Record<
   { bg: string; text: string; border: string }
 > = {
   operator: {
-    bg: 'bg-app-brand-soft',
+    bg: 'bg-app-warning-soft',
     text: 'text-app-brand-dark',
-    border: 'border-app-brand-soft',
+    border: 'border-app-brand/20',
   },
   admin: {
-    bg: 'bg-purple-100',
-    text: 'text-purple-700',
-    border: 'border-purple-200',
+    bg: 'bg-app-info-soft',
+    text: 'text-app-info',
+    border: 'border-app-info/20',
   },
   viewer: {
-    bg: 'bg-emerald-100',
-    text: 'text-emerald-700',
-    border: 'border-emerald-200',
+    bg: 'bg-app-success-soft',
+    text: 'text-app-success',
+    border: 'border-app-success/20',
   },
 };
+
+const paginationButtonClasses =
+  'inline-flex size-9 items-center justify-center rounded-lg border border-app-border-soft bg-app-surface text-app-text-secondary transition-colors hover:border-app-border hover:bg-app-surface-subtle hover:text-app-text-primary disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-app-border-soft disabled:hover:bg-app-surface disabled:hover:text-app-text-secondary focus-visible:ring-2 focus-visible:ring-app-brand focus-visible:ring-offset-2 focus-visible:ring-offset-app-surface focus-visible:outline-none';
 
 interface ConfirmModalState {
   isOpen: boolean;
@@ -88,10 +90,12 @@ export default function UsersTable() {
         return (
           <div
             title={fullName}
-            className='truncate text-xs font-black sm:text-sm lg:text-base'
+            className='truncate text-xs sm:text-sm lg:text-base'
           >
-            <p className='text-app-text-primary capitalize'>{displayName}</p>
-            <p className='text-app-text-muted text-[10px] font-normal sm:text-xs lg:text-sm'>
+            <p className='text-app-text-primary font-semibold capitalize'>
+              {displayName}
+            </p>
+            <p className='text-app-text-secondary text-[10px] font-normal sm:text-xs lg:text-sm'>
               {jobTitle}
             </p>
           </div>
@@ -126,7 +130,7 @@ export default function UsersTable() {
         return (
           <span
             title={role}
-            className={`-ml-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold sm:-ml-2 lg:text-sm ${style.bg} ${style.text} border ${style.border}`}
+            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${style.bg} ${style.text} ${style.border}`}
           >
             {role}
           </span>
@@ -154,11 +158,11 @@ export default function UsersTable() {
       id: 'actions',
       header: 'Acciones',
       cell: ({ row }) => (
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-1.5'>
           <button
             type='button'
             aria-label='Editar usuario'
-            className='hover:text-app-brand text-app-text-muted cursor-pointer rounded p-1 transition-colors hover:scale-105'
+            className='text-app-text-muted hover:bg-app-info-soft hover:text-app-info focus-visible:ring-app-brand focus-visible:ring-offset-app-surface inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
             title='Editar'
           >
             <Pencil size={16} />
@@ -166,7 +170,7 @@ export default function UsersTable() {
           <button
             type='button'
             aria-label='Eliminar usuario'
-            className='text-app-text-muted cursor-pointer rounded p-1 transition-colors hover:scale-105 hover:text-red-500'
+            className='text-app-text-muted hover:bg-app-danger-soft hover:text-app-danger focus-visible:ring-app-brand focus-visible:ring-offset-app-surface inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
             title='Eliminar'
             onClick={() =>
               handleDeleteClick(row.original.id, row.original.full_name)
@@ -208,22 +212,22 @@ export default function UsersTable() {
   }
 
   return (
-    <div className='mt-4 flex w-full flex-col gap-6 md:mt-6'>
+    <div className='flex w-full flex-col gap-6'>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className='shadow-shPrimary-500/20 bg-shGray-900 border-shGray-700/50 overflow-hidden rounded-2xl border shadow-md'
+        className='border-app-border-soft bg-app-surface overflow-hidden rounded-2xl border shadow-sm shadow-slate-900/5'
       >
         <div className='overflow-x-auto'>
-          <table className='w-full border-collapse text-left'>
+          <table className='w-full min-w-[760px] border-collapse text-left'>
             <thead className='bg-app-surface-subtle'>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className='text-app-text-secondary px-2 py-3 text-xs font-bold select-none sm:text-sm md:px-6 md:py-4 lg:text-base'
+                      className='text-app-text-secondary px-4 py-3 text-xs font-semibold tracking-wide select-none md:px-6'
                     >
                       {flexRender(
                         header.column.columnDef.header,
@@ -234,7 +238,7 @@ export default function UsersTable() {
                 </tr>
               ))}
             </thead>
-            <tbody className='divide-app-border-soft divide-y'>
+            <tbody className='divide-app-border-soft bg-app-surface divide-y'>
               {isPending
                 ? [...Array(5)].map((_, i) => (
                     <motion.tr
@@ -245,8 +249,8 @@ export default function UsersTable() {
                       className='animate-pulse'
                     >
                       {[...Array(4)].map((_, j) => (
-                        <td key={j} className='px-6 py-5'>
-                          <div className='bg-app-surface-subtle h-4 rounded' />
+                        <td key={j} className='px-4 py-5 md:px-6'>
+                          <div className='bg-app-surface-muted h-4 rounded' />
                         </td>
                       ))}
                     </motion.tr>
@@ -259,12 +263,12 @@ export default function UsersTable() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 + index * 0.03 }}
-                        className='hover:bg-app-surface-subtle transition-colors'
+                        className='bg-app-surface hover:bg-app-surface-subtle transition-colors'
                       >
                         {row.getVisibleCells().map((cell) => (
                           <td
                             key={cell.id}
-                            className='px-2 py-2 align-middle md:px-6 md:py-3'
+                            className='px-4 py-3 align-middle md:px-6 md:py-4'
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
@@ -295,7 +299,7 @@ export default function UsersTable() {
         )}
 
         {/* Pagination Controls */}
-        <div className='border-app-border-soft flex flex-col items-center justify-between gap-6 border-t px-6 py-6 sm:flex-row sm:gap-3'>
+        <div className='border-app-border-soft bg-app-surface flex flex-col items-center justify-between gap-6 border-t px-4 py-4 sm:flex-row sm:gap-3 md:px-6'>
           <div className='flex-1'>
             <p className='text-app-text-muted text-xs font-medium sm:text-sm lg:text-base'>
               Mostrando{' '}
@@ -306,22 +310,26 @@ export default function UsersTable() {
             </p>
           </div>
           <div className='flex items-center gap-1 sm:gap-2 md:gap-3'>
-            <Button
-              variant='secondary'
-              intent='primary'
+            <button
+              type='button'
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={isFetching || currentPage <= 1}
-              icon={<ChevronLeft size={20} />}
-              tooltip='Página Anterior'
-            />
-            <Button
-              variant='secondary'
-              intent='primary'
+              aria-label='Página anterior'
+              title='Página Anterior'
+              className={paginationButtonClasses}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type='button'
               onClick={() => setPage((p) => Math.min(pages, p + 1))}
               disabled={isFetching || currentPage >= pages}
-              icon={<ChevronRight size={20} />}
-              tooltip='Página Siguiente'
-            />
+              aria-label='Página siguiente'
+              title='Página Siguiente'
+              className={paginationButtonClasses}
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
       </motion.div>
