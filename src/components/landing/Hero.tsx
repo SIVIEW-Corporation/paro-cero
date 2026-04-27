@@ -14,11 +14,11 @@ export default function Hero() {
         alt='Equipo tecnico inspeccionando activos industriales en planta'
         fill
         priority
-        className='object-cover opacity-20 saturate-75'
+        className='object-cover object-[68%_center] opacity-90 saturate-100 md:object-right'
       />
 
-      <div className='absolute inset-0 bg-[linear-gradient(100deg,rgba(245,247,250,0.98),rgba(245,247,250,0.88)_48%,rgba(245,247,250,0.98))]' />
-      <div className='absolute inset-0 bg-[radial-gradient(circle_at_78%_20%,rgba(216,155,43,0.18),transparent_38%),radial-gradient(circle_at_8%_82%,rgba(203,213,225,0.45),transparent_34%)]' />
+      <div className='absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.9)_42%,rgba(255,255,255,0.28)_68%,transparent_100%)] md:bg-[linear-gradient(100deg,rgba(255,255,255,0.98)_0%,rgba(255,255,255,0.84)_42%,rgba(255,255,255,0.18)_62%,transparent_82%)]' />
+      <div className='absolute inset-0 bg-[radial-gradient(circle_at_78%_20%,rgba(216,155,43,0.12),transparent_34%),radial-gradient(circle_at_8%_82%,rgba(255,255,255,0.28),transparent_30%)]' />
 
       <div className='relative container flex min-h-[calc(100svh-4rem)] items-end py-16 md:items-center'>
         <ScrollReveal className='max-w-3xl space-y-7'>
