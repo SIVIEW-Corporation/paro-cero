@@ -62,9 +62,10 @@ function Reveal({ children, className, delay = 0 }: RevealProps) {
 function ComparisonSection({ before, after }: ComparisonSectionProps) {
   return (
     <Reveal>
-      <section className='border-app-border-soft bg-app-surface/70 relative overflow-hidden rounded-[2rem] border p-6 shadow-2xl shadow-black/20 md:p-10'>
-        <div className='bg-app-brand/70 absolute top-0 bottom-0 left-1/2 hidden w-px opacity-60 md:block' />
+      <section className='border-app-border-soft relative overflow-hidden rounded-[2rem] border bg-white p-6 shadow-xl shadow-slate-900/8 md:p-10'>
+        <div className='bg-app-brand/45 absolute top-0 bottom-0 left-1/2 hidden w-px md:block' />
         <div className='bg-app-brand absolute top-0 right-8 left-8 h-px opacity-70' />
+        <div className='bg-app-brand-soft/60 pointer-events-none absolute -top-28 -right-20 size-72 rounded-full blur-3xl' />
         <div className='mb-8 max-w-3xl'>
           <p className='text-app-brand mb-3 text-xs font-semibold tracking-[0.22em] uppercase'>
             De operación reactiva a operación controlada
@@ -75,7 +76,7 @@ function ComparisonSection({ before, after }: ComparisonSectionProps) {
         </div>
 
         <div className='grid gap-8 md:grid-cols-2 md:gap-14'>
-          <div className='md:pr-2'>
+          <div className='relative md:pr-2'>
             <p className='text-app-text-muted mb-2 text-xs font-semibold tracking-[0.18em] uppercase'>
               {before.title}
             </p>
@@ -95,7 +96,7 @@ function ComparisonSection({ before, after }: ComparisonSectionProps) {
             </ul>
           </div>
 
-          <div className='border-app-border-soft border-t pt-8 md:border-t-0 md:pt-0 md:pl-2'>
+          <div className='border-app-border-soft relative border-t pt-8 md:border-t-0 md:pt-0 md:pl-2'>
             <p className='text-app-brand mb-2 text-xs font-semibold tracking-[0.18em] uppercase'>
               {after.title}
             </p>
@@ -127,14 +128,14 @@ function TimelineStep({ step, index, isLast }: TimelineStepProps) {
     <Reveal delay={index * 120}>
       <article className='relative grid gap-5 py-8 md:grid-cols-[10rem_1fr] md:gap-10 md:py-10'>
         {!isLast ? (
-          <div className='bg-app-brand/50 absolute top-20 bottom-0 left-5 w-px transition-opacity duration-700 md:left-[5rem]' />
+          <div className='bg-app-brand/35 absolute top-20 bottom-0 left-5 w-px transition-opacity duration-700 md:left-[5rem]' />
         ) : null}
 
         <div className='relative flex items-start gap-4 md:block'>
-          <div className='border-app-brand/40 bg-app-brand-soft/10 text-app-brand relative z-10 flex size-10 items-center justify-center rounded-full border text-sm font-semibold shadow-[0_0_24px_rgb(216_155_43_/_0.16)] md:mx-auto'>
+          <div className='border-app-brand/40 bg-app-brand-soft text-app-brand-dark relative z-10 flex size-10 items-center justify-center rounded-full border text-sm font-semibold shadow-[0_10px_30px_rgb(216_155_43_/_0.18)] md:mx-auto'>
             {stage}
           </div>
-          <p className='text-app-text-muted pointer-events-none text-6xl leading-none font-semibold tracking-[-0.08em] md:mt-5 md:text-center md:text-7xl'>
+          <p className='pointer-events-none text-6xl leading-none font-semibold tracking-[-0.08em] text-slate-200 md:mt-5 md:text-center md:text-7xl'>
             {stage}
           </p>
         </div>
@@ -176,7 +177,7 @@ function TimelineSection({ steps }: { steps: FooterPageSection[] }) {
         </div>
       </Reveal>
 
-      <div className='mt-6 md:mt-10'>
+      <div className='border-app-border-soft mt-6 rounded-[2rem] border bg-white/65 px-4 shadow-sm shadow-slate-900/5 md:mt-10 md:px-8'>
         {steps.map((step, index) => (
           <TimelineStep
             key={step.title}
@@ -193,7 +194,7 @@ function TimelineSection({ steps }: { steps: FooterPageSection[] }) {
 function ImpactSection({ section }: SingleSectionProps) {
   return (
     <Reveal>
-      <section className='border-app-border-soft bg-app-surface/80 mt-16 overflow-hidden rounded-[2rem] border md:mt-24'>
+      <section className='border-app-border-soft mt-16 overflow-hidden rounded-[2rem] border bg-white shadow-lg shadow-slate-900/6 md:mt-24'>
         <div className='grid gap-8 p-6 md:grid-cols-[0.85fr_1.15fr] md:p-10'>
           <div>
             <p className='text-app-brand mb-3 text-xs font-semibold tracking-[0.22em] uppercase'>
@@ -212,7 +213,7 @@ function ImpactSection({ section }: SingleSectionProps) {
             {section.bullets.map((bullet) => (
               <div
                 key={bullet}
-                className='border-app-border-soft border-b py-5 sm:pl-6'
+                className='border-app-border-soft border-b py-5 last:border-b-0 sm:pl-6 sm:odd:border-r sm:even:pl-8'
               >
                 <p className='text-app-brand mb-3 text-xs font-semibold tracking-[0.16em] uppercase'>
                   Impacto
@@ -233,7 +234,7 @@ function NotPm0Section({ section }: SingleSectionProps) {
   return (
     <Reveal>
       <section className='mt-16 md:mt-24'>
-        <div className='border-app-brand/40 bg-app-brand-soft/10 rounded-[2rem] border-l-2 px-6 py-8 md:px-10 md:py-12'>
+        <div className='border-app-brand/40 bg-app-brand-soft/70 rounded-[2rem] border-l-2 px-6 py-8 shadow-sm shadow-slate-900/5 md:px-10 md:py-12'>
           <p className='text-app-brand mb-3 text-xs font-semibold tracking-[0.22em] uppercase'>
             {section.title}
           </p>
@@ -263,9 +264,10 @@ function NotPm0Section({ section }: SingleSectionProps) {
 function CtaSection({ page }: ComoFuncionaTemplateProps) {
   return (
     <Reveal>
-      <section className='border-app-border-soft bg-app-surface/80 relative mt-16 overflow-hidden rounded-[2rem] border p-6 shadow-2xl shadow-black/20 md:mt-24 md:p-10'>
+      <section className='border-app-border-soft relative mt-16 overflow-hidden rounded-[2rem] border bg-white p-6 shadow-xl shadow-slate-900/8 md:mt-24 md:p-10'>
         <div className='bg-app-brand absolute top-0 right-10 left-10 h-px opacity-80' />
-        <div className='max-w-3xl'>
+        <div className='bg-app-brand-soft/70 pointer-events-none absolute -right-20 -bottom-28 size-80 rounded-full blur-3xl' />
+        <div className='relative max-w-3xl'>
           <p className='text-app-brand mb-3 text-xs font-semibold tracking-[0.22em] uppercase'>
             Siguiente paso
           </p>
@@ -277,7 +279,7 @@ function CtaSection({ page }: ComoFuncionaTemplateProps) {
           </p>
         </div>
 
-        <div className='mt-8 flex flex-col gap-3 sm:flex-row'>
+        <div className='relative mt-8 flex flex-col gap-3 sm:flex-row'>
           <Link
             href={page.cta.primaryHref}
             className={cn(
@@ -322,9 +324,9 @@ export default function ComoFuncionaTemplate({
   );
 
   return (
-    <main className='como-funciona-shell public-shell bg-app-bg text-app-text-primary min-h-screen'>
+    <main className='public-shell bg-app-bg text-app-text-primary min-h-screen'>
       <div className='container py-14 md:py-20'>
-        <nav className='text-app-text-muted mb-8 text-xs tracking-[0.08em] uppercase'>
+        <nav className='text-app-text-secondary mb-8 text-xs tracking-[0.08em] uppercase'>
           <Link
             href='/'
             className='hover:text-app-brand transition-colors duration-200'
@@ -338,16 +340,18 @@ export default function ComoFuncionaTemplate({
         </nav>
 
         <Reveal>
-          <section className='border-app-border-soft bg-app-surface/70 relative mb-14 overflow-hidden rounded-[2rem] border p-6 shadow-2xl shadow-black/20 md:mb-20 md:p-12'>
+          <section className='border-app-border-soft relative mb-14 overflow-hidden rounded-[2rem] border bg-white p-6 shadow-xl shadow-slate-900/8 md:mb-20 md:p-12'>
             <div className='bg-app-brand absolute top-0 right-10 left-10 h-px opacity-80' />
-            <div className='max-w-5xl'>
-              <p className='text-app-brand mb-4 text-xs font-semibold tracking-[0.22em] uppercase'>
+            <div className='bg-app-brand-soft/80 pointer-events-none absolute -top-32 -right-24 size-80 rounded-full blur-3xl' />
+            <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgb(17_24_39_/_0.045)_1px,transparent_0)] bg-size-[28px_28px]' />
+            <div className='relative max-w-5xl'>
+              <p className='text-app-brand-dark border-app-brand/20 bg-app-brand-soft mb-4 inline-flex rounded-full border px-3 py-1 text-xs font-semibold tracking-[0.22em] uppercase'>
                 {page.category}
               </p>
               <h1 className='text-app-text-primary max-w-4xl text-4xl leading-[0.95] font-semibold tracking-[-0.04em] md:text-7xl'>
                 {page.title}
               </h1>
-              <p className='text-app-text-primary mt-6 max-w-4xl text-xl leading-tight font-medium md:text-3xl'>
+              <p className='text-app-text-secondary mt-6 max-w-4xl text-xl leading-tight font-medium md:text-3xl'>
                 {page.subtitle}
               </p>
               <p className='text-app-text-secondary mt-6 max-w-3xl text-base leading-relaxed md:text-lg'>

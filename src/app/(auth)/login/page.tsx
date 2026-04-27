@@ -1,70 +1,92 @@
 import Image from 'next/image';
 import LoginForm from './login-form';
-import { AnimatePresence } from 'motion/react';
-import * as motion from 'motion/react-client';
 
 export default function LoginPage() {
   return (
-    <AnimatePresence>
-      <main className='relative flex min-h-screen w-full flex-col overflow-x-hidden lg:flex-row'>
-        {/* Left Panel - Branding */}
-        <motion.div
-          initial={{ x: -50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className='bg-shPrimary-800/50 relative flex w-full flex-col items-center justify-center overflow-hidden p-12 text-white lg:w-5/12'
-        >
-          <div className='relative z-20 flex flex-col items-center text-center'>
-            <div className='from-shPrimary-700/50 mb-8 hidden rounded-2xl bg-linear-to-t to-black/25 p-3 brightness-105 backdrop-blur-sm md:p-4 lg:block'>
-              <Image
-                src='/PM0-logo.webp'
-                alt='Logo PM0'
-                height={120}
-                width={120}
-                className='h-20 w-auto rounded-xl'
-                loading='eager'
-              />
+    <main className='auth-shell login-page-shell bg-app-bg text-app-text-primary relative min-h-screen overflow-hidden'>
+      <style>{`
+        @media (prefers-reduced-motion: no-preference) {
+          .login-page-shell {
+            animation: loginShellIn 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          }
+
+          .login-brand-panel {
+            animation: loginBrandIn 660ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+          }
+
+          .login-card-panel {
+            animation: loginCardPanelIn 640ms cubic-bezier(0.22, 1, 0.36, 1) 140ms both;
+          }
+        }
+
+        @keyframes loginShellIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes loginBrandIn {
+          from { opacity: 0; transform: translate3d(-14px, 0, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+
+        @keyframes loginCardPanelIn {
+          from { opacity: 0; transform: translate3d(0, 16px, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+      `}</style>
+      <div className='absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgb(17_24_39_/_0.055)_1px,transparent_0)] bg-size-[28px_28px]' />
+      <div className='bg-app-brand-soft/70 absolute top-0 right-0 h-80 w-80 rounded-full blur-3xl' />
+      <div className='bg-app-brand/12 absolute top-1/2 right-6 h-72 w-72 -translate-y-1/2 rounded-full blur-3xl motion-reduce:translate-y-0 lg:right-24' />
+      <div className='absolute bottom-0 left-0 h-96 w-96 rounded-full bg-white/80 blur-3xl' />
+
+      <div className='relative grid min-h-screen grid-cols-1 lg:grid-cols-2'>
+        <section className='flex items-center justify-center px-6 pt-10 pb-6 sm:px-10 lg:px-16 lg:py-16 xl:px-24'>
+          <div className='login-brand-panel mx-auto w-full max-w-xl lg:mx-0'>
+            <div className='mb-10 flex items-center gap-3'>
+              <div className='border-app-border-soft rounded-2xl border bg-white p-2 shadow-sm'>
+                <Image
+                  src='/PM0-logo.webp'
+                  alt='Logo PM0'
+                  height={56}
+                  width={56}
+                  className='h-12 w-auto rounded-xl object-contain'
+                  loading='eager'
+                />
+              </div>
+              <div>
+                <p className='text-app-brand-dark text-sm font-semibold tracking-[0.18em] uppercase'>
+                  PM0
+                </p>
+                <p className='text-app-text-secondary text-sm font-medium'>
+                  Paro Cero
+                </p>
+              </div>
             </div>
-            <h1 className='font-inter text-shPrimary-200 max-w-md text-xl leading-tight font-bold tracking-tight md:text-2xl lg:text-3xl'>
-              <span className='from-shPrimary-300 to-shPrimary-200 bg-linear-to-t via-white/85 bg-clip-text text-3xl text-transparent md:text-4xl lg:text-5xl'>
-                PM0
-              </span>{' '}
-              <br /> Gestión de Mantenimiento
-            </h1>{' '}
-            <p className='text-shPrimary-200 mt-6 max-w-sm md:text-lg'>
-              Control inteligente y seguro de tus activos
+
+            <div className='border-app-border-soft text-app-text-secondary mb-6 inline-flex rounded-full border bg-white/80 px-3 py-1 text-xs font-semibold tracking-[0.16em] uppercase shadow-sm backdrop-blur'>
+              Gestión de Mantenimiento
+            </div>
+
+            <h1 className='text-app-text-primary max-w-xl text-4xl leading-[1.05] font-semibold tracking-[-0.04em] sm:text-5xl xl:text-6xl'>
+              Control operativo para mantenimiento industrial
+            </h1>
+            <p className='text-app-text-secondary mt-6 max-w-xl text-base leading-7 sm:text-lg'>
+              Accede a tu espacio de trabajo para gestionar activos, órdenes,
+              preventivos, inspecciones y KPIs en una sola plataforma.
             </p>
           </div>
-          {/* Decorative circles */}
-          <div className='bg-shPrimary-700/20 absolute -right-24 -bottom-24 h-96 w-96 rounded-full blur-3xl' />
-          <div className='bg-shPrimary-700/20 absolute -top-24 -left-24 h-96 w-96 animate-pulse rounded-full blur-3xl' />
-        </motion.div>
-        <div className='bg-shPrimary-600/5 absolute -right-24 -bottom-24 z-10 h-64 w-64 animate-pulse rounded-full blur-3xl sm:-top-24' />
+        </section>
 
-        {/* Right Panel - Login Form */}
-        <div className='bg-shBackground relative flex w-full flex-col items-center justify-center p-6 lg:w-7/12'>
-          <div className='absolute inset-0 bg-[radial-gradient(#252323_1px,transparent_1px)] mask-[radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] bg-size-[16px_16px]' />
-
-          {/* Mobile Logo (only visible on small screens) */}
-          <div className='relative z-20 mb-8 lg:hidden'>
-            <Image
-              src='/PM0-logo.webp'
-              alt='Logo PM0'
-              height={64}
-              width={64}
-              className='h-16 w-auto object-contain'
-              loading='eager'
-            />
-          </div>
-
-          <div className='relative z-20 w-full max-w-md'>
+        <section className='login-card-panel lg:border-app-border-soft relative flex items-start justify-center px-6 pb-10 sm:px-10 lg:items-center lg:border-l lg:bg-white/40 lg:px-12 lg:py-16 lg:backdrop-blur-sm'>
+          <div className='bg-app-brand/10 pointer-events-none absolute inset-x-0 top-1/2 mx-auto -mt-36 h-72 w-72 rounded-full blur-3xl' />
+          <div className='w-full max-w-md'>
             <LoginForm />
-            <p className='mt-8 text-center text-sm text-zinc-400'>
+            <p className='text-app-text-muted mt-8 text-center text-xs font-medium'>
               © 2026 SIVIEW. Todos los derechos reservados.
             </p>
           </div>
-        </div>
-      </main>
-    </AnimatePresence>
+        </section>
+      </div>
+    </main>
   );
 }
