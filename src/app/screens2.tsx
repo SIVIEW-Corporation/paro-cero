@@ -23,7 +23,6 @@ import {
   PRC,
   PRL,
   CRC,
-  NTC,
   NTL,
   NTI,
   assetComplianceData,
@@ -1524,6 +1523,42 @@ interface Notificacion {
   fecha: string;
 }
 
+interface NotificationTone {
+  accent: string;
+  iconBg: string;
+  iconColor: string;
+  badgeBg: string;
+  badgeColor: string;
+  badgeBorder: string;
+}
+
+const notificationTone: Record<Notificacion['tipo'], NotificationTone> = {
+  vencida: {
+    accent: '#dc2626',
+    iconBg: '#fee2e2',
+    iconColor: '#dc2626',
+    badgeBg: '#fee2e2',
+    badgeColor: '#dc2626',
+    badgeBorder: '#fecaca',
+  },
+  proxima: {
+    accent: '#d89b2b',
+    iconBg: '#fef3c7',
+    iconColor: '#b7791f',
+    badgeBg: '#fef3c7',
+    badgeColor: '#b7791f',
+    badgeBorder: '#fde68a',
+  },
+  asignada: {
+    accent: '#2563eb',
+    iconBg: '#dbeafe',
+    iconColor: '#2563eb',
+    badgeBg: '#dbeafe',
+    badgeColor: '#2563eb',
+    badgeBorder: '#bfdbfe',
+  },
+};
+
 export function NotificationsScreen({
   notifs,
   setNotifs,
@@ -1544,106 +1579,190 @@ export function NotificationsScreen({
         sub={unread > 0 ? unread + ' sin leer' : 'Todo al dia'}
         action={
           unread > 0 ? (
-            <BtnGhost onClick={markAll}>Marcar todas como leidas</BtnGhost>
+            <button
+              onClick={markAll}
+              style={{
+                background: 'var(--app-surface, #ffffff)',
+                border: '1px solid var(--app-border-soft, #dde3ea)',
+                color: 'var(--app-text-secondary, #667085)',
+                fontSize: 12,
+                fontWeight: 650,
+                padding: '7px 14px',
+                borderRadius: 9,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                fontFamily: 'inherit',
+                transition:
+                  'background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background =
+                  'var(--app-surface-subtle, #f8fafc)';
+                e.currentTarget.style.borderColor =
+                  'var(--app-border, #cbd5e1)';
+                e.currentTarget.style.color =
+                  'var(--app-text-primary, #111827)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background =
+                  'var(--app-surface, #ffffff)';
+                e.currentTarget.style.borderColor =
+                  'var(--app-border-soft, #dde3ea)';
+                e.currentTarget.style.color =
+                  'var(--app-text-secondary, #667085)';
+              }}
+            >
+              Marcar todas como leidas
+            </button>
           ) : null
         }
       />
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-          maxWidth: 860,
-        }}
-      >
-        {notifs.map((n) => (
-          <div
-            key={n.id}
-            onClick={() => markRead(n.id)}
-            style={{
-              background: '#0d1627',
-              border: `1px solid ${n.leida ? '#1e3a5f' : (NTC[n.tipo] || '#3b82f6') + '55'}`,
-              borderLeft: `4px solid ${n.leida ? '#1e3a5f44' : NTC[n.tipo] || '#3b82f6'}`,
-              borderRadius: 8,
-              padding: '16px 22px',
-              cursor: 'pointer',
-              opacity: n.leida ? 0.5 : 1,
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              if (!n.leida) e.currentTarget.style.background = '#0f2040';
-            }}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#0d1627')}
-          >
+      <div className='flex w-full max-w-[860px] flex-col gap-3'>
+        {notifs.map((n) => {
+          const tone = notificationTone[n.tipo];
+          const cardBackground = n.leida
+            ? 'var(--app-surface-subtle, #f8fafc)'
+            : 'var(--app-surface, #ffffff)';
+
+          return (
             <div
+              key={n.id}
+              onClick={() => markRead(n.id)}
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
+                background: cardBackground,
+                border: `1px solid ${
+                  n.leida
+                    ? 'var(--app-border-soft, #dde3ea)'
+                    : 'var(--app-border, #cbd5e1)'
+                }`,
+                borderLeft: `3px solid ${tone.accent}`,
+                borderRadius: 14,
+                padding: '16px 18px',
+                cursor: 'pointer',
+                boxShadow: n.leida
+                  ? '0 1px 2px rgb(15 23 42 / 0.03)'
+                  : '0 0 0 1px rgb(15 23 42 / 0.02), 0 2px 6px rgb(15 23 42 / 0.06)',
+                transition:
+                  'background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background =
+                  'var(--app-surface-subtle, #f8fafc)';
+                e.currentTarget.style.boxShadow =
+                  '0 0 0 1px rgb(15 23 42 / 0.03), 0 4px 10px rgb(15 23 42 / 0.07)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = cardBackground;
+                e.currentTarget.style.boxShadow = n.leida
+                  ? '0 1px 2px rgb(15 23 42 / 0.03)'
+                  : '0 0 0 1px rgb(15 23 42 / 0.02), 0 2px 6px rgb(15 23 42 / 0.06)';
               }}
             >
-              <div
-                style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}
-              >
-                <span style={{ fontSize: 20, lineHeight: 1, marginTop: 1 }}>
-                  {NTI[n.tipo]}
-                </span>
-                <div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: 8,
-                      alignItems: 'center',
-                      marginBottom: 5,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: n.leida ? '#94a3b8' : '#f1f5f9',
-                      }}
-                    >
-                      {n.titulo}
-                    </span>
-                    {!n.leida && (
-                      <span
-                        style={{
-                          width: 7,
-                          height: 7,
-                          background: NTC[n.tipo],
-                          borderRadius: '50%',
-                          display: 'inline-block',
-                          flexShrink: 0,
-                        }}
-                      />
-                    )}
-                  </div>
-                  <p
-                    style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}
-                  >
-                    {n.msg}
-                  </p>
-                </div>
-              </div>
-              <div
-                style={{ textAlign: 'right', flexShrink: 0, marginLeft: 20 }}
-              >
-                <Badge label={NTL[n.tipo]} color={NTC[n.tipo]} />
+              <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
                 <div
                   style={{
-                    fontSize: 11,
-                    color: '#475569',
-                    marginTop: 6,
-                    fontFamily: 'monospace',
+                    display: 'flex',
+                    gap: 14,
+                    alignItems: 'flex-start',
+                    minWidth: 0,
                   }}
                 >
-                  {n.fecha}
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 34,
+                      height: 34,
+                      borderRadius: 10,
+                      background: tone.iconBg,
+                      color: tone.iconColor,
+                      fontSize: 17,
+                      lineHeight: 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {NTI[n.tipo]}
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 8,
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        marginBottom: 5,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: n.leida
+                            ? 'var(--app-text-secondary, #667085)'
+                            : 'var(--app-text-primary, #111827)',
+                        }}
+                      >
+                        {n.titulo}
+                      </span>
+                      {!n.leida && (
+                        <span
+                          style={{
+                            width: 7,
+                            height: 7,
+                            background: tone.accent,
+                            borderRadius: '50%',
+                            display: 'inline-block',
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+                    </div>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: 'var(--app-text-secondary, #667085)',
+                        lineHeight: 1.5,
+                        margin: 0,
+                      }}
+                    >
+                      {n.msg}
+                    </p>
+                  </div>
+                </div>
+                <div
+                  className='flex flex-row flex-wrap items-center gap-2 sm:ml-5 sm:flex-col sm:items-end sm:text-right'
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      padding: '3px 9px',
+                      borderRadius: 999,
+                      fontWeight: 700,
+                      letterSpacing: '0.02em',
+                      background: tone.badgeBg,
+                      color: tone.badgeColor,
+                      border: `1px solid ${tone.badgeBorder}`,
+                      whiteSpace: 'nowrap',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    {NTL[n.tipo]}
+                  </span>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: 'var(--app-text-muted, #94a3b8)',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    {n.fecha}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
