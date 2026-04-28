@@ -78,9 +78,9 @@ Nunca uses colores base (500/600) para fondos grandes. Usa la escala de grises y
 Los inputs de formulario deben tener una apariencia **hundida (inset)** para transmitir solidez y tactilidad industrial. NUNCA uses inputs planos con `bg-transparent`.
 
 - **Fondo del input:** `bg-shNeutral-50` (gris muy claro, nunca transparente).
-- **Sombra interna:** `shadow-inner shadow-shNeutral-900` (efecto de profundidad).
-- **Separador izquierdo:** `border-l border-shNeutral-200` (línea divisoria entre icono y texto).
-- **Borde del contenedor:** `border-shNeutral-300` (definición exterior).
+- **Sombra interna:** `shadow-inner` (efecto de profundidad).
+- **Separador izquierdo:** `border-l border-shNeutral-100` (línea divisoria entre icono y texto).
+- **Borde del contenedor:** `border-shNeutral-200` (definición exterior).
 - **Labels:** `text-shNeutral-700` (font-medium, 12px).
 - **Iconos por defecto:** `text-shNeutral-600`.
 - **Placeholder:** `text-shNeutral-600`.
@@ -145,7 +145,7 @@ Implementación correcta de un input con apariencia hundida, icono y estados.
   >
     Correo electrónico
   </label>
-  <div className='flex items-center overflow-hidden rounded-lg border border-shNeutral-300 bg-white transition-all focus-within:border-shPrimary-500 focus-within:ring-2 focus-within:ring-shPrimary-500/15'>
+  <div className='flex items-center overflow-hidden rounded-lg! border border-shNeutral-200 bg-white transition-all focus-within:border-shPrimary-500 focus-within:ring-2 focus-within:ring-shPrimary-500/15'>
     <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
       <Mail size={16} />
     </div>
@@ -153,7 +153,7 @@ Implementación correcta de un input con apariencia hundida, icono y estados.
       id='email'
       type='email'
       placeholder='ejemplo@winba.com'
-      className='text-shNeutral-900 placeholder:text-shNeutral-600 shadow-shNeutral-900! border-shNeutral-200! bg-shNeutral-50! flex-1 rounded-none! rounded-l-md! border-0! border-l! py-2.5 pr-4 shadow-inner! ring-0! outline-none!'
+      className='text-shNeutral-900 placeholder:text-shNeutral-600 border-shNeutral-100! bg-shNeutral-50! flex-1 rounded-none! rounded-l-md! border-0! border-l! py-2.5 pr-4 shadow-inner! ring-0! outline-none!'
     />
   </div>
 </div>

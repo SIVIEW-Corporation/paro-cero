@@ -37,10 +37,10 @@ export function FormField({
       </label>
       <div
         className={cn(
-          'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
+          'flex items-center overflow-hidden rounded-lg! border bg-white transition-all',
           hasError
             ? 'border-shDanger-500'
-            : 'border-shNeutral-300 focus-within:border-shPrimary-500 group-focus-within:ring-shPrimary-500/15 group-focus-within:ring-2',
+            : 'border-shNeutral-200 focus-within:border-shPrimary-500 group-focus-within:ring-shPrimary-500/15 group-focus-within:ring-2',
         )}
       >
         {Icon && (
@@ -65,7 +65,7 @@ export function FormField({
           placeholder={placeholder}
           autoComplete={autocomplete}
           className={cn(
-            'text-shNeutral-900 placeholder:text-shNeutral-600 shadow-shNeutral-900! border-shNeutral-200! bg-shNeutral-50! flex-1 rounded-none! rounded-l-md! border-0! border-l! py-2.5 pr-4 shadow-inner! ring-0! outline-none!',
+            'text-shNeutral-900 placeholder:text-shNeutral-600 border-shNeutral-100! bg-shNeutral-50! flex-1 rounded-md! border-0! border-l! py-2.5 pr-4 shadow-inner! ring-0! outline-none!',
             !Icon && 'pl-4',
           )}
         />
@@ -154,7 +154,7 @@ export function PasswordField({
       </label>
       <div
         className={cn(
-          'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
+          'flex items-center overflow-hidden rounded-lg! border bg-white transition-all',
           hasError
             ? 'border-shDanger-500'
             : 'border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 focus-within:ring-2',
@@ -180,7 +180,7 @@ export function PasswordField({
           placeholder='••••••••'
           autoComplete={autocomplete}
           className={cn(
-            'text-shNeutral-900 placeholder:text-shNeutral-600 shadow-shNeutral-900! border-shNeutral-200! bg-shNeutral-50! flex-1 rounded-none! rounded-l-md! border-0! border-l! py-2.5 pr-4 shadow-inner! ring-0! outline-none!',
+            'text-shNeutral-900 placeholder:text-shNeutral-600 border-shNeutral-100! bg-shNeutral-50! flex-1 rounded-md! border-0! border-l! py-2.5 pr-4 shadow-inner! ring-0! outline-none!',
             !Icon && 'pl-4',
           )}
         />
@@ -191,7 +191,7 @@ export function PasswordField({
             setIsVisible((prev) => !prev);
           }}
           aria-label={isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-          className='text-shNeutral-600 hover:text-shNeutral-800 flex w-12 shrink-0 cursor-pointer items-center justify-center transition-colors'
+          className='text-shNeutral-400 hover:text-shNeutral-600 flex w-12 shrink-0 cursor-pointer items-center justify-center transition-colors'
         >
           {isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
