@@ -1237,7 +1237,7 @@ export function WorkOrdersScreen({
           {filtered.map((w) => (
             <tr
               key={w.id}
-              className='bg-app-surface transition-colors hover:bg-app-surface-subtle'
+              className='bg-app-surface hover:bg-app-surface-subtle transition-colors'
               style={{ cursor: 'pointer' }}
             >
               <Td mono>{w.folio}</Td>

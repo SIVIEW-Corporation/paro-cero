@@ -3,7 +3,7 @@ import LoginForm from './login-form';
 
 export default function LoginPage() {
   return (
-    <main className='auth-shell login-page-shell bg-gradient-to-br from-shBackground to-shNeutral-100 text-shNeutral-900 relative min-h-screen overflow-hidden'>
+    <main className='auth-shell login-page-shell from-shBackground to-shNeutral-100 text-shNeutral-900 relative min-h-screen overflow-hidden bg-gradient-to-br'>
       <style>{`
         @media (prefers-reduced-motion: no-preference) {
           .login-page-shell {
@@ -67,7 +67,7 @@ export default function LoginPage() {
               Gestión de Mantenimiento
             </div>
 
-            <h1 className='text-white max-w-xl text-4xl leading-[1.05] font-semibold tracking-[-0.04em] sm:text-5xl xl:text-6xl'>
+            <h1 className='max-w-xl text-4xl leading-[1.05] font-semibold tracking-[-0.04em] text-white sm:text-5xl xl:text-6xl'>
               Control operativo para mantenimiento industrial
             </h1>
             <p className='text-shNeutral-300 mt-6 max-w-xl text-base leading-7 sm:text-lg'>

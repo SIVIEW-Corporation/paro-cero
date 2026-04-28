@@ -21,30 +21,28 @@ import ConfirmModal from './confirm-modal';
 import formatDate from '@/utils/format-date';
 import { useOperatorsQuery } from '../hooks/use-users-query';
 import { useDeleteUserMutation } from '../hooks/use-delete-user-mutation';
+import Button from '@/global-components/Button';
 
 const roleBadgeStyles: Record<
   string,
   { bg: string; text: string; border: string }
 > = {
   operator: {
-    bg: 'bg-app-warning-soft',
-    text: 'text-app-brand-dark',
-    border: 'border-app-brand/20',
+    bg: 'bg-shNeutral-50',
+    text: 'text-shNeutral-700',
+    border: 'border-shNeutral-200',
   },
   admin: {
-    bg: 'bg-app-info-soft',
-    text: 'text-app-info',
-    border: 'border-app-info/20',
+    bg: 'bg-shPrimary-50',
+    text: 'text-shPrimary-700',
+    border: 'border-shPrimary-200',
   },
   viewer: {
-    bg: 'bg-app-success-soft',
-    text: 'text-app-success',
-    border: 'border-app-success/20',
+    bg: 'bg-shSuccess-50',
+    text: 'text-shSuccess-700',
+    border: 'border-shSuccess-200',
   },
 };
-
-const paginationButtonClasses =
-  'inline-flex size-9 items-center justify-center rounded-lg border border-app-border-soft bg-app-surface text-app-text-secondary transition-colors hover:border-app-border hover:bg-app-surface-subtle hover:text-app-text-primary disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-app-border-soft disabled:hover:bg-app-surface disabled:hover:text-app-text-secondary focus-visible:ring-2 focus-visible:ring-app-brand focus-visible:ring-offset-2 focus-visible:ring-offset-app-surface focus-visible:outline-none';
 
 interface ConfirmModalState {
   isOpen: boolean;
@@ -92,10 +90,10 @@ export default function UsersTable() {
             title={fullName}
             className='truncate text-xs sm:text-sm lg:text-base'
           >
-            <p className='text-app-text-primary font-semibold capitalize'>
+            <p className='text-shNeutral-900 font-semibold capitalize'>
               {displayName}
             </p>
-            <p className='text-app-text-secondary text-[10px] font-normal sm:text-xs lg:text-sm'>
+            <p className='text-shNeutral-500 text-[10px] font-normal sm:text-xs lg:text-sm'>
               {jobTitle}
             </p>
           </div>
@@ -110,7 +108,7 @@ export default function UsersTable() {
         return (
           <span
             title={jobArea}
-            className='text-app-text-secondary truncate text-xs font-normal capitalize sm:text-sm lg:text-base'
+            className='text-shNeutral-500 truncate text-xs font-normal capitalize sm:text-sm lg:text-base'
           >
             {jobArea}
           </span>
@@ -123,9 +121,9 @@ export default function UsersTable() {
       cell: ({ row }) => {
         const role = row.original.role;
         const style = roleBadgeStyles[role] ?? {
-          bg: 'bg-app-surface-subtle',
-          text: 'text-app-text-secondary',
-          border: 'border-app-border-soft',
+          bg: 'bg-shNeutral-50',
+          text: 'text-shNeutral-700',
+          border: 'border-shNeutral-200',
         };
         return (
           <span
@@ -146,7 +144,7 @@ export default function UsersTable() {
         const dateWithoutHour = formatted.split(',')[0];
         return (
           <span
-            className='text-app-text-muted text-xs sm:text-sm lg:text-base'
+            className='text-shNeutral-400 text-xs sm:text-sm lg:text-base'
             title={formatted}
           >
             {dateWithoutHour}
@@ -159,25 +157,31 @@ export default function UsersTable() {
       header: 'Acciones',
       cell: ({ row }) => (
         <div className='flex items-center gap-1.5'>
-          <button
+          <Button
             type='button'
             aria-label='Editar usuario'
-            className='text-app-text-muted hover:bg-app-info-soft hover:text-app-info focus-visible:ring-app-brand focus-visible:ring-offset-app-surface inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
             title='Editar'
-          >
-            <Pencil size={16} />
-          </button>
-          <button
+            intent='primary'
+            variant='ghost'
+            icon={<Pencil size={16} />}
+            scale='101'
+            shadowSize='none'
+            className='size-8 rounded-lg p-0'
+          />
+          <Button
             type='button'
             aria-label='Eliminar usuario'
-            className='text-app-text-muted hover:bg-app-danger-soft hover:text-app-danger focus-visible:ring-app-brand focus-visible:ring-offset-app-surface inline-flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
             title='Eliminar'
+            intent='danger'
+            variant='ghost'
+            icon={<Trash2 size={16} />}
+            scale='101'
+            shadowSize='none'
+            className='size-8 rounded-lg p-0'
             onClick={() =>
               handleDeleteClick(row.original.id, row.original.full_name)
             }
-          >
-            <Trash2 size={16} />
-          </button>
+          />
         </div>
       ),
     },
@@ -200,34 +204,37 @@ export default function UsersTable() {
   if (error) {
     return (
       <div className='flex flex-col items-center justify-center p-12 text-center'>
-        <div className='mb-4 rounded-full bg-red-100 p-3 text-red-600'>
+        <div className='bg-shDanger-50 text-shDanger-600 mb-4 rounded-full p-3'>
           <AlertCircle size={32} />
         </div>
-        <p className='text-app-text-primary text-lg font-bold'>
+        <p className='text-shNeutral-900 text-lg font-bold'>
           Error al cargar usuarios
         </p>
-        <p className='text-app-text-secondary'>{error.message}</p>
+        <p className='text-shNeutral-500'>{error.message}</p>
       </div>
     );
   }
 
   return (
-    <div className='flex w-full flex-col gap-6'>
+    <div className='relative flex w-full flex-col gap-6'>
+      {/* Decorative orb */}
+      <div className='bg-shAccent-500/5 pointer-events-none absolute -top-12 -right-12 h-64 w-64 rounded-full blur-3xl' />
+
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className='border-app-border-soft bg-app-surface overflow-hidden rounded-2xl border shadow-sm shadow-slate-900/5'
+        className='border-shNeutral-200/80 overflow-hidden rounded-2xl border bg-white shadow-[0_2px_8px_rgb(15_23_42_/_0.06),0_8px_24px_rgb(15_23_42_/_0.04)]'
       >
         <div className='overflow-x-auto'>
           <table className='w-full min-w-[760px] border-collapse text-left'>
-            <thead className='bg-app-surface-subtle'>
+            <thead className='bg-shPrimary-900'>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className='text-app-text-secondary px-4 py-3 text-xs font-semibold tracking-wide select-none md:px-6'
+                      className='border-shNeutral-200 border-b px-4 py-3 text-[11px] font-bold tracking-wider text-white uppercase select-none md:px-6'
                     >
                       {flexRender(
                         header.column.columnDef.header,
@@ -238,7 +245,7 @@ export default function UsersTable() {
                 </tr>
               ))}
             </thead>
-            <tbody className='divide-app-border-soft bg-app-surface divide-y'>
+            <tbody className='bg-white'>
               {isPending
                 ? [...Array(5)].map((_, i) => (
                     <motion.tr
@@ -246,11 +253,11 @@ export default function UsersTable() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.1 + i * 0.03 }}
-                      className='animate-pulse'
+                      className='border-shNeutral-100 bg-shNeutral-50 animate-pulse border-b last:border-b-0'
                     >
                       {[...Array(4)].map((_, j) => (
                         <td key={j} className='px-4 py-5 md:px-6'>
-                          <div className='bg-app-surface-muted h-4 rounded' />
+                          <div className='bg-shNeutral-100 h-4 rounded-md' />
                         </td>
                       ))}
                     </motion.tr>
@@ -263,7 +270,7 @@ export default function UsersTable() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 + index * 0.03 }}
-                        className='bg-app-surface hover:bg-app-surface-subtle transition-colors'
+                        className='hover:bg-shNeutral-50 border-shNeutral-100 border-b bg-white transition-colors last:border-b-0'
                       >
                         {row.getVisibleCells().map((cell) => (
                           <td
@@ -287,49 +294,58 @@ export default function UsersTable() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className='bg-app-surface flex flex-col items-center justify-center py-20 text-center'
+            className='flex flex-col items-center justify-center bg-white py-20 text-center'
           >
-            <div className='bg-app-surface-subtle mb-4 rounded-full p-4'>
-              <AlertCircle size={32} className='text-app-text-muted' />
+            <div className='bg-shNeutral-50 border-shNeutral-200 mb-4 rounded-full border p-4'>
+              <AlertCircle size={32} className='text-shNeutral-400' />
             </div>
-            <p className='text-app-text-primary mb-2 text-sm font-bold md:text-base lg:text-lg'>
+            <p className='text-shNeutral-900 mb-1 text-base font-bold'>
               No se encontraron usuarios
+            </p>
+            <p className='text-shNeutral-500 text-sm'>
+              Crea un nuevo usuario para comenzar.
             </p>
           </motion.div>
         )}
 
         {/* Pagination Controls */}
-        <div className='border-app-border-soft bg-app-surface flex flex-col items-center justify-between gap-6 border-t px-4 py-4 sm:flex-row sm:gap-3 md:px-6'>
+        <div className='border-shNeutral-200 flex flex-col items-center justify-between gap-6 border-t bg-white px-4 py-4 sm:flex-row sm:gap-3 md:px-6'>
           <div className='flex-1'>
-            <p className='text-app-text-muted text-xs font-medium sm:text-sm lg:text-base'>
+            <p className='text-shNeutral-400 text-xs font-medium sm:text-sm lg:text-base'>
               Mostrando{' '}
-              <span className='text-app-text-secondary font-bold'>{from}</span>{' '}
-              a <span className='text-app-text-secondary font-bold'>{to}</span>{' '}
-              de <span className='text-app-brand font-bold'>{total}</span>{' '}
+              <span className='text-shNeutral-500 font-bold'>{from}</span> a{' '}
+              <span className='text-shNeutral-500 font-bold'>{to}</span> de{' '}
+              <span className='text-shPrimary-700 font-bold'>{total}</span>{' '}
               usuarios
             </p>
           </div>
           <div className='flex items-center gap-1 sm:gap-2 md:gap-3'>
-            <button
+            <Button
               type='button'
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={isFetching || currentPage <= 1}
               aria-label='Página anterior'
               title='Página Anterior'
-              className={paginationButtonClasses}
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
+              intent='neutral'
+              variant='ghost'
+              icon={<ChevronLeft size={18} />}
+              scale='101'
+              shadowSize='none'
+              className='size-9 rounded-lg p-0'
+            />
+            <Button
               type='button'
               onClick={() => setPage((p) => Math.min(pages, p + 1))}
               disabled={isFetching || currentPage >= pages}
               aria-label='Página siguiente'
               title='Página Siguiente'
-              className={paginationButtonClasses}
-            >
-              <ChevronRight size={18} />
-            </button>
+              intent='neutral'
+              variant='ghost'
+              icon={<ChevronRight size={18} />}
+              scale='101'
+              shadowSize='none'
+              className='size-9 rounded-lg p-0'
+            />
           </div>
         </div>
       </motion.div>

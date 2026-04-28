@@ -54,7 +54,7 @@ export default function Users() {
               loading='eager'
             />
           </div>
-          <p className='text-app-text-muted'>Cargando sesión...</p>
+          <p className='text-shNeutral-400'>Cargando sesión...</p>
         </div>
       </div>
     );
@@ -65,10 +65,10 @@ export default function Users() {
     return (
       <main className='z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
         <div className='flex flex-col items-center justify-center py-16'>
-          <h2 className='text-app-text-primary text-xl font-bold'>
+          <h2 className='text-shNeutral-900 text-xl font-bold'>
             Acceso restringido
           </h2>
-          <p className='text-app-text-secondary mt-2 text-sm'>
+          <p className='text-shNeutral-500 mt-2 text-sm'>
             Solo los administradores pueden crear usuarios.
           </p>
         </div>
@@ -79,25 +79,25 @@ export default function Users() {
   return (
     <main className='z-10 container mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8'>
       <section className='mb-6 md:mb-8'>
-        <h1 className='font-inter text-app-text-primary mb-1 text-2xl font-semibold tracking-[-0.02em] md:text-3xl'>
+        <h1 className='font-inter text-shNeutral-900 mb-1 text-2xl font-semibold tracking-[-0.02em] md:text-3xl'>
           Gestionar usuarios
         </h1>
-        <p className='text-app-text-secondary font-inter max-w-2xl text-sm leading-6 md:text-base'>
+        <p className='text-shNeutral-500 font-inter max-w-2xl text-sm leading-6 md:text-base'>
           Aquí podrás crear, editar y eliminar perfiles. También podrás asignar
           roles y permisos.
         </p>
       </section>
 
       <section className='w-full overflow-x-auto'>
-        <div className='border-app-border-soft flex min-w-max items-center gap-1 border-b md:min-w-0 md:gap-3'>
+        <div className='border-shNeutral-200 flex min-w-max items-center gap-1 border-b md:min-w-0 md:gap-3'>
           {tabs.map((tab) => (
             <button
               key={tab.id}
               title={tab.label}
-              className={`focus-visible:ring-app-brand focus-visible:ring-offset-app-bg relative flex shrink-0 cursor-pointer items-center gap-2 rounded-t-lg px-3 py-3 text-sm font-semibold transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:px-5 md:py-4 ${
+              className={`focus-visible:ring-shAccent-500 focus-visible:ring-offset-shBackground relative flex shrink-0 cursor-pointer items-center gap-2 rounded-t-lg px-3 py-3 text-sm font-semibold transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:px-5 md:py-4 ${
                 activeTab === tab.id
-                  ? 'text-app-brand-dark'
-                  : 'text-app-text-secondary hover:bg-app-surface-subtle hover:text-app-text-primary'
+                  ? 'text-shPrimary-700'
+                  : 'text-shNeutral-500 hover:bg-shNeutral-50 hover:text-shNeutral-900'
               }`}
               onClick={() => handleTabChange(tab.id)}
             >
@@ -106,7 +106,7 @@ export default function Users() {
               {activeTab === tab.id && (
                 <motion.div
                   layoutId='underline'
-                  className='bg-app-brand absolute right-0 bottom-0 left-0 h-0.5'
+                  className='bg-shPrimary-500 absolute right-0 bottom-0 left-0 h-0.5'
                 />
               )}
             </button>

@@ -123,7 +123,9 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
               <form.Field
                 name='password'
                 validators={{ onChange: newUserSchema.shape.password }}
-                children={(field) => <PasswordField field={field} autocomplete='new-password' />}
+                children={(field) => (
+                  <PasswordField field={field} autocomplete='new-password' />
+                )}
               />
             </motion.div>
           </div>
@@ -270,7 +272,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
               icon={<UserPlus size={18} />}
               scale='101'
               variant='primary'
-              intent='primary'
+              intent='accent'
               fullWidth={true}
             >
               Crear usuario
