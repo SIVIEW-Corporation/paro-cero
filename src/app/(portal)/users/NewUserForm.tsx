@@ -95,7 +95,6 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             name='companyId'
             validators={{
               onChange: newUserSchema.shape.companyId,
-              onBlur: newUserSchema.shape.companyId,
             }}
             children={(field) => (
               <input
@@ -119,7 +118,6 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                 name='email'
                 validators={{
                   onChange: newUserSchema.shape.email,
-                  onBlur: newUserSchema.shape.email,
                 }}
                 children={(field) => (
                   <FormField
@@ -144,7 +142,6 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                 name='password'
                 validators={{
                   onChange: newUserSchema.shape.password,
-                  onBlur: newUserSchema.shape.password,
                 }}
                 children={(field) => (
                   <PasswordField field={field} autocomplete='new-password' />
@@ -165,7 +162,6 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                 name='fullName'
                 validators={{
                   onChange: newUserSchema.shape.fullName,
-                  onBlur: newUserSchema.shape.fullName,
                 }}
                 children={(field) => (
                   <FormField
@@ -188,7 +184,6 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                 name='role'
                 validators={{
                   onChange: newUserSchema.shape.role,
-                  onBlur: newUserSchema.shape.role,
                 }}
                 children={(field) => (
                   <div className='group'>
@@ -255,7 +250,6 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                 name='area'
                 validators={{
                   onChange: newUserSchema.shape.area,
-                  onBlur: newUserSchema.shape.area,
                 }}
                 children={(field) => (
                   <FormField
@@ -278,7 +272,6 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                 name='jobTitle'
                 validators={{
                   onChange: newUserSchema.shape.jobTitle,
-                  onBlur: newUserSchema.shape.jobTitle,
                 }}
                 children={(field) => (
                   <FormField
