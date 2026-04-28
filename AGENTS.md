@@ -29,7 +29,7 @@ Use these skills for detailed patterns on-demand.
 ### Project Skills
 
 | Skill | Description | URL |
-|-------|-------------|-----|
+| :--- | :--- | :--- |
 | `nextjs-v16` | App Router, Server Actions, Caching | [SKILL.md](skills/nextjs-v16/SKILL.md) |
 | `commits` | Professional conventional commits | [SKILL.md](skills/commits/SKILL.md) |
 | `typescript` | Const types, flat interfaces, utility types | [SKILL.md](skills/typescript/SKILL.md) |
@@ -41,13 +41,14 @@ Use these skills for detailed patterns on-demand.
 | `react-dropzone` | Drag-and-drop file uploads | [SKILL.md](skills/react-dropzone/SKILL.md) |
 | `skill-creator` | Create new AI agent skills | [SKILL.md](skills/skill-creator/SKILL.md) |
 | `skill-sync` | Sync skill metadata to AGENTS.md | [SKILL.md](skills/skill-sync/SKILL.md) |
+| `sh-color-system-protocol` | 60-30-10 UI rule, Technical Marine & Industrial Amber | [SKILL.md](skills/sh-color-system-protocol/SKILL.md) |
 
 ### Auto-invoke Skills
 
 When performing these actions, ALWAYS invoke the corresponding skill FIRST:
 
 | Action | Skill |
-|--------|-------|
+| :--- | :--- |
 | App Router / Server Actions | `nextjs-v16` |
 | Committing changes | `commits` |
 | Creating Zod schemas | `zod-4` |
@@ -59,6 +60,7 @@ When performing these actions, ALWAYS invoke the corresponding skill FIRST:
 | Using "use cache" directive | `nextjs-v16` |
 | Using Zustand stores | `zustand-5` |
 | Working with Tailwind classes | `tailwind-4` |
+| Applying UI colors, designing layouts, or refactoring components | `sh-color-system-protocol` |
 | Writing React 19 hooks/components | `react-19` |
 | Writing TypeScript types | `typescript` |
 | Syncing skill metadata | `skill-sync` |
@@ -89,6 +91,17 @@ Follow conventional-commit style: `<type>(<scope>): <description>`
 - **Data Fetching/Forms**: TanStack Query, TanStack Table, TanStack Form
 - **Validation**: Zod
 - **Notifications**: Sonner
+
+### UI & Color System (Strict Branding)
+
+- **Do NOT use default Tailwind color families** (e.g., `bg-zinc-100`, `text-blue-600`, `bg-red-500`) to maintain design cohesion.
+- **Custom Palettes Only:** Always use the `sh-*` prefix variables provided in the theme.
+  - `shPrimary` (Technical Marine) para estructura, sidebars y acciones primarias.
+  - `shAccent` (Industrial Amber) para el CTA principal **exclusivamente** (10% rule).
+  - `shNeutral` (Slate) para superficies, textos secundarios y bordes.
+  - `shDanger` (Crimson) y `shSuccess` (Emerald) para feedback de estados y alertas.
+- **Accessibility:** Never use white text over `shAccent` (Amber); always use `text-shForeground`.
+- See the `sh-color-system-protocol` skill for the 60-30-10 architectural layout rule.
 
 ### Formatting Rules
 
@@ -143,7 +156,3 @@ Follow conventional-commit style: `<type>(<scope>): <description>`
 
 - Avoid `any`. Use specific types or generic constraints.
 - Infer types from Zod schemas where possible (e.g., `z.infer<typeof Schema>`).
-
-## 5. Cursor/Copilot Rules
-
-_No specific `.cursorrules` or `.github/copilot-instructions.md` found in the repository._

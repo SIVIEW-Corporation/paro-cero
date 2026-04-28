@@ -4,7 +4,13 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
-type ButtonIntent = 'primary' | 'red' | 'green' | 'blue' | 'purple' | 'zinc';
+type ButtonIntent =
+  | 'primary'
+  | 'accent'
+  | 'danger'
+  | 'success'
+  | 'info'
+  | 'neutral';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -19,54 +25,53 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   cursor?: string;
 }
 
+// Fallback por defecto optimizado usando Technical Marine como base
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    'text-white bg-shPrimary-600 hover:bg-shPrimary-500 disabled:bg-zinc-500',
-  secondary: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 disabled:bg-zinc-300',
-  ghost: 'bg-transparent text-zinc-500 hover:bg-zinc-100 disabled:bg-zinc-100',
+    'bg-shPrimary-800 text-white hover:bg-shPrimary-700 disabled:bg-shNeutral-300 disabled:text-shNeutral-500',
+  secondary:
+    'bg-shPrimary-100 text-shPrimary-900 hover:bg-shPrimary-200 disabled:bg-shNeutral-50 disabled:text-shNeutral-300',
+  ghost:
+    'bg-transparent text-shPrimary-800 hover:bg-shPrimary-100 disabled:bg-transparent disabled:text-shNeutral-300',
 };
 
+// Matriz de estilos conectada estrictamente a las variables CSS personalizadas
 const intentStyles: Record<ButtonIntent, Record<ButtonVariant, string>> = {
   primary: {
-    primary:
-      'bg-shPrimary-600 hover:bg-shPrimary-500 text-white active:text-black',
-    secondary:
-      'bg-zinc-700 text-shPrimary-400 hover:text-shPrimary-300 hover:bg-shPrimary-700 active:text-white',
-    ghost:
-      'hover:text-shPrimary-300 text-shPrimary-400 hover:bg-shPrimary-800 active:text-white',
+    // Technical Marine Blue - 800 es base, 700 es hover
+    primary: 'bg-shPrimary-800 text-white hover:bg-shPrimary-700',
+    secondary: 'bg-shPrimary-100 text-shPrimary-900 hover:bg-shPrimary-200',
+    ghost: 'bg-transparent text-shPrimary-800 hover:bg-shPrimary-50',
   },
-  red: {
-    primary: 'bg-red-900 hover:bg-red-800 text-white active:text-black',
-    secondary:
-      'bg-zinc-700 text-red-400 hover:text-red-200 hover:bg-red-950 active:text-white',
-    ghost: 'hover:text-red-200 text-red-400 hover:bg-red-950 active:text-white',
+  accent: {
+    // Industrial Amber - Obligatorio shForeground (#0F172A) para texto
+    primary: 'bg-shAccent-500 text-shForeground hover:bg-shAccent-600',
+    secondary: 'bg-shAccent-100 text-shAccent-900 hover:bg-shAccent-200',
+    ghost: 'bg-transparent text-shAccent-800 hover:bg-shAccent-50',
   },
-  green: {
-    primary: 'bg-emerald-900 hover:bg-emerald-800 text-white active:text-black',
-    secondary:
-      'bg-zinc-700 text-emerald-400 hover:text-emerald-200 hover:bg-emerald-950 active:text-white',
-    ghost:
-      'hover:text-emerald-200 text-emerald-400 hover:bg-emerald-950 active:text-white',
+  danger: {
+    // Escala Crimson personalizada
+    primary: 'bg-shDanger-700 text-white hover:bg-shDanger-600',
+    secondary: 'bg-shDanger-50 text-shDanger-800 hover:bg-shDanger-100',
+    ghost: 'bg-transparent text-shDanger-700 hover:bg-shDanger-50',
   },
-  blue: {
-    primary: 'bg-sky-900 hover:bg-sky-800 text-white active:text-black',
-    secondary:
-      'bg-zinc-700 text-sky-400 hover:text-sky-200 hover:bg-sky-950 active:text-white',
-    ghost: 'hover:text-sky-200 text-sky-400 hover:bg-sky-950 active:text-white',
+  success: {
+    // Escala Emerald personalizada
+    primary: 'bg-shSuccess-700 text-white hover:bg-shSuccess-600',
+    secondary: 'bg-shSuccess-50 text-shSuccess-800 hover:bg-shSuccess-100',
+    ghost: 'bg-transparent text-shSuccess-700 hover:bg-shSuccess-50',
   },
-  purple: {
-    primary: 'bg-indigo-900 hover:bg-indigo-800 text-white active:text-black',
-    secondary:
-      'bg-zinc-700 text-indigo-400 hover:text-indigo-200 hover:bg-indigo-950 active:text-white',
-    ghost:
-      'hover:text-indigo-200 text-indigo-400 hover:bg-indigo-950 active:text-white',
+  info: {
+    // Mantenemos la paleta sky de Tailwind pero ajustada a la lógica 700/600
+    primary: 'bg-sky-700 text-white hover:bg-sky-600',
+    secondary: 'bg-sky-50 text-sky-800 hover:bg-sky-100',
+    ghost: 'bg-transparent text-sky-700 hover:bg-sky-50',
   },
-  zinc: {
-    primary: 'bg-zinc-300 hover:bg-zinc-100 text-black active:text-black',
-    secondary:
-      'bg-zinc-700 text-zinc-300 hover:text-zinc-200 hover:bg-zinc-600 active:text-white',
-    ghost:
-      'hover:text-zinc-200 text-zinc-300 hover:bg-zinc-600 active:text-white',
+  neutral: {
+    // Slate neutral para acciones de cancelación o regreso
+    primary: 'bg-shNeutral-800 text-white hover:bg-shNeutral-700',
+    secondary: 'bg-shNeutral-100 text-shNeutral-800 hover:bg-shNeutral-200',
+    ghost: 'bg-transparent text-shNeutral-700 hover:bg-shNeutral-100',
   },
 };
 
@@ -79,9 +84,9 @@ const scaleStyles = {
 
 const shadowStyles = {
   none: '',
-  sm: 'hover:shadow-sm',
-  md: 'hover:shadow-md',
-  lg: 'hover:shadow-lg',
+  sm: 'shadow-sm hover:shadow-md',
+  md: 'shadow-md hover:shadow-lg',
+  lg: 'shadow-lg hover:shadow-xl',
 };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -105,14 +110,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const baseStyles =
-      'flex items-center text-xs sm:text-sm lg:text-base justify-center gap-2 rounded-lg px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 active:scale-[0.98]';
+      'flex items-center text-xs sm:text-sm lg:text-base justify-center gap-2 rounded-lg px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none active:scale-[0.98]';
 
     const variantClass = intent
       ? intentStyles[intent][variant]
       : variantStyles[variant];
 
-    const shadowClass = shadowStyles[shadowSize];
-    const scaleClass = scaleStyles[scale];
+    const shadowClass =
+      disabled || variant === 'ghost' ? '' : shadowStyles[shadowSize];
+    const scaleClass = disabled || loading ? '' : scaleStyles[scale];
     const widthClass = fullWidth ? 'w-full' : 'w-fit';
 
     return (

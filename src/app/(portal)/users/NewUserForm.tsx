@@ -7,6 +7,7 @@ import * as motion from 'motion/react-client';
 import { Mail, User, Briefcase, MapPin, Shield, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FormField, PasswordField } from '@/global-components/form-field';
+import Button from '@/global-components/Button';
 
 interface NewUserFormProps {
   company_id?: string;
@@ -59,7 +60,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
           transition={{ delay: 0.1, duration: 0.4 }}
           className='mb-1 flex items-center gap-2'
         >
-          <h2 className='font-inter text-app-text-primary text-lg font-bold md:text-xl xl:text-2xl'>
+          <h2 className='font-inter text-shNeutral-900 text-lg font-bold md:text-xl xl:text-2xl'>
             Nuevo usuario
           </h2>
         </motion.div>
@@ -67,7 +68,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.15, duration: 0.3 }}
-          className='text-app-text-secondary font-inter text-sm'
+          className='text-shNeutral-500 font-inter text-sm'
         >
           Completa el formulario para registrar un nuevo usuario en la
           plataforma.
@@ -79,7 +80,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, duration: 0.4 }}
-        className='border-app-border-soft bg-app-surface overflow-hidden rounded-2xl border p-5 shadow-sm shadow-slate-900/5 md:p-6'
+        className='border-shNeutral-200 overflow-hidden rounded-2xl border bg-white p-5 shadow-sm md:p-6'
       >
         <form
           onSubmit={(e) => {
@@ -160,17 +161,17 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                   <div className='group'>
                     <label
                       htmlFor='role'
-                      className='text-app-text-secondary group-focus-within:text-app-brand-dark mb-1.5 block text-xs font-medium transition-colors duration-300'
+                      className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
                     >
                       Rol
                     </label>
                     <div
                       className={cn(
                         'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
-                        'border-app-border-soft focus-within:border-app-brand focus-within:ring-app-brand/15 focus-within:ring-2',
+                        'border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 focus-within:ring-2',
                       )}
                     >
-                      <div className='text-app-text-muted group-focus-within:text-app-brand-dark flex w-12 shrink-0 items-center justify-center transition-colors'>
+                      <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
                         <Shield size={16} />
                       </div>
                       <select
@@ -182,12 +183,12 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                             () => e.target.value as 'operator' | 'viewer',
                           )
                         }
-                        className='text-app-text-primary placeholder:text-app-text-muted flex-1 appearance-none border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!'
+                        className='text-shNeutral-900 placeholder:text-shNeutral-500 flex-1 appearance-none border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!'
                       >
                         <option value='operator'>Operador</option>
                         <option value='viewer'>Visor</option>
                       </select>
-                      <div className='text-app-text-muted flex w-12 shrink-0 items-center justify-center'>
+                      <div className='text-shNeutral-600 flex w-12 shrink-0 items-center justify-center'>
                         <svg
                           className='h-4 w-4'
                           fill='none'
@@ -260,14 +261,19 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             transition={{ delay: 0.5, duration: 0.3 }}
             className='flex items-center justify-end gap-3 pt-3 md:pt-4 lg:pt-6'
           >
-            <button
+            <Button
               type='submit'
               disabled={createUser.isPending}
-              className='bg-app-brand text-app-surface hover:bg-app-brand-dark focus-visible:ring-app-brand focus-visible:ring-offset-app-surface inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60'
+              loading={createUser.isPending}
+              loadingText='Creando...'
+              icon={<UserPlus size={18} />}
+              scale='101'
+              variant='primary'
+              intent='primary'
+              fullWidth={true}
             >
-              {!createUser.isPending && <UserPlus size={18} />}
-              {createUser.isPending ? 'Creando...' : 'Crear usuario'}
-            </button>
+              Crear usuario
+            </Button>
           </motion.div>
         </form>
       </motion.div>

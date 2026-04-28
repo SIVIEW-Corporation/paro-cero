@@ -31,7 +31,7 @@ export function FormField({
     <div className='group'>
       <label
         htmlFor={name}
-        className='text-shGray-600 group-focus-within:text-shPrimary-500 mb-1.5 block text-xs font-medium transition-colors duration-300'
+        className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
       >
         {label}
       </label>
@@ -39,8 +39,8 @@ export function FormField({
         className={cn(
           'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
           hasError
-            ? 'border-red-500'
-            : 'border-shGray-300 focus-within:border-shPrimary-400 group-focus-within:ring-shPrimary-400/20 group-focus-within:ring-2',
+            ? 'border-shDanger-500'
+            : 'border-shNeutral-300 focus-within:border-shPrimary-500 group-focus-within:ring-shPrimary-500/15 group-focus-within:ring-2',
         )}
       >
         {Icon && (
@@ -48,8 +48,8 @@ export function FormField({
             className={cn(
               'flex w-12 shrink-0 items-center justify-center transition-colors',
               hasError
-                ? 'text-red-500'
-                : 'text-shGray-400 group-focus-within:text-shPrimary-400',
+                ? 'text-shDanger-500'
+                : 'text-shNeutral-600 group-focus-within:text-shPrimary-700',
             )}
           >
             <Icon size={16} />
@@ -65,7 +65,7 @@ export function FormField({
           placeholder={placeholder}
           autoComplete={autocomplete}
           className={cn(
-            'text-shGray-900 placeholder:text-shGray-400 flex-1 border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!',
+            'text-shNeutral-900 placeholder:text-shNeutral-600 shadow-shNeutral-900! border-shNeutral-200! bg-shNeutral-50! flex-1 rounded-none! rounded-l-md! border-0! border-l! py-2.5 pr-4 shadow-inner! ring-0! outline-none!',
             !Icon && 'pl-4',
           )}
         />
@@ -81,9 +81,9 @@ export function FormField({
             .map((err: any, i: number) => (
               <p
                 key={i}
-                className='flex items-center gap-1.5 text-xs font-medium text-red-400'
+                className='text-shDanger-700 flex items-center gap-1.5 text-xs font-medium'
               >
-                <span className='h-1 w-1 rounded-full bg-red-400' />
+                <span className='bg-shDanger-500 h-1 w-1 rounded-full' />
                 {typeof err === 'object' ? err.message : err}
               </p>
             ))}
@@ -148,7 +148,7 @@ export function PasswordField({
     <div className='group relative'>
       <label
         htmlFor='password'
-        className='text-shGray-600 group-focus-within:text-shPrimary-500 mb-1.5 block text-xs font-medium transition-colors duration-300'
+        className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
       >
         {label}
       </label>
@@ -156,16 +156,16 @@ export function PasswordField({
         className={cn(
           'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
           hasError
-            ? 'border-red-500'
-            : 'border-shGray-300 focus-within:border-shPrimary-400 focus-within:ring-shPrimary-400/20 focus-within:ring-2',
+            ? 'border-shDanger-500'
+            : 'border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 focus-within:ring-2',
         )}
       >
         <div
           className={cn(
             'flex w-12 shrink-0 items-center justify-center transition-colors',
             hasError
-              ? 'text-red-500'
-              : 'text-shGray-400 group-focus-within:text-shPrimary-400',
+              ? 'text-shDanger-500'
+              : 'text-shNeutral-600 group-focus-within:text-shPrimary-700',
           )}
         >
           <Icon size={16} />
@@ -180,7 +180,7 @@ export function PasswordField({
           placeholder='••••••••'
           autoComplete={autocomplete}
           className={cn(
-            'text-shGray-900 placeholder:text-shGray-400 flex-1 border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!',
+            'text-shNeutral-900 placeholder:text-shNeutral-600 shadow-shNeutral-900! border-shNeutral-200! bg-shNeutral-50! flex-1 rounded-none! rounded-l-md! border-0! border-l! py-2.5 pr-4 shadow-inner! ring-0! outline-none!',
             !Icon && 'pl-4',
           )}
         />
@@ -191,7 +191,7 @@ export function PasswordField({
             setIsVisible((prev) => !prev);
           }}
           aria-label={isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-          className='text-shGray-400 hover:text-shGray-700 flex w-12 shrink-0 cursor-pointer items-center justify-center transition-colors'
+          className='text-shNeutral-600 hover:text-shNeutral-800 flex w-12 shrink-0 cursor-pointer items-center justify-center transition-colors'
         >
           {isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
@@ -212,13 +212,13 @@ export function PasswordField({
                 key={req.key}
                 className={cn(
                   'flex items-center gap-1.5 text-xs transition-all',
-                  passed ? 'text-emerald-400' : 'text-shGray-500',
+                  passed ? 'text-shSuccess-700' : 'text-shNeutral-600',
                 )}
               >
                 {passed ? (
                   <CheckCircle size={12} className='shrink-0' />
                 ) : (
-                  <div className='bg-shGray-600 h-1.5 w-1.5 shrink-0 rounded-full' />
+                  <div className='bg-shNeutral-600 h-1.5 w-1.5 shrink-0 rounded-full' />
                 )}
                 <span>{req.label}</span>
               </div>
