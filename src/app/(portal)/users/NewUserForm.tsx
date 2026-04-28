@@ -109,6 +109,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                     type='email'
                     icon={Mail}
                     field={field}
+                    autocomplete='off'
                   />
                 )}
               />
@@ -122,7 +123,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
               <form.Field
                 name='password'
                 validators={{ onChange: newUserSchema.shape.password }}
-                children={(field) => <PasswordField field={field} />}
+                children={(field) => <PasswordField field={field} autocomplete='new-password' />}
               />
             </motion.div>
           </div>
