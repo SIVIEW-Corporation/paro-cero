@@ -90,6 +90,23 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
           }}
           className='space-y-5'
         >
+          {/* Hidden companyId field for validation */}
+          <form.Field
+            name='companyId'
+            validators={{
+              onChange: newUserSchema.shape.companyId,
+              onBlur: newUserSchema.shape.companyId,
+            }}
+            children={(field) => (
+              <input
+                type='hidden'
+                name={field.name}
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+            )}
+          />
+
           {/* Row 1: Email + Password */}
           <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
             <motion.div
@@ -100,7 +117,10 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             >
               <form.Field
                 name='email'
-                validators={{ onChange: newUserSchema.shape.email }}
+                validators={{
+                  onChange: newUserSchema.shape.email,
+                  onBlur: newUserSchema.shape.email,
+                }}
                 children={(field) => (
                   <FormField
                     name='email'
@@ -122,7 +142,10 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             >
               <form.Field
                 name='password'
-                validators={{ onChange: newUserSchema.shape.password }}
+                validators={{
+                  onChange: newUserSchema.shape.password,
+                  onBlur: newUserSchema.shape.password,
+                }}
                 children={(field) => (
                   <PasswordField field={field} autocomplete='new-password' />
                 )}
@@ -140,7 +163,10 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             >
               <form.Field
                 name='fullName'
-                validators={{ onChange: newUserSchema.shape.fullName }}
+                validators={{
+                  onChange: newUserSchema.shape.fullName,
+                  onBlur: newUserSchema.shape.fullName,
+                }}
                 children={(field) => (
                   <FormField
                     name='fullName'
@@ -160,6 +186,10 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             >
               <form.Field
                 name='role'
+                validators={{
+                  onChange: newUserSchema.shape.role,
+                  onBlur: newUserSchema.shape.role,
+                }}
                 children={(field) => (
                   <div className='group'>
                     <label
@@ -223,7 +253,10 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             >
               <form.Field
                 name='area'
-                validators={{ onChange: newUserSchema.shape.area }}
+                validators={{
+                  onChange: newUserSchema.shape.area,
+                  onBlur: newUserSchema.shape.area,
+                }}
                 children={(field) => (
                   <FormField
                     name='area'
@@ -243,7 +276,10 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             >
               <form.Field
                 name='jobTitle'
-                validators={{ onChange: newUserSchema.shape.jobTitle }}
+                validators={{
+                  onChange: newUserSchema.shape.jobTitle,
+                  onBlur: newUserSchema.shape.jobTitle,
+                }}
                 children={(field) => (
                   <FormField
                     name='jobTitle'
@@ -264,19 +300,35 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
             transition={{ delay: 0.5, duration: 0.3 }}
             className='flex items-center justify-end gap-3 pt-3 md:pt-4 lg:pt-6'
           >
-            <Button
-              type='submit'
-              disabled={createUser.isPending}
-              loading={createUser.isPending}
-              loadingText='Creando...'
-              icon={<UserPlus size={18} />}
-              scale='101'
-              variant='primary'
-              intent='accent'
-              fullWidth={true}
-            >
-              Crear usuario
-            </Button>
+            <form.Subscribe
+              selector={(state) => {
+                const v = state.values;
+                const allFilled =
+                  v.email.length > 0 &&
+                  v.password.length > 0 &&
+                  v.fullName.length > 0 &&
+                  v.role.length > 0 &&
+                  v.area.length > 0 &&
+                  v.jobTitle.length > 0 &&
+                  v.companyId.length > 0;
+                return [allFilled && state.canSubmit, state.isSubmitting];
+              }}
+              children={([canSubmit]) => (
+                <Button
+                  type='submit'
+                  disabled={!canSubmit || createUser.isPending}
+                  loading={createUser.isPending}
+                  loadingText='Creando...'
+                  icon={<UserPlus size={18} />}
+                  scale='101'
+                  variant='primary'
+                  intent='accent'
+                  fullWidth={true}
+                >
+                  Crear usuario
+                </Button>
+              )}
+            />
           </motion.div>
         </form>
       </motion.div>
