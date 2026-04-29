@@ -1,37 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import {
+  useState,
+  type CSSProperties,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
 import {
   format,
   subMonths,
   startOfMonth,
   endOfMonth,
   eachMonthOfInterval,
-  isSameMonth,
 } from 'date-fns';
+import * as echarts from 'echarts';
 import { es } from 'date-fns/locale';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/style.css';
 
 import { EChartsArea, EChartsBar, EChartsPie } from '@/components/charts';
 
-import {
-  ASSETS,
-  PLANS,
-  STC,
-  STL,
-  PRC,
-  PRL,
-  CRC,
-  NTL,
-  NTI,
-  assetComplianceData,
-  assetDowntimeData,
-  assetTipoData,
-} from '@/app/data';
+import { ASSETS, PLANS, STC, STL, PRC, PRL, NTL, NTI } from '@/app/data';
 import { TECNICOS } from '@/app/data/constants';
 import { generarDatosSeisMeses } from '@/app/data/mock-data';
 import { useWorkOrdersStore } from '@/app/stores/useWorkOrdersStore';
+import { cn } from '@/lib/cn';
+import { exportToCsv, type CsvColumn } from '@/utils/exportCsv';
 
 import {
   Badge,
@@ -50,7 +45,7 @@ import {
   ModalFooter,
 } from '@/components/ui';
 
-import type { OrdenTrabajo } from '@/app/data/types';
+import type { EstadoOT, OrdenTrabajo, PrioridadOT } from '@/app/data/types';
 
 const workOrderFilterPillBase =
   'inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg border px-3.5 text-xs font-bold transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-app-brand focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg focus-visible:outline-none';
@@ -81,7 +76,7 @@ export function PlansScreen() {
   const [newItem, setNewItem] = useState('');
   const [createError, setCreateError] = useState('');
 
-  const inputStyle: React.CSSProperties = {
+  const inputStyle: CSSProperties = {
     width: '100%',
     background: '#0a1628',
     border: '1px solid #1e3a5f',
@@ -715,7 +710,7 @@ export function WorkOrdersScreen({
   setWo,
 }: {
   wo: OrdenTrabajo[];
-  setWo: React.Dispatch<React.SetStateAction<OrdenTrabajo[]>>;
+  setWo: Dispatch<SetStateAction<OrdenTrabajo[]>>;
 }) {
   const [selected, setSelected] = useState<OrdenTrabajo | null>(null);
   const [filterStatus, setFilter] = useState('');
@@ -1730,9 +1725,7 @@ export function NotificationsScreen({
                     </p>
                   </div>
                 </div>
-                <div
-                  className='flex flex-row flex-wrap items-center gap-2 sm:ml-5 sm:flex-col sm:items-end sm:text-right'
-                >
+                <div className='flex flex-row flex-wrap items-center gap-2 sm:ml-5 sm:flex-col sm:items-end sm:text-right'>
                   <span
                     style={{
                       fontSize: 11,
@@ -1768,147 +1761,686 @@ export function NotificationsScreen({
   );
 }
 
+const REPORT_DATE_PRESET = {
+  THIS_MONTH: 'this_month',
+  LAST_3_MONTHS: 'last_3_months',
+  LAST_6_MONTHS: 'last_6_months',
+  CUSTOM: 'custom',
+} as const;
+
+type ReportDatePreset =
+  (typeof REPORT_DATE_PRESET)[keyof typeof REPORT_DATE_PRESET];
+
+interface ReportDateRange {
+  from: Date;
+  to: Date;
+}
+
+interface ReportFilters {
+  datePreset: ReportDatePreset;
+  dateRange: ReportDateRange;
+  area: string;
+  technicianId: string;
+  assetId: string;
+  status: EstadoOT | '';
+}
+
+interface ReportKpiSummary {
+  metric: string;
+  value: string | number;
+  detail: string;
+}
+
+const REPORT_EXPORT_KIND = {
+  FULL_PDF: 'full_pdf',
+  EXECUTIVE_PDF: 'executive_pdf',
+  DATABASE_CSV: 'database_csv',
+} as const;
+
+type ReportExportKind =
+  (typeof REPORT_EXPORT_KIND)[keyof typeof REPORT_EXPORT_KIND];
+
+const reportStatusFilterOptions = [
+  { label: 'Todos', value: '' },
+  { label: 'Nueva', value: 'nueva' },
+  { label: 'Asignada', value: 'asignada' },
+  { label: 'En proceso', value: 'en_proceso' },
+  { label: 'En espera', value: 'en_espera' },
+  { label: 'Completada', value: 'completada' },
+  { label: 'Cerrada', value: 'cerrada' },
+  { label: 'Cancelada', value: 'cancelada' },
+] as const satisfies ReadonlyArray<{ label: string; value: EstadoOT | '' }>;
+
+const closedStatuses: EstadoOT[] = ['completada', 'cerrada', 'cancelada'];
+
+const REPORT_MONTHLY_TREND_OMITTED_NOTE =
+  'Las gráficas de tendencia mensual se omiten en periodos de un mes o menos. Selecciona un rango mayor para incluir análisis histórico.';
+
+const reportStatusLabel: Record<EstadoOT, string> = {
+  nueva: 'Nueva',
+  asignada: 'Asignada',
+  en_proceso: 'En Proceso',
+  en_espera: 'En Espera',
+  completada: 'Completada',
+  cerrada: 'Cerrada',
+  cancelada: 'Cancelada',
+};
+
+const reportPriorityLabel: Record<PrioridadOT, string> = {
+  baja: 'Baja',
+  media: 'Media',
+  alta: 'Alta',
+  critico: 'Crítico',
+};
+
+const datePresetOptions = [
+  { label: 'Este mes', value: REPORT_DATE_PRESET.THIS_MONTH },
+  { label: 'Últimos 3 meses', value: REPORT_DATE_PRESET.LAST_3_MONTHS },
+  { label: 'Últimos 6 meses', value: REPORT_DATE_PRESET.LAST_6_MONTHS },
+  { label: 'Personalizado', value: REPORT_DATE_PRESET.CUSTOM },
+] as const;
+
+function getPresetRange(preset: ReportDatePreset): ReportDateRange {
+  const now = new Date();
+
+  if (preset === REPORT_DATE_PRESET.LAST_3_MONTHS) {
+    return { from: startOfMonth(subMonths(now, 2)), to: endOfMonth(now) };
+  }
+
+  if (preset === REPORT_DATE_PRESET.LAST_6_MONTHS) {
+    return { from: startOfMonth(subMonths(now, 5)), to: endOfMonth(now) };
+  }
+
+  return { from: startOfMonth(now), to: endOfMonth(now) };
+}
+
+function getDateRangeDays(startDate: Date, endDate: Date) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+
+  const rangeInMs = end.getTime() - start.getTime();
+  const dayInMs = 1000 * 60 * 60 * 24;
+
+  return Math.floor(Math.abs(rangeInMs) / dayInMs) + 1;
+}
+
+function isRangeLongerThanOneMonth(startDate: Date, endDate: Date) {
+  return getDateRangeDays(startDate, endDate) > 31;
+}
+
+function getInitialReportFilters(): ReportFilters {
+  return {
+    datePreset: REPORT_DATE_PRESET.THIS_MONTH,
+    dateRange: getPresetRange(REPORT_DATE_PRESET.THIS_MONTH),
+    area: '',
+    technicianId: '',
+    assetId: '',
+    status: '',
+  };
+}
+
+function getAssetById(assetId: string) {
+  return ASSETS.find((asset) => asset.id === assetId);
+}
+
+function getFilteredAssets(filters: ReportFilters) {
+  return ASSETS.filter((asset) => {
+    if (filters.assetId && asset.id !== filters.assetId) return false;
+    if (filters.area && asset.area !== filters.area) return false;
+    return true;
+  });
+}
+
+function getFilteredWorkOrders(orders: OrdenTrabajo[], filters: ReportFilters) {
+  const filteredAssetIds = new Set(
+    getFilteredAssets(filters).map((asset) => asset.id),
+  );
+
+  return orders.filter((workOrder) => {
+    const creationDate = new Date(workOrder.fechaCreacion);
+
+    if (creationDate < filters.dateRange.from) return false;
+    if (creationDate > filters.dateRange.to) return false;
+    if (!filteredAssetIds.has(workOrder.activoId)) return false;
+    if (filters.technicianId && workOrder.tecnicoId !== filters.technicianId) {
+      return false;
+    }
+    if (filters.status && workOrder.status !== filters.status) return false;
+
+    return true;
+  });
+}
+
+function getFilteredPlans(filters: ReportFilters) {
+  const filteredAssetIds = new Set(
+    getFilteredAssets(filters).map((asset) => asset.id),
+  );
+
+  return PLANS.filter((plan) => {
+    if (!filteredAssetIds.has(plan.assetId)) return false;
+    return true;
+  });
+}
+
+function filterReportsData(orders: OrdenTrabajo[], filters: ReportFilters) {
+  return {
+    assets: getFilteredAssets(filters),
+    workOrders: getFilteredWorkOrders(orders, filters),
+    plans: getFilteredPlans(filters),
+  };
+}
+
+function sanitizeFilenameSegment(value: string) {
+  return (
+    value
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'todos'
+  );
+}
+
+function buildReportFilename(filters: ReportFilters, kind: ReportExportKind) {
+  const from = format(filters.dateRange.from, 'yyyyMMdd');
+  const to = format(filters.dateRange.to, 'yyyyMMdd');
+  const asset = filters.assetId
+    ? getAssetById(filters.assetId)?.code || filters.assetId
+    : 'todos-los-activos';
+  const period = `${from}-${to}`;
+  const prefixByKind: Record<ReportExportKind, string> = {
+    [REPORT_EXPORT_KIND.FULL_PDF]: 'pm0-reporte-completo',
+    [REPORT_EXPORT_KIND.EXECUTIVE_PDF]: 'pm0-reporte-ejecutivo',
+    [REPORT_EXPORT_KIND.DATABASE_CSV]: 'pm0-base-datos-reporte',
+  };
+
+  return `${prefixByKind[kind]}-${sanitizeFilenameSegment(asset)}-${period}`;
+}
+
+function escapeHtml(
+  value: string | number | boolean | Date | null | undefined,
+) {
+  const stringValue =
+    value instanceof Date ? formatDate(value) : String(value ?? '');
+
+  return stringValue
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function buildPrintRows(
+  rows: Array<
+    Record<string, string | number | boolean | Date | null | undefined>
+  >,
+  emptyLabel: string,
+) {
+  if (rows.length === 0) {
+    return `<p class="empty">${escapeHtml(emptyLabel)}</p>`;
+  }
+
+  const headers = Object.keys(rows[0] || {});
+
+  return `
+    <table>
+      <thead>
+        <tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('')}</tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map(
+            (row) => `
+              <tr>
+                ${headers
+                  .map((header) => `<td>${escapeHtml(row[header])}</td>`)
+                  .join('')}
+              </tr>
+            `,
+          )
+          .join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+interface CapturedReportChart {
+  id: string;
+  title: string;
+  dataUrl: string;
+}
+
+const REPORT_CHART_EXPORT_SELECTOR = '[data-report-chart-export="true"]';
+
+function waitForReportCharts(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function captureVisibleReportCharts(): Promise<CapturedReportChart[]> {
+  await waitForReportCharts(120);
+
+  const chartContainers = Array.from(
+    document.querySelectorAll<HTMLElement>(REPORT_CHART_EXPORT_SELECTOR),
+  ).filter((container) => {
+    const rect = container.getBoundingClientRect();
+
+    return rect.width > 0 && rect.height > 0;
+  });
+
+  const chartInstances = chartContainers
+    .map((container) => {
+      const echartsRoot =
+        container.querySelector<HTMLElement>('.echarts-for-react');
+
+      if (!echartsRoot) {
+        return null;
+      }
+
+      const instance = echarts.getInstanceByDom(echartsRoot);
+
+      if (!instance) {
+        return null;
+      }
+
+      return { container, instance };
+    })
+    .filter(
+      (chart): chart is { container: HTMLElement; instance: echarts.ECharts } =>
+        Boolean(chart),
+    );
+
+  chartInstances.forEach(({ instance }) => instance.resize());
+  await waitForReportCharts(160);
+
+  return chartInstances.map(({ container, instance }, index) => ({
+    id: container.dataset.reportChartId || `chart-${index + 1}`,
+    title: container.dataset.reportChartTitle || `Gráfica ${index + 1}`,
+    dataUrl: instance.getDataURL({
+      type: 'png',
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+      excludeComponents: ['toolbox'],
+    }),
+  }));
+}
+
+function openReportPrintWindow({
+  title,
+  filename,
+  body,
+}: {
+  title: string;
+  filename: string;
+  body: string;
+}) {
+  const printWindow = window.open('', '_blank');
+
+  if (!printWindow) {
+    window.alert(
+      'No se pudo abrir la ventana de impresión. Permití pop-ups para exportar el PDF.',
+    );
+    return;
+  }
+
+  printWindow.document.write(`<!doctype html>
+    <html lang="es">
+      <head>
+        <meta charset="utf-8" />
+        <title>${escapeHtml(title)} - ${escapeHtml(filename)}.pdf</title>
+        <style>
+          @page { size: A4; margin: 14mm; }
+          * { box-sizing: border-box; }
+          body {
+            margin: 0;
+            background: #ffffff;
+            color: #111827;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 12px;
+            line-height: 1.45;
+          }
+          .report { padding: 24px; }
+          .header {
+            border-bottom: 3px solid #0f3a5f;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+          }
+          .brand { color: #b7791f; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+          h1 { color: #0f3a5f; font-size: 26px; margin: 6px 0 8px; }
+          h2 { color: #0f3a5f; font-size: 16px; margin: 20px 0 8px; }
+          .meta { color: #475569; display: grid; gap: 3px; }
+          .grid { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 14px 0 8px; }
+          .card { border: 1px solid #dde3ea; border-radius: 10px; padding: 10px; background: #f8fafc; }
+          .card-label { color: #667085; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+          .card-value { color: #111827; font-size: 20px; font-weight: 900; margin-top: 4px; }
+          .card-detail { color: #667085; font-size: 11px; margin-top: 3px; }
+          .chart-section { page-break-inside: avoid; }
+          .chart-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 10px 0 14px; }
+          .chart-card { border: 1px solid #dde3ea; border-radius: 10px; padding: 10px; background: #ffffff; page-break-inside: avoid; }
+          .chart-card h3 { color: #0f3a5f; font-size: 12px; margin: 0 0 8px; }
+          .chart-image { display: block; height: auto; max-height: 230px; object-fit: contain; width: 100%; }
+          table { border-collapse: collapse; width: 100%; margin-bottom: 10px; page-break-inside: auto; }
+          th, td { border: 1px solid #dde3ea; padding: 6px 7px; text-align: left; vertical-align: top; }
+          th { background: #f1f5f9; color: #475569; font-size: 10px; text-transform: uppercase; }
+          tr { page-break-inside: avoid; page-break-after: auto; }
+          .empty { border: 1px dashed #cbd5e1; border-radius: 8px; color: #667085; padding: 10px; }
+          .note { color: #667085; font-size: 10px; margin-top: 16px; }
+          @media print { .report { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <main class="report">
+          ${body}
+          <p class="note">Al guardar como PDF, el navegador puede ignorar el nombre sugerido: ${escapeHtml(filename)}.pdf</p>
+        </main>
+        <script>
+          const waitForImages = () => Promise.all(
+            Array.from(document.images).map((image) => {
+              if (image.complete) return Promise.resolve();
+              return new Promise((resolve) => {
+                image.addEventListener('load', resolve, { once: true });
+                image.addEventListener('error', resolve, { once: true });
+              });
+            })
+          );
+
+          window.addEventListener('load', async () => {
+            await waitForImages();
+            window.focus();
+            window.print();
+          });
+        </script>
+      </body>
+    </html>`);
+  printWindow.document.close();
+}
+
+function formatDate(value: Date | string) {
+  return format(new Date(value), 'dd MMM yyyy', { locale: es });
+}
+
+function ReportField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className='flex flex-col gap-1.5'>
+      <span className='text-shNeutral-700 text-xs font-semibold'>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function SoftBadge({ children, tone }: { children: string; tone: string }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex rounded-full border px-2.5 py-1 text-xs font-bold whitespace-nowrap',
+        tone,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function getStatusBadgeClass(status: EstadoOT) {
+  if (status === 'completada' || status === 'cerrada') {
+    return 'border-shSuccess-200 bg-shSuccess-50 text-shSuccess-800';
+  }
+  if (status === 'cancelada') {
+    return 'border-shNeutral-200 bg-shNeutral-100 text-shNeutral-700';
+  }
+  if (status === 'en_proceso' || status === 'en_espera') {
+    return 'border-shAccent-200 bg-shAccent-50 text-shAccent-800';
+  }
+  return 'border-shPrimary-200 bg-shPrimary-50 text-shPrimary-800';
+}
+
+function getPriorityBadgeClass(priority: PrioridadOT) {
+  if (priority === 'critico') {
+    return 'border-shDanger-200 bg-shDanger-50 text-shDanger-800';
+  }
+  if (priority === 'alta') {
+    return 'border-shAccent-200 bg-shAccent-50 text-shAccent-800';
+  }
+  if (priority === 'media') {
+    return 'border-shPrimary-200 bg-shPrimary-50 text-shPrimary-800';
+  }
+  return 'border-shSuccess-200 bg-shSuccess-50 text-shSuccess-800';
+}
+
 export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
   const setOrdenes = useWorkOrdersStore((state) => state.setOrdenes);
-  const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date()),
-  });
+  const [filters, setFilters] = useState<ReportFilters>(
+    getInitialReportFilters,
+  );
+  const [draftFilters, setDraftFilters] = useState<ReportFilters>(
+    getInitialReportFilters,
+  );
   const [showPicker, setShowPicker] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const closedStatuses: OrdenTrabajo['status'][] = [
-    'completada',
-    'cerrada',
-    'cancelada',
-  ];
-
-  const quickOptions = [
-    {
-      label: 'Este mes',
-      getValue: () => ({
-        from: startOfMonth(new Date()),
-        to: endOfMonth(new Date()),
-      }),
-    },
-    {
-      label: 'Ultimos 3 meses',
-      getValue: () => ({
-        from: subMonths(new Date(), 2),
-        to: new Date(),
-      }),
-    },
-    {
-      label: 'Ultimos 6 meses',
-      getValue: () => ({
-        from: subMonths(new Date(), 5),
-        to: new Date(),
-      }),
-    },
-  ];
-
-  const last6Months = eachMonthOfInterval({
-    start: subMonths(startOfMonth(new Date()), 5),
-    end: endOfMonth(new Date()),
+  const {
+    assets: filteredAssets,
+    workOrders: filteredWo,
+    plans: filteredPlans,
+  } = filterReportsData(wo, filters);
+  const selectedAsset = filters.assetId;
+  const selectedAssetCode = selectedAsset
+    ? getAssetById(selectedAsset)?.code
+    : null;
+  const selectedAssetName = selectedAsset
+    ? getAssetById(selectedAsset)?.name || selectedAsset
+    : 'todos los activos';
+  const printDateLabel = `${formatDate(filters.dateRange.from)} - ${formatDate(
+    filters.dateRange.to,
+  )}`;
+  const reportMonths = eachMonthOfInterval({
+    start: startOfMonth(filters.dateRange.from),
+    end: endOfMonth(filters.dateRange.to),
   });
+  const areas = Array.from(new Set(ASSETS.map((asset) => asset.area))).sort();
+  const technicians = Array.from(
+    new Map(
+      wo.map((workOrder) => [
+        workOrder.tecnicoId,
+        { id: workOrder.tecnicoId, name: workOrder.tecnicoNombre },
+      ]),
+    ).values(),
+  ).sort((first, second) => first.name.localeCompare(second.name));
 
-  const historyData = last6Months.map((month) => {
-    const monthWO = wo.filter((w) => {
-      const wDate =
-        w.fechaCreacion instanceof Date
-          ? w.fechaCreacion
-          : new Date(w.fechaCreacion);
-      const sameAsset = !selectedAsset || w.activoId === selectedAsset;
-      return sameAsset && isSameMonth(wDate, month);
+  const historyData = reportMonths.map((month) => {
+    const monthWO = getFilteredWorkOrders(wo, {
+      ...filters,
+      dateRange: { from: startOfMonth(month), to: endOfMonth(month) },
     });
-
-    const completed = monthWO.filter((w) => w.status === 'completada').length;
-    const totalFinished = monthWO.filter((w) =>
-      closedStatuses.includes(w.status),
+    const monthCompleted = monthWO.filter(
+      (workOrder) => workOrder.status === 'completada',
+    ).length;
+    const totalFinished = monthWO.filter((workOrder) =>
+      closedStatuses.includes(workOrder.status),
     ).length;
 
     return {
       mes: format(month, 'MMM', { locale: es }),
       compliance:
-        totalFinished > 0 ? Math.round((completed / totalFinished) * 100) : 0,
-      downtime: monthWO.reduce((s, w) => s + (w.downtimeMinutos || 0), 0) / 60,
+        totalFinished > 0
+          ? Math.round((monthCompleted / totalFinished) * 100)
+          : 0,
+      downtime:
+        monthWO.reduce((sum, workOrder) => sum + workOrder.downtimeMinutos, 0) /
+        60,
     };
   });
 
-  const chartCompliance = historyData.map((d) => ({
-    mes: d.mes,
-    val: d.compliance,
+  const chartCompliance = historyData.map((item) => ({
+    mes: item.mes,
+    val: item.compliance,
   }));
-  const chartDowntime = historyData.map((d) => ({
-    mes: d.mes,
-    hrs: Math.round(d.downtime * 10) / 10,
+  const chartDowntime = historyData.map((item) => ({
+    mes: item.mes,
+    hrs: Math.round(item.downtime * 10) / 10,
   }));
-
-  const filteredWo = wo.filter((w) => {
-    if (selectedAsset && w.activoId !== selectedAsset) return false;
-    if (!dateRange || !dateRange.from || !dateRange.to) return true;
-    const woDate =
-      w.fechaCreacion instanceof Date
-        ? w.fechaCreacion
-        : new Date(w.fechaCreacion);
-    return woDate >= dateRange.from && woDate <= dateRange.to;
-  });
-
   const totalDown = filteredWo.reduce(
-    (s, w) => s + (w.downtimeMinutos || 0),
+    (sum, workOrder) => sum + workOrder.downtimeMinutos,
     0,
   );
-  const correctivos = filteredWo.filter((w) => w.tipo === 'correctivo').length;
-  const preventivos = filteredWo.filter((w) => w.tipo === 'preventivo').length;
+  const correctivos = filteredWo.filter(
+    (workOrder) => workOrder.tipo === 'correctivo',
+  ).length;
+  const preventivos = filteredWo.filter(
+    (workOrder) => workOrder.tipo === 'preventivo',
+  ).length;
   const pct =
     filteredWo.length > 0
       ? Math.round((correctivos / filteredWo.length) * 100)
       : 0;
-
   const avgMTTR =
     correctivos > 0 ? Math.round((totalDown / 60 / correctivos) * 10) / 10 : 0;
-
-  const completed = filteredWo.filter((w) => w.status === 'completada').length;
-  const total = filteredWo.filter((w) =>
-    closedStatuses.includes(w.status),
+  const completed = filteredWo.filter(
+    (workOrder) => workOrder.status === 'completada',
+  ).length;
+  const total = filteredWo.filter((workOrder) =>
+    closedStatuses.includes(workOrder.status),
   ).length;
   const compliancePct = total > 0 ? Math.round((completed / total) * 100) : 0;
-
   const chartTipo = [
-    { name: 'Preventivo', value: preventivos, color: '#3b82f6' },
-    { name: 'Correctivo', value: correctivos, color: '#ef4444' },
+    { name: 'Preventivo', value: preventivos, color: '#486581' },
+    { name: 'Correctivo', value: correctivos, color: '#b91c1c' },
   ];
-
   const assetGroups = filteredWo
-    .filter((w) => w.tipo === 'correctivo')
+    .filter((workOrder) => workOrder.tipo === 'correctivo')
     .reduce(
-      (acc, w) => {
-        if (!acc[w.activoId]) {
-          acc[w.activoId] = { count: 0, down: 0, id: w.activoId };
+      (accumulator, workOrder) => {
+        if (!accumulator[workOrder.activoId]) {
+          accumulator[workOrder.activoId] = {
+            count: 0,
+            down: 0,
+            id: workOrder.activoId,
+          };
         }
-        acc[w.activoId].count += 1;
-        acc[w.activoId].down += w.downtimeMinutos || 0;
-        return acc;
+
+        accumulator[workOrder.activoId].count += 1;
+        accumulator[workOrder.activoId].down += workOrder.downtimeMinutos;
+        return accumulator;
       },
       {} as Record<string, { count: number; down: number; id: string }>,
     );
-
   const dynamicTopFallas = Object.values(assetGroups)
-    .map((g) => ({
-      asset: ASSETS.find((a) => a.id === g.id)?.name || 'Desconocido',
-      count: g.count,
-      down: Math.round(g.down / 60),
+    .map((group) => ({
+      asset: getAssetById(group.id)?.name || 'Desconocido',
+      count: group.count,
+      down: Math.round(group.down / 60),
     }))
-    .sort((a, b) => b.count - a.count);
+    .sort((first, second) => second.count - first.count);
+  const kpiSummary: ReportKpiSummary[] = [
+    {
+      metric: 'Cumplimiento PM',
+      value: `${compliancePct}%`,
+      detail: `${completed} completadas de ${total} OTs cerradas/canceladas`,
+    },
+    { metric: 'MTTR promedio', value: `${avgMTTR} h`, detail: 'Correctivos' },
+    {
+      metric: 'Paro acumulado',
+      value: `${Math.round(totalDown / 60)} h`,
+      detail: `${filteredWo.length} OTs filtradas`,
+    },
+    {
+      metric: '% Correctivo',
+      value: `${pct}%`,
+      detail: `Prev: ${preventivos} · Corr: ${correctivos}`,
+    },
+  ];
+  const periodLabel =
+    datePresetOptions.find((option) => option.value === filters.datePreset)
+      ?.label || printDateLabel;
+  const selectedAreaLabel = filters.area || '';
+  const selectedTechnicianLabel = filters.technicianId
+    ? technicians.find((technician) => technician.id === filters.technicianId)
+        ?.name || filters.technicianId
+    : '';
+  const selectedStatusLabel = filters.status
+    ? reportStatusFilterOptions.find(
+        (option) => option.value === filters.status,
+      )?.label || reportStatusLabel[filters.status]
+    : '';
+  const activeFilterSummary = [
+    `Mostrando información de ${periodLabel} para ${selectedAssetName}`,
+    selectedStatusLabel ? `Estado: ${selectedStatusLabel}` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const hasAdditionalFilters = Boolean(
+    filters.area || filters.technicianId || filters.status,
+  );
+  const detailRows = filteredWo.slice(0, 50);
 
-  const selectedAssetName = selectedAsset
-    ? ASSETS.find((a) => a.id === selectedAsset)?.name
-    : null;
-  const printDateLabel =
-    dateRange?.from && dateRange?.to
-      ? `${format(dateRange.from, 'dd MMM yyyy', { locale: es })} - ${format(dateRange.to, 'dd MMM yyyy', { locale: es })}`
-      : format(new Date(), 'dd MMM yyyy', { locale: es });
+  const updateDraftFilter = <TKey extends keyof ReportFilters>(
+    key: TKey,
+    value: ReportFilters[TKey],
+  ) => {
+    setDraftFilters((currentFilters) => ({ ...currentFilters, [key]: value }));
+  };
+
+  const applyPreset = (preset: ReportDatePreset) => {
+    const range = getPresetRange(preset);
+    const nextFilters = {
+      ...draftFilters,
+      datePreset: preset,
+      dateRange: range,
+    };
+
+    setDraftFilters(nextFilters);
+    if (preset !== REPORT_DATE_PRESET.CUSTOM) {
+      setFilters(nextFilters);
+      setShowPicker(false);
+    } else {
+      setShowPicker(true);
+    }
+  };
+
+  const updateReportFilter = <TKey extends keyof ReportFilters>(
+    key: TKey,
+    value: ReportFilters[TKey],
+  ) => {
+    const nextFilters = { ...filters, [key]: value };
+
+    setDraftFilters({ ...draftFilters, [key]: value });
+    setFilters(nextFilters);
+  };
+
+  const applyFilters = () => {
+    setFilters(draftFilters);
+    setShowPicker(false);
+  };
+
+  const clearFilters = () => {
+    const nextFilters = { ...filters, area: '', technicianId: '', status: '' };
+
+    setDraftFilters({
+      ...draftFilters,
+      area: '',
+      technicianId: '',
+      status: '',
+    });
+    setFilters(nextFilters);
+    setShowPicker(false);
+  };
+
+  const updateHeaderAsset = (assetId: string) => {
+    const nextDraftFilters = { ...draftFilters, assetId };
+
+    setDraftFilters(nextDraftFilters);
+    setFilters({ ...filters, assetId });
+  };
 
   const regenerateDemoData = () => {
     if (
@@ -1922,296 +2454,336 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
     setOrdenes(generarDatosSeisMeses());
   };
 
-  const exportCsv = () => {
-    const headers = [
-      'id',
-      'folio',
-      'activo_id',
-      'activo_nombre',
-      'tipo',
-      'status',
-      'prioridad',
-      'tecnico',
-      'fecha_creacion',
-      'fecha_compromiso',
-      'fecha_cierre',
-      'downtime_minutos',
-      'gasto_dinero',
-      'monto_gastado',
-      'uso_refaccion_consumible',
-      'refaccion_consumible_detalle',
-      'titulo',
-      'descripcion',
-      'descripcion_problema',
-      'descripcion_servicio',
-    ];
-
-    const escapeCsv = (value: string | number) => {
-      const stringValue = String(value ?? '');
-      if (
-        stringValue.includes(',') ||
-        stringValue.includes('"') ||
-        stringValue.includes('\n')
-      ) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
-      }
-      return stringValue;
+  const getWorkOrderRootCause = (workOrder: OrdenTrabajo) => {
+    const legacyWorkOrder = workOrder as OrdenTrabajo & {
+      causa?: string;
+      accion?: string;
     };
 
-    const rows = filteredWo.map((item) => {
-      const activoNombre =
-        ASSETS.find((a) => a.id === item.activoId)?.name || '';
-      return [
-        item.id,
-        item.folio,
-        item.activoId,
-        activoNombre,
-        item.tipo,
-        item.status,
-        item.prioridad,
-        item.tecnicoNombre,
-        format(new Date(item.fechaCreacion), 'yyyy-MM-dd'),
-        format(new Date(item.fechaCompromiso), 'yyyy-MM-dd'),
-        item.fechaCierre
-          ? format(new Date(item.fechaCierre), 'yyyy-MM-dd')
-          : '',
-        item.downtimeMinutos || 0,
-        item.gastoDinero ? 'si' : 'no',
-        item.montoGastado || 0,
-        item.usoRefaccionConsumible ? 'si' : 'no',
-        item.refaccionConsumibleDetalle || '',
-        item.titulo,
-        item.descripcion,
-        item.descripcionProblema || item.observaciones || '',
-        item.descripcionServicio || '',
-      ];
-    });
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => escapeCsv(cell)).join(',')),
-    ].join('\n');
-
-    const blob = new Blob([csvContent], {
-      type: 'text/csv;charset=utf-8;',
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `reporte-kpis-${format(new Date(), 'yyyyMMdd-HHmm')}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    setShowExportMenu(false);
+    return legacyWorkOrder.causaRaiz || legacyWorkOrder.causa || '';
   };
 
-  const exportPdfEjecutivo = () => {
-    const periodLabel =
-      dateRange?.from && dateRange?.to
-        ? `${format(dateRange.from, 'dd MMM yyyy', { locale: es })} - ${format(dateRange.to, 'dd MMM yyyy', { locale: es })}`
-        : 'Periodo general';
-    const topRows = (
-      selectedAsset
-        ? [
-            {
-              asset: selectedAssetName || 'Activo seleccionado',
-              count: correctivos,
-              down: Math.round(totalDown / 60),
-            },
-          ]
-        : dynamicTopFallas
-    )
-      .slice(0, 10)
-      .map(
-        (row, index) => `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${row.asset}</td>
-            <td>${row.count}</td>
-            <td>${row.down}</td>
-          </tr>
-        `,
-      )
-      .join('');
+  const getWorkOrderAction = (workOrder: OrdenTrabajo) => {
+    const legacyWorkOrder = workOrder as OrdenTrabajo & {
+      causa?: string;
+      accion?: string;
+    };
 
-    const reportHtml = `
-      <!doctype html>
-      <html lang="es">
-        <head>
-          <meta charset="utf-8" />
-          <title>Reporte Ejecutivo</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 28px; color: #0f172a; }
-            h1 { margin: 0 0 8px; font-size: 22px; }
-            .meta { color: #334155; margin-bottom: 18px; font-size: 13px; }
-            .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-            .kpi { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; }
-            .kpi .label { font-size: 12px; color: #475569; }
-            .kpi .value { font-size: 20px; font-weight: 700; margin-top: 2px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; font-size: 12px; }
-            th { background: #f1f5f9; }
-          </style>
-        </head>
-        <body>
-          <h1>Reporte Ejecutivo de Mantenimiento</h1>
-          <div class="meta">
-            Activo: ${selectedAssetName || 'Todos'}<br />
-            Periodo: ${periodLabel}<br />
-            Generado: ${format(new Date(), 'dd MMM yyyy HH:mm', { locale: es })}
-          </div>
+    return legacyWorkOrder.accionTomada || legacyWorkOrder.accion || '';
+  };
 
-          <div class="kpis">
-            <div class="kpi"><div class="label">Cumplimiento PM</div><div class="value">${compliancePct}%</div></div>
-            <div class="kpi"><div class="label">MTTR Promedio</div><div class="value">${avgMTTR} h</div></div>
-            <div class="kpi"><div class="label">Paro Acumulado</div><div class="value">${Math.round(totalDown / 60)} h</div></div>
-            <div class="kpi"><div class="label">% Correctivo</div><div class="value">${pct}%</div></div>
-          </div>
+  const buildPrintHeader = (title: string) => `
+    <section class="header">
+      <div class="brand">PM0 / Paro Cero</div>
+      <h1>${escapeHtml(title)}</h1>
+      <div class="meta">
+        <span><strong>Generado:</strong> ${escapeHtml(format(new Date(), 'dd MMM yyyy HH:mm', { locale: es }))}</span>
+        <span><strong>Activo seleccionado:</strong> ${escapeHtml(selectedAssetCode ? `${selectedAssetCode} · ${selectedAssetName}` : selectedAssetName)}</span>
+        <span><strong>Periodo:</strong> ${escapeHtml(periodLabel)} (${escapeHtml(printDateLabel)})</span>
+        ${selectedAreaLabel ? `<span><strong>Área:</strong> ${escapeHtml(selectedAreaLabel)}</span>` : ''}
+        ${selectedTechnicianLabel ? `<span><strong>Técnico / responsable:</strong> ${escapeHtml(selectedTechnicianLabel)}</span>` : ''}
+        ${selectedStatusLabel ? `<span><strong>Estado de OT:</strong> ${escapeHtml(selectedStatusLabel)}</span>` : ''}
+        <span><strong>Alcance:</strong> ${escapeHtml(filteredWo.length)} OTs · ${escapeHtml(filteredAssets.length)} activos · ${escapeHtml(filteredPlans.length)} planes PM</span>
+      </div>
+    </section>
+  `;
 
-          <h2 style="margin: 0 0 8px; font-size: 16px;">Top fallas por activo</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Activo</th>
-                <th>Fallas</th>
-                <th>Paro (h)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${topRows || '<tr><td colspan="4">Sin datos para el periodo seleccionado</td></tr>'}
-            </tbody>
-          </table>
-        </body>
-      </html>
+  const buildKpiCards = () => `
+    <section class="grid">
+      ${kpiSummary
+        .map(
+          (kpi) => `
+            <article class="card">
+              <div class="card-label">${escapeHtml(kpi.metric)}</div>
+              <div class="card-value">${escapeHtml(kpi.value)}</div>
+              <div class="card-detail">${escapeHtml(kpi.detail)}</div>
+            </article>
+          `,
+        )
+        .join('')}
+    </section>
+  `;
+
+  const buildSummaryTables = () => {
+    const chartRows = historyData.map((item) => ({
+      Mes: item.mes,
+      'Cumplimiento PM (%)': item.compliance,
+      'Horas paro': Math.round(item.downtime * 10) / 10,
+    }));
+    const failureRows = dynamicTopFallas.map((failure, index) => ({
+      '#': index + 1,
+      Activo: failure.asset,
+      Fallas: failure.count,
+      'Paro (h)': failure.down,
+    }));
+    const typeRows = chartTipo.map((item) => ({
+      Tipo: item.name,
+      Órdenes: item.value,
+    }));
+
+    return `
+      <h2>Resumen de tendencias</h2>
+      ${buildPrintRows(chartRows, 'Sin datos de tendencia para el periodo.')}
+      <h2>Ranking de fallas</h2>
+      ${buildPrintRows(failureRows, 'Sin fallas para los filtros aplicados.')}
+      <h2>Preventivo vs correctivo</h2>
+      ${buildPrintRows(typeRows, 'Sin órdenes para comparar.')}
     `;
+  };
 
-    const printWindow = window.open('', '_blank', 'width=1100,height=900');
-    if (!printWindow) {
-      alert('No se pudo abrir la ventana de impresión.');
+  const buildVisualCharts = (capturedCharts: CapturedReportChart[]) => {
+    return `
+      <section class="chart-section">
+        <h2>Gráficas visibles del reporte</h2>
+        <div class="chart-grid">
+          ${
+            capturedCharts.length > 0
+              ? capturedCharts
+                  .map(
+                    (chart) => `
+                    <article class="chart-card" data-chart-id="${escapeHtml(chart.id)}">
+                      <h3>${escapeHtml(chart.title)}</h3>
+                      <img class="chart-image" src="${escapeHtml(chart.dataUrl)}" alt="${escapeHtml(chart.title)}" />
+                    </article>
+                  `,
+                  )
+                  .join('')
+              : '<p class="empty">No se pudieron capturar las gráficas visibles. Verificá que estén renderizadas antes de exportar.</p>'
+          }
+        </div>
+      </section>
+    `;
+  };
+
+  const buildMonthlyTrendChartsOmittedNote = () => `
+    <section class="chart-section">
+      <h2>Gráficas visibles del reporte</h2>
+      <p class="empty">${escapeHtml(REPORT_MONTHLY_TREND_OMITTED_NOTE)}</p>
+    </section>
+  `;
+
+  const exportFullPdf = async () => {
+    const shouldIncludeMonthlyTrendCharts = isRangeLongerThanOneMonth(
+      filters.dateRange.from,
+      filters.dateRange.to,
+    );
+    const capturedCharts = shouldIncludeMonthlyTrendCharts
+      ? await captureVisibleReportCharts()
+      : [];
+    const detailPrintRows = detailRows.map((workOrder) => {
+      const asset = getAssetById(workOrder.activoId);
+
+      return {
+        Folio: workOrder.folio,
+        Activo: asset ? `${asset.code} · ${asset.name}` : workOrder.activoId,
+        Área: asset?.area || '—',
+        Tipo: workOrder.tipo,
+        Estado: reportStatusLabel[workOrder.status],
+        Prioridad: reportPriorityLabel[workOrder.prioridad],
+        Responsable: workOrder.tecnicoNombre,
+        Fecha: formatDate(workOrder.fechaCreacion),
+        'Paro (h)': Math.round((workOrder.downtimeMinutos / 60) * 10) / 10,
+        'Causa raíz': getWorkOrderRootCause(workOrder) || '—',
+        'Acción tomada': getWorkOrderAction(workOrder) || '—',
+      };
+    });
+
+    openReportPrintWindow({
+      title: 'Reportes y KPIs',
+      filename: buildReportFilename(filters, REPORT_EXPORT_KIND.FULL_PDF),
+      body: `
+        ${buildPrintHeader('Reportes y KPIs')}
+        ${buildKpiCards()}
+        ${
+          shouldIncludeMonthlyTrendCharts
+            ? buildVisualCharts(capturedCharts)
+            : buildMonthlyTrendChartsOmittedNote()
+        }
+        ${buildSummaryTables()}
+        <h2>Detalle visible del reporte</h2>
+        ${buildPrintRows(detailPrintRows, 'Sin órdenes de trabajo para los filtros aplicados.')}
+      `,
+    });
+  };
+
+  const exportExecutivePdf = () => {
+    openReportPrintWindow({
+      title: 'Reporte ejecutivo PM0 / Paro Cero',
+      filename: buildReportFilename(filters, REPORT_EXPORT_KIND.EXECUTIVE_PDF),
+      body: `
+        ${buildPrintHeader('Reporte ejecutivo PM0 / Paro Cero')}
+        ${buildKpiCards()}
+        <h2>Resumen ejecutivo</h2>
+        ${buildPrintRows(
+          [
+            {
+              Indicador: 'Cumplimiento PM',
+              Valor: `${compliancePct}%`,
+              Lectura: `${completed} completadas de ${total} OTs cerradas/canceladas`,
+            },
+            {
+              Indicador: 'Paro acumulado',
+              Valor: `${Math.round(totalDown / 60)} h`,
+              Lectura: `${filteredWo.length} OTs filtradas`,
+            },
+            {
+              Indicador: 'MTTR',
+              Valor: `${avgMTTR} h`,
+              Lectura: 'Promedio sobre OTs correctivas',
+            },
+            {
+              Indicador: '% correctivo',
+              Valor: `${pct}%`,
+              Lectura: `Prev: ${preventivos} · Corr: ${correctivos}`,
+            },
+          ],
+          'Sin KPIs para el periodo.',
+        )}
+        <h2>Principales tendencias</h2>
+        ${buildPrintRows(
+          historyData.map((item) => ({
+            Mes: item.mes,
+            'Cumplimiento PM (%)': item.compliance,
+            'Horas paro': Math.round(item.downtime * 10) / 10,
+          })),
+          'Sin datos de tendencia para el periodo.',
+        )}
+      `,
+    });
+  };
+
+  const exportDatabaseCsv = () => {
+    exportToCsv({
+      filename: `${buildReportFilename(filters, REPORT_EXPORT_KIND.DATABASE_CSV)}.csv`,
+      columns: [
+        { header: 'Folio', value: (workOrder) => workOrder.folio },
+        {
+          header: 'Activo',
+          value: (workOrder) => {
+            const asset = getAssetById(workOrder.activoId);
+            return asset ? `${asset.code} - ${asset.name}` : workOrder.activoId;
+          },
+        },
+        {
+          header: 'Área',
+          value: (workOrder) => getAssetById(workOrder.activoId)?.area || '',
+        },
+        {
+          header: 'Técnico',
+          value: (workOrder) => workOrder.tecnicoNombre,
+        },
+        { header: 'Tipo', value: (workOrder) => workOrder.tipo },
+        {
+          header: 'Estado',
+          value: (workOrder) => reportStatusLabel[workOrder.status],
+        },
+        {
+          header: 'Prioridad',
+          value: (workOrder) => reportPriorityLabel[workOrder.prioridad],
+        },
+        {
+          header: 'Fecha',
+          value: (workOrder) => formatDate(workOrder.fechaCreacion),
+        },
+        {
+          header: 'Paro',
+          value: (workOrder) =>
+            Math.round((workOrder.downtimeMinutos / 60) * 10) / 10,
+        },
+        {
+          header: 'Causa raíz',
+          value: (workOrder) => getWorkOrderRootCause(workOrder),
+        },
+        {
+          header: 'Acción tomada',
+          value: (workOrder) => getWorkOrderAction(workOrder),
+        },
+      ] satisfies CsvColumn<OrdenTrabajo>[],
+      rows: filteredWo,
+    });
+  };
+
+  const runExport = (kind: ReportExportKind) => {
+    setShowExportMenu(false);
+
+    if (kind === REPORT_EXPORT_KIND.FULL_PDF) {
+      void exportFullPdf();
       return;
     }
 
-    printWindow.document.open();
-    printWindow.document.write(reportHtml);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    setShowExportMenu(false);
-  };
+    if (kind === REPORT_EXPORT_KIND.EXECUTIVE_PDF) {
+      exportExecutivePdf();
+      return;
+    }
 
-  const exportPdfVistaCompleta = () => {
-    setShowExportMenu(false);
-    window.dispatchEvent(new Event('resize'));
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-      }, 120);
-    }, 260);
+    exportDatabaseCsv();
   };
 
   return (
-    <div
-      className='report-print-root'
-      style={{ padding: '28px', overflowY: 'auto', height: '100%' }}
-    >
+    <div className='report-print-root h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
       <div className='no-print'>
         <PageHeader
           title='Reportes y KPIs'
-          sub={
-            selectedAsset
-              ? `Activo: ${selectedAssetName}`
-              : dateRange?.from && dateRange?.to
-                ? `${format(dateRange.from, 'dd MMM yyyy', { locale: es })} - ${format(dateRange.to, 'dd MMM yyyy', { locale: es })}`
-                : 'Indicadores de desempeño'
-          }
+          sub='Analiza mantenimiento, paros, cumplimiento y desempeño por activo, área, técnico o periodo.'
           action={
-            <div
-              className='no-print'
-              style={{ display: 'flex', gap: 8, alignItems: 'center' }}
-            >
+            <div className='no-print flex flex-col gap-2 sm:flex-row sm:items-center'>
               <select
-                value={selectedAsset || ''}
-                onChange={(e) => setSelectedAsset(e.target.value || null)}
-                style={{ minWidth: 220 }}
+                value={selectedAsset}
+                onChange={(event) => updateHeaderAsset(event.target.value)}
+                className='border-shNeutral-200 bg-shNeutral-50 text-shNeutral-900 focus:border-shAccent-500 focus:ring-shAccent-500/20 h-10 min-w-56 rounded-lg border px-3 text-sm font-semibold shadow-inner outline-none focus:ring-2'
               >
                 <option value=''>Todos los activos</option>
-                {ASSETS.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.code} — {a.name}
+                {ASSETS.map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.code} — {asset.name}
                   </option>
                 ))}
               </select>
 
-              <div style={{ position: 'relative' }}>
-                <BtnGhost onClick={() => setShowExportMenu((prev) => !prev)}>
-                  Exportar reporte ▾
-                </BtnGhost>
+              <div className='relative'>
+                <button
+                  onClick={() => setShowExportMenu((current) => !current)}
+                  className='border-shPrimary-200 text-shPrimary-800 hover:bg-shPrimary-50 inline-flex h-10 items-center gap-2 rounded-lg border bg-white px-4 text-sm font-bold shadow-sm transition-colors'
+                  aria-haspopup='menu'
+                  aria-expanded={showExportMenu}
+                >
+                  Exportar reporte
+                  <span className='text-shNeutral-500 text-xs'>▾</span>
+                </button>
 
                 {showExportMenu && (
                   <div
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: 'calc(100% + 6px)',
-                      minWidth: 240,
-                      background: '#0d1627',
-                      border: '1px solid #1e3a5f',
-                      borderRadius: 8,
-                      boxShadow: '0 10px 24px rgba(0,0,0,0.35)',
-                      padding: 6,
-                      zIndex: 80,
-                    }}
+                    role='menu'
+                    className='border-shNeutral-200 shadow-shNeutral-900/10 absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-xl border bg-white p-1.5 shadow-lg'
                   >
                     <button
-                      onClick={exportPdfVistaCompleta}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#e2e8f0',
-                        padding: '9px 10px',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        fontSize: 13,
-                      }}
+                      type='button'
+                      role='menuitem'
+                      onClick={() => runExport(REPORT_EXPORT_KIND.FULL_PDF)}
+                      className='text-shNeutral-800 hover:bg-shNeutral-50 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors'
                     >
-                      Exportar PDF vista completa
+                      <span className='text-shDanger-700'>📄</span>
+                      PDF vista completa
                     </button>
                     <button
-                      onClick={exportPdfEjecutivo}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#e2e8f0',
-                        padding: '9px 10px',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        fontSize: 13,
-                      }}
+                      type='button'
+                      role='menuitem'
+                      onClick={() =>
+                        runExport(REPORT_EXPORT_KIND.EXECUTIVE_PDF)
+                      }
+                      className='text-shNeutral-800 hover:bg-shNeutral-50 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors'
                     >
-                      Exportar PDF ejecutivo
+                      <span className='text-shDanger-700'>📑</span>
+                      PDF ejecutivo
                     </button>
                     <button
-                      onClick={exportCsv}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#e2e8f0',
-                        padding: '9px 10px',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        fontSize: 13,
-                      }}
+                      type='button'
+                      role='menuitem'
+                      onClick={() => runExport(REPORT_EXPORT_KIND.DATABASE_CSV)}
+                      className='text-shNeutral-800 hover:bg-shNeutral-50 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors'
                     >
-                      Exportar CSV base de datos
+                      <span className='text-shSuccess-700'>▦</span>
+                      CSV base de datos
                     </button>
                   </div>
                 )}
@@ -2223,268 +2795,386 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
 
       <div className='print-only-date'>Fecha: {printDateLabel}</div>
 
-      <div
-        className='no-print'
-        style={{
-          display: 'flex',
-          gap: 8,
-          marginBottom: 20,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-        }}
-      >
-        {quickOptions.map((opt) => (
-          <button
-            key={opt.label}
-            onClick={() => setDateRange(opt.getValue())}
-            style={{
-              padding: '6px 12px',
-              borderRadius: 6,
-              border: '1px solid #1e3a5f',
-              background: '#0d1627',
-              cursor: 'pointer',
-              fontSize: 13,
-              fontWeight: 500,
-              color: '#94a3b8',
-            }}
-          >
-            {opt.label}
-          </button>
-        ))}
-        <BtnGhost onClick={regenerateDemoData}>Regenerar datos demo</BtnGhost>
-        <button
-          onClick={() => setShowPicker(!showPicker)}
-          style={{
-            padding: '6px 12px',
-            borderRadius: 6,
-            border: '1px solid #1e3a5f',
-            background: '#0d1627',
-            cursor: 'pointer',
-            fontSize: 13,
-            fontWeight: 500,
-            color: '#94a3b8',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          📅{' '}
-          {dateRange?.from && dateRange?.to
-            ? `${format(dateRange.from, 'dd MMM')} - ${format(dateRange.to, 'dd MMM yyyy')}`
-            : 'Personalizado'}
-        </button>
+      <section className='no-print border-shNeutral-200 mb-6 rounded-2xl border bg-white p-3 shadow-sm sm:p-4'>
+        <div className='flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between'>
+          <div>
+            <h2 className='text-shPrimary-900 text-sm font-bold'>
+              Controles del reporte
+            </h2>
+            <p className='text-shNeutral-500 mt-1 text-sm'>
+              {activeFilterSummary}
+            </p>
+          </div>
+          <div className='flex flex-wrap items-center gap-2'>
+            {datePresetOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => applyPreset(option.value)}
+                className={cn(
+                  'rounded-full border px-3 py-1.5 text-xs font-bold transition-colors',
+                  draftFilters.datePreset === option.value
+                    ? 'border-shAccent-300 bg-shAccent-100 text-shAccent-900'
+                    : 'border-shAccent-100 bg-shAccent-50 text-shAccent-800 hover:bg-shAccent-100',
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+            <BtnGhost onClick={regenerateDemoData}>
+              Regenerar datos demo
+            </BtnGhost>
+          </div>
+        </div>
+
         {showPicker && (
-          <div
-            style={{
-              position: 'absolute',
-              zIndex: 50,
-              marginTop: 8,
-              background: '#0d1627',
-              borderRadius: 8,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-              padding: 16,
-              border: '1px solid #1e3a5f',
-            }}
-          >
+          <div className='border-shAccent-200 bg-shAccent-50 mb-4 rounded-xl border p-3'>
             <DayPicker
               mode='range'
-              selected={dateRange}
+              selected={draftFilters.dateRange}
               onSelect={(range) => {
                 if (range?.from && range?.to) {
-                  setDateRange({ from: range.from, to: range.to });
+                  updateDraftFilter('dateRange', {
+                    from: range.from,
+                    to: range.to,
+                  });
                 }
               }}
               locale={es}
-              footer={
-                <button
-                  onClick={() => setShowPicker(false)}
-                  style={{
-                    marginTop: 8,
-                    padding: '4px 12px',
-                    background: '#3b82f6',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 4,
-                    cursor: 'pointer',
-                    fontSize: 12,
-                  }}
-                >
-                  Aplicar
-                </button>
-              }
             />
+            <div className='mt-2 flex justify-end'>
+              <button
+                onClick={applyFilters}
+                className='bg-shAccent-500 text-shForeground hover:bg-shAccent-600 rounded-lg px-4 py-2 text-sm font-bold transition-colors'
+              >
+                Aplicar período
+              </button>
+            </div>
           </div>
         )}
-      </div>
+
+        <div className='mt-3 grid grid-cols-1 gap-3 md:grid-cols-3 xl:max-w-5xl'>
+          <ReportField label='Área'>
+            <select
+              value={draftFilters.area}
+              onChange={(event) =>
+                updateReportFilter('area', event.target.value)
+              }
+              className='report-filter-control'
+            >
+              <option value=''>Todas</option>
+              {areas.map((area) => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </select>
+          </ReportField>
+          <ReportField label='Estado de OT'>
+            <select
+              value={draftFilters.status}
+              onChange={(event) =>
+                updateReportFilter(
+                  'status',
+                  event.target.value as ReportFilters['status'],
+                )
+              }
+              className='report-filter-control'
+            >
+              {reportStatusFilterOptions.map((option) => (
+                <option key={option.value || 'todos'} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </ReportField>
+          <ReportField label='Técnico / responsable'>
+            <select
+              value={draftFilters.technicianId}
+              onChange={(event) =>
+                updateReportFilter('technicianId', event.target.value)
+              }
+              className='report-filter-control'
+            >
+              <option value=''>Todos</option>
+              {technicians.map((technician) => (
+                <option key={technician.id} value={technician.id}>
+                  {technician.name}
+                </option>
+              ))}
+            </select>
+          </ReportField>
+        </div>
+
+        {hasAdditionalFilters && (
+          <div className='mt-3 flex justify-end'>
+            <button
+              onClick={clearFilters}
+              className='border-shNeutral-200 text-shNeutral-700 hover:bg-shNeutral-50 rounded-lg border bg-white px-4 py-2 text-sm font-bold transition-colors'
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        )}
+      </section>
 
       <div className='print-content'>
-        <div
-          className='report-kpi-grid'
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4,1fr)',
-            gap: 14,
-            marginBottom: 24,
-          }}
-        >
+        <div className='report-kpi-grid mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4'>
           <KpiCard
             label='Cumplimiento PM'
-            value={compliancePct + '%'}
+            value={`${compliancePct}%`}
             sub={
               selectedAsset
-                ? 'Basado en historico del activo'
+                ? 'Basado en histórico del activo'
                 : 'Meta: 90% · General'
             }
-            color='#3b82f6'
+            color='#486581'
             icon={<span>📊</span>}
           />
           <KpiCard
             label='MTTR Promedio'
-            value={avgMTTR + 'h'}
+            value={`${avgMTTR}h`}
             sub='Mean time to repair'
-            color='#22c55e'
+            color='#047857'
             icon={<span>🔧</span>}
           />
           <KpiCard
             label='Paro Acumulado'
-            value={Math.round(totalDown / 60) + 'h'}
+            value={`${Math.round(totalDown / 60)}h`}
             sub={selectedAsset ? 'Paro total activo' : 'Total acumulado'}
-            color='#ef4444'
+            color='#b91c1c'
             icon={<span>⏱</span>}
           />
           <KpiCard
             label='% Correctivo'
-            value={pct + '%'}
+            value={`${pct}%`}
             sub={`Prev: ${preventivos} · Corr: ${correctivos}`}
-            color='#f97316'
+            color='#d97706'
             icon={<span>🔴</span>}
           />
         </div>
 
-        <div
-          className='report-main-charts'
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 16,
-            marginBottom: 16,
-          }}
-        >
+        <div className='report-main-charts mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2'>
           <Card>
-            <CardTitle>Cumplimiento PM — Ultimos 6 Meses (%)</CardTitle>
-            <EChartsArea
-              data={chartCompliance}
-              dataKey='val'
-              color='#3b82f6'
-              name='Cumplimiento %'
-              height={210}
-              yDomain={[0, 100]}
-            />
+            <CardTitle>Cumplimiento PM — periodo filtrado (%)</CardTitle>
+            <div
+              data-report-chart-export='true'
+              data-report-chart-id='pm-compliance'
+              data-report-chart-title='Cumplimiento PM — periodo filtrado (%)'
+            >
+              <EChartsArea
+                data={chartCompliance}
+                dataKey='val'
+                color='#486581'
+                name='Cumplimiento %'
+                height={210}
+                yDomain={[0, 100]}
+              />
+            </div>
           </Card>
           <Card>
             <CardTitle>Horas de Paro por Mes</CardTitle>
-            <EChartsBar
-              data={chartDowntime}
-              dataKey='hrs'
-              color='#ef4444'
-              name='Horas paro'
-              height={210}
-            />
+            <div
+              data-report-chart-export='true'
+              data-report-chart-id='downtime-by-month'
+              data-report-chart-title='Horas de Paro por Mes'
+            >
+              <EChartsBar
+                data={chartDowntime}
+                dataKey='hrs'
+                color='#b91c1c'
+                name='Horas paro'
+                height={210}
+              />
+            </div>
           </Card>
         </div>
 
-        <div
-          className='report-bottom-grid'
-          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
-        >
+        <div className='report-bottom-grid mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2'>
           <Card>
             <CardTitle>Ranking de Fallas por Activo</CardTitle>
             <DataTable head={['#', 'Activo', 'Fallas', 'Paro (h)']}>
-              {selectedAsset ? (
-                <tr>
-                  <Td mono>1</Td>
-                  <Td bold>{selectedAssetName}</Td>
-                  <Td>
-                    <span
-                      style={{
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        color: '#ef4444',
-                      }}
-                    >
-                      {correctivos}
-                    </span>
-                  </Td>
-                  <Td>
-                    <span style={{ fontFamily: 'monospace', color: '#f97316' }}>
-                      {Math.round(totalDown / 60)}
-                    </span>
-                  </Td>
-                </tr>
-              ) : (
-                dynamicTopFallas.map((f, i) => (
-                  <tr key={i}>
-                    <Td mono>{i + 1}</Td>
-                    <Td bold={i < 2}>{f.asset}</Td>
+              {dynamicTopFallas.length > 0 ? (
+                dynamicTopFallas.map((failure, index) => (
+                  <tr key={failure.asset}>
+                    <Td mono>{index + 1}</Td>
+                    <Td bold={index < 2}>{failure.asset}</Td>
                     <Td>
-                      <span
-                        style={{
-                          fontFamily: 'monospace',
-                          fontWeight: 700,
-                          color: '#ef4444',
-                        }}
-                      >
-                        {f.count}
+                      <span className='text-shDanger-700 font-mono font-bold'>
+                        {failure.count}
                       </span>
                     </Td>
                     <Td>
-                      <span
-                        style={{ fontFamily: 'monospace', color: '#f97316' }}
-                      >
-                        {f.down}
+                      <span className='text-shAccent-700 font-mono'>
+                        {failure.down}
                       </span>
                     </Td>
                   </tr>
                 ))
+              ) : (
+                <tr>
+                  <Td>Sin datos</Td>
+                  <Td>Sin fallas para los filtros aplicados</Td>
+                  <Td>0</Td>
+                  <Td>0</Td>
+                </tr>
               )}
             </DataTable>
           </Card>
           <Card>
             <CardTitle>Preventivo vs. Correctivo</CardTitle>
-            <EChartsPie data={chartTipo} height={185} />
             <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: 28,
-                marginTop: 10,
-              }}
+              data-report-chart-export='true'
+              data-report-chart-id='preventive-vs-corrective'
+              data-report-chart-title='Preventivo vs. Correctivo'
             >
-              {chartTipo.map((d) => (
-                <div
-                  key={d.name}
-                  style={{ display: 'flex', alignItems: 'center', gap: 7 }}
-                >
+              <EChartsPie data={chartTipo} height={185} />
+            </div>
+            <div className='mt-3 flex flex-wrap justify-center gap-5'>
+              {chartTipo.map((item) => (
+                <div key={item.name} className='flex items-center gap-2'>
                   <div
-                    style={{
-                      width: 10,
-                      height: 10,
-                      background: d.color,
-                      borderRadius: 3,
-                    }}
+                    className='h-2.5 w-2.5 rounded-sm'
+                    style={{ background: item.color }}
                   />
-                  <span style={{ fontSize: 13, color: '#94a3b8' }}>
-                    {d.name}:{' '}
-                    <strong style={{ color: '#e2e8f0' }}>{d.value}</strong>
+                  <span className='text-shNeutral-600 text-sm'>
+                    {item.name}:{' '}
+                    <strong className='text-shNeutral-900'>{item.value}</strong>
                   </span>
                 </div>
               ))}
             </div>
           </Card>
         </div>
+
+        <Card className='mb-4'>
+          <div className='mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between'>
+            <div>
+              <CardTitle>Detalle del reporte</CardTitle>
+              <p className='text-shNeutral-500 text-sm'>
+                {activeFilterSummary}
+              </p>
+            </div>
+            <span className='text-shNeutral-500 text-xs font-semibold'>
+              {filteredWo.length} OTs · {filteredAssets.length} activos ·{' '}
+              {filteredPlans.length} planes PM
+            </span>
+          </div>
+          <div className='border-shNeutral-200 overflow-x-auto rounded-xl border'>
+            <table className='w-full min-w-[980px] border-collapse bg-white text-sm'>
+              <thead className='bg-shNeutral-50 text-shNeutral-600'>
+                <tr>
+                  {[
+                    'Folio',
+                    'Activo',
+                    'Área',
+                    'Tipo',
+                    'Técnico',
+                    'Estado',
+                    'Prioridad',
+                    'Fecha',
+                    'Paro (h)',
+                  ].map((heading) => (
+                    <th
+                      key={heading}
+                      className='border-shNeutral-200 border-b px-4 py-3 text-left text-xs font-bold tracking-wide uppercase'
+                    >
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {detailRows.length > 0 ? (
+                  detailRows.map((workOrder) => {
+                    const asset = getAssetById(workOrder.activoId);
+                    return (
+                      <tr
+                        key={workOrder.id}
+                        className='hover:bg-shNeutral-50 transition-colors'
+                      >
+                        <td className='border-shNeutral-100 text-shPrimary-800 border-b px-4 py-3 font-mono text-xs font-bold'>
+                          {workOrder.folio}
+                        </td>
+                        <td className='border-shNeutral-100 text-shNeutral-900 border-b px-4 py-3'>
+                          <div className='font-semibold'>
+                            {asset?.code || workOrder.activoId}
+                          </div>
+                          <div className='text-shNeutral-500 text-xs'>
+                            {asset?.name || 'Sin activo'}
+                          </div>
+                        </td>
+                        <td className='border-shNeutral-100 text-shNeutral-600 border-b px-4 py-3'>
+                          {asset?.area || '—'}
+                        </td>
+                        <td className='border-shNeutral-100 text-shNeutral-700 border-b px-4 py-3'>
+                          {workOrder.tipo}
+                        </td>
+                        <td className='border-shNeutral-100 text-shNeutral-700 border-b px-4 py-3'>
+                          {workOrder.tecnicoNombre}
+                        </td>
+                        <td className='border-shNeutral-100 border-b px-4 py-3'>
+                          <SoftBadge
+                            tone={getStatusBadgeClass(workOrder.status)}
+                          >
+                            {reportStatusLabel[workOrder.status]}
+                          </SoftBadge>
+                        </td>
+                        <td className='border-shNeutral-100 border-b px-4 py-3'>
+                          <SoftBadge
+                            tone={getPriorityBadgeClass(workOrder.prioridad)}
+                          >
+                            {reportPriorityLabel[workOrder.prioridad]}
+                          </SoftBadge>
+                        </td>
+                        <td className='border-shNeutral-100 text-shNeutral-600 border-b px-4 py-3'>
+                          {formatDate(workOrder.fechaCreacion)}
+                        </td>
+                        <td className='border-shNeutral-100 text-shDanger-700 border-b px-4 py-3 font-mono font-bold'>
+                          {Math.round((workOrder.downtimeMinutos / 60) * 10) /
+                            10}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={9}
+                      className='text-shNeutral-500 px-4 py-10 text-center'
+                    >
+                      Sin resultados para los filtros aplicados. Probá ampliar
+                      el periodo o limpiar filtros.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </div>
 
       <style jsx global>{`
+        .report-filter-control {
+          height: 42px;
+          width: 100%;
+          border-radius: 0.625rem;
+          border: 1px solid var(--color-shNeutral-200);
+          background: var(--color-shNeutral-50);
+          padding: 0 0.75rem;
+          color: var(--color-shNeutral-900);
+          font-size: 0.875rem;
+          font-weight: 600;
+          box-shadow: inset 0 1px 2px rgb(15 23 42 / 0.04);
+          outline: none;
+        }
+
+        .report-filter-control:focus {
+          border-color: var(--color-shAccent-500);
+          box-shadow:
+            0 0 0 3px rgb(245 158 11 / 0.18),
+            inset 0 1px 2px rgb(15 23 42 / 0.04);
+        }
+
         .print-only-date {
           display: none;
         }
