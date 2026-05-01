@@ -11,7 +11,7 @@ export default function CTASection() {
       className='border-app-border-soft bg-app-surface scroll-mt-24 border-b'
     >
       <div className='container py-20'>
-        <ScrollReveal className='border-app-border-soft rounded-2xl border bg-[linear-gradient(130deg,#ffffff,#fff4db)] p-8 shadow-xl shadow-slate-900/10 sm:p-12'>
+        <ScrollReveal className='border-app-border-soft bg-app-brand-soft shadow-app-text-primary/10 rounded-2xl border p-8 shadow-xl sm:p-12'>
           <p className='text-app-brand mb-3 text-xs font-semibold tracking-[0.2em] uppercase'>
             Demo ejecutiva
           </p>

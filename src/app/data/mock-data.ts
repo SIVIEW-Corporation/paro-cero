@@ -966,18 +966,26 @@ function generarFechaAleatoria(inicio: Date, fin: Date): Date {
 export function generarDatosSeisMeses(): OrdenTrabajo[] {
   const ordenes: OrdenTrabajo[] = [];
   const ahora = new Date();
-  const meses = [
-    { fecha: new Date(2025, 9, 1), cant: 15 },
-    { fecha: new Date(2025, 10, 1), cant: 20 },
-    { fecha: new Date(2025, 11, 1), cant: 25 },
-    { fecha: new Date(2026, 0, 1), cant: 35 },
-    { fecha: new Date(2026, 1, 1), cant: 45 },
-    { fecha: new Date(2026, 2, 1), cant: 65 },
-  ];
+
+  // Generar meses dinámicamente desde 6 meses atrás hasta el mes actual
+  const cantidadMeses = 6;
+  const meses: { fecha: Date; cant: number }[] = [];
+
+  for (let i = cantidadMeses - 1; i >= 0; i--) {
+    const fecha = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+    // Cantidad creciente: 15, 20, 25, 35, 45, 65 (patrón original)
+    const baseCant = 15 + i * 5;
+    const cant = baseCant + Math.floor(i / 2) * 10;
+    meses.push({ fecha, cant });
+  }
 
   let n = 100;
   meses.forEach((m, i) => {
-    const fin = i === 5 ? ahora : new Date(meses[i + 1].fecha.getTime() - 1);
+    // Si es el último mes (mes actual), usar ahora; si no, hasta el último día del mes
+    const esUltimoMes = i === meses.length - 1;
+    const fin = esUltimoMes
+      ? ahora
+      : new Date(meses[i + 1].fecha.getTime() - 1);
     for (let j = 0; j < m.cant; j++) {
       const fc = generarFechaAleatoria(m.fecha, fin);
       const estado = getRandomItem([

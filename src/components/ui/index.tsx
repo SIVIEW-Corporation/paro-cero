@@ -376,13 +376,19 @@ export function BtnBack({ onClick }: BtnBackProps) {
 interface DataTableProps {
   head: string[];
   children: ReactNode;
+  minWidth?: number;
 }
 
-export function DataTable({ head, children }: DataTableProps) {
+export function DataTable({ head, children, minWidth }: DataTableProps) {
   return (
     <div style={{ overflowX: 'auto' }}>
       <table
-        style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}
+        style={{
+          width: '100%',
+          minWidth,
+          borderCollapse: 'separate',
+          borderSpacing: 0,
+        }}
       >
         <thead>
           <tr>
