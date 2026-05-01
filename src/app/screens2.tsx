@@ -48,13 +48,130 @@ import {
 import type { EstadoOT, OrdenTrabajo, PrioridadOT } from '@/app/data/types';
 
 const workOrderFilterPillBase =
-  'inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg border px-3.5 text-xs font-bold transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-app-brand focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg focus-visible:outline-none';
+  'inline-flex h-8 items-center justify-center whitespace-nowrap rounded-full border px-2.5 text-[11px] font-bold transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-app-brand focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg focus-visible:outline-none';
 const workOrderFilterPillActive =
-  'border-app-brand bg-app-brand-soft text-app-brand-dark hover:bg-app-brand-soft';
+  'border-app-brand/60 bg-app-brand-soft text-app-brand-dark shadow-sm shadow-app-brand/10 hover:bg-app-brand-soft';
 const workOrderFilterPillInactive =
   'border-app-border-soft bg-app-surface text-app-text-secondary hover:border-app-border hover:bg-app-surface-subtle hover:text-app-text-primary';
 const workOrderSelectClassName =
-  'h-9 w-full min-w-0 rounded-lg border border-app-border-soft bg-app-surface px-3 text-xs font-bold text-app-text-primary transition-[background-color,border-color,box-shadow] duration-150 outline-none focus:border-app-brand focus:shadow-[0_0_0_3px_rgb(216_155_43_/_0.14)] sm:w-auto sm:min-w-[210px]';
+  'h-10 min-h-10 w-full min-w-0 rounded-lg border border-app-border-soft bg-app-surface px-3 py-2 text-xs leading-5 font-semibold text-app-text-primary shadow-inner transition-[background-color,border-color,box-shadow] duration-150 outline-none focus:border-app-brand focus:ring-2 focus:ring-app-brand/15 sm:w-auto sm:min-w-36';
+const workOrderSearchClassName =
+  'h-10 min-h-10 w-full min-w-0 rounded-lg border border-app-border-soft bg-app-surface px-3 py-2 text-xs leading-5 font-semibold text-app-text-primary shadow-inner placeholder:text-app-text-muted transition-[background-color,border-color,box-shadow] duration-150 outline-none focus:border-app-brand focus:ring-2 focus:ring-app-brand/15 sm:w-auto sm:min-w-48';
+const workOrderMonthInputClassName =
+  'h-10 min-h-10 w-full min-w-0 rounded-lg border border-app-border-soft bg-app-surface px-3 py-2 text-xs leading-5 font-semibold text-app-text-primary shadow-inner transition-[background-color,border-color,box-shadow] duration-150 outline-none focus:border-app-brand focus:ring-2 focus:ring-app-brand/15 sm:w-auto sm:min-w-36';
+
+const WORK_ORDER_STATUS_FILTERS = [
+  'completada',
+  'cerrada',
+  'en_espera',
+  'nueva',
+  'en_proceso',
+  'cancelada',
+  'asignada',
+] as const satisfies readonly EstadoOT[];
+
+const WORK_ORDER_PERIOD_FILTER = {
+  SELECTED_MONTH: 'selected_month',
+  LAST_MONTH: 'last_month',
+  LAST_3_MONTHS: 'last_3_months',
+  LAST_6_MONTHS: 'last_6_months',
+} as const;
+
+type WorkOrderPeriodFilter =
+  (typeof WORK_ORDER_PERIOD_FILTER)[keyof typeof WORK_ORDER_PERIOD_FILTER];
+
+interface WorkOrderPeriodRange {
+  start: Date;
+  end: Date;
+}
+
+const WORK_ORDER_PERIOD_LABEL: Record<WorkOrderPeriodFilter, string> = {
+  [WORK_ORDER_PERIOD_FILTER.SELECTED_MONTH]: 'Mes seleccionado',
+  [WORK_ORDER_PERIOD_FILTER.LAST_MONTH]: 'Último mes',
+  [WORK_ORDER_PERIOD_FILTER.LAST_3_MONTHS]: 'Últimos 3 meses',
+  [WORK_ORDER_PERIOD_FILTER.LAST_6_MONTHS]: 'Últimos 6 meses',
+};
+
+function getCurrentMonthValue(date: Date): string {
+  return format(date, 'yyyy-MM');
+}
+
+function getSelectedMonthRange(monthValue: string): WorkOrderPeriodRange {
+  // El filtro Mes usa formato YYYY-MM y se aplica sobre la fecha de creación de la OT.
+  const [yearValue, monthValueOneBased] = monthValue.split('-');
+  const year = Number(yearValue);
+  const monthIndex = Number(monthValueOneBased) - 1;
+  const monthDate = new Date(year, monthIndex, 1);
+
+  return {
+    start: startOfMonth(monthDate),
+    end: endOfMonth(monthDate),
+  };
+}
+
+function getWorkOrderPeriodRange(
+  period: WorkOrderPeriodFilter,
+  selectedMonth: string,
+): WorkOrderPeriodRange {
+  const now = new Date();
+
+  if (period === WORK_ORDER_PERIOD_FILTER.SELECTED_MONTH) {
+    return getSelectedMonthRange(selectedMonth || getCurrentMonthValue(now));
+  }
+
+  const monthsToSubtractByPeriod: Record<WorkOrderPeriodFilter, number> = {
+    [WORK_ORDER_PERIOD_FILTER.SELECTED_MONTH]: 0,
+    [WORK_ORDER_PERIOD_FILTER.LAST_MONTH]: 1,
+    [WORK_ORDER_PERIOD_FILTER.LAST_3_MONTHS]: 3,
+    [WORK_ORDER_PERIOD_FILTER.LAST_6_MONTHS]: 6,
+  };
+
+  return {
+    start: subMonths(now, monthsToSubtractByPeriod[period]),
+    end: now,
+  };
+}
+
+function isDateInRange(
+  dateValue: Date | string | null | undefined,
+  range: WorkOrderPeriodRange,
+): boolean {
+  if (!dateValue) {
+    return false;
+  }
+
+  const date = new Date(dateValue);
+
+  return date >= range.start && date <= range.end;
+}
+
+function formatWorkOrderDate(
+  dateValue: Date | string | null | undefined,
+): string {
+  if (!dateValue) {
+    return '—';
+  }
+
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return '—';
+  }
+
+  return format(date, 'dd/MM/yyyy');
+}
+
+function openNativeMonthPicker(input: HTMLInputElement): void {
+  if (typeof input.showPicker !== 'function') {
+    return;
+  }
+
+  try {
+    input.showPicker();
+  } catch {
+    // Browsers can block showPicker; the native month input remains editable.
+  }
+}
 
 export function PlansScreen() {
   const [plans, setPlans] = useState(PLANS);
@@ -447,13 +564,8 @@ export function PlansScreen() {
             return (
               <tr
                 key={p.id}
+                className='hover:bg-app-surface-subtle transition-colors'
                 style={{ cursor: 'pointer' }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = '#0f2040')
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = 'transparent')
-                }
               >
                 <Td mono>{p.id}</Td>
                 <Td bold>{p.name}</Td>
@@ -715,6 +827,15 @@ export function WorkOrdersScreen({
   const [selected, setSelected] = useState<OrdenTrabajo | null>(null);
   const [filterStatus, setFilter] = useState('');
   const [filterActivoId, setFilterActivoId] = useState('');
+  const [filterPriority, setFilterPriority] = useState('');
+  const [filterTecnicoId, setFilterTecnicoId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [periodFilter, setPeriodFilter] = useState<WorkOrderPeriodFilter>(
+    WORK_ORDER_PERIOD_FILTER.SELECTED_MONTH,
+  );
+  const [selectedMonth, setSelectedMonth] = useState(
+    getCurrentMonthValue(new Date()),
+  );
   const [showCreate, setShowCreate] = useState(false);
   const [newOtData, setNewOtData] = useState({
     titulo: '',
@@ -845,12 +966,67 @@ export function WorkOrdersScreen({
   wo.forEach((w) => {
     statusCounts[w.status] = (statusCounts[w.status] || 0) + 1;
   });
+  const periodRange = getWorkOrderPeriodRange(periodFilter, selectedMonth);
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const hasActiveFilters = Boolean(
+    filterStatus ||
+      filterActivoId ||
+      filterPriority ||
+      filterTecnicoId ||
+      normalizedSearch ||
+      periodFilter !== WORK_ORDER_PERIOD_FILTER.SELECTED_MONTH ||
+      selectedMonth !== getCurrentMonthValue(new Date()),
+  );
+
   const filtered = wo.filter((w) => {
     const matchesStatus = !filterStatus || w.status === filterStatus;
     const matchesActivo = !filterActivoId || w.activoId === filterActivoId;
+    const matchesPriority =
+      !filterPriority || w.prioridad === filterPriority;
+    const matchesTecnico =
+      !filterTecnicoId || w.tecnicoId === filterTecnicoId;
+    // Los filtros de periodo se aplican sobre la fecha de creación de la OT.
+    const matchesPeriod = isDateInRange(w.fechaCreacion, periodRange);
+    const asset = ASSETS.find((item) => item.id === w.activoId);
+    const searchableText = [
+      w.folio,
+      w.titulo,
+      w.descripcion,
+      w.descripcionProblema,
+      w.descripcionServicio,
+      w.observaciones,
+      w.tecnicoNombre,
+      asset?.code,
+      asset?.name,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    const matchesSearch =
+      !normalizedSearch || searchableText.includes(normalizedSearch);
 
-    return matchesStatus && matchesActivo;
+    return (
+      matchesStatus &&
+      matchesActivo &&
+      matchesPriority &&
+      matchesTecnico &&
+      matchesPeriod &&
+      matchesSearch
+    );
   });
+  const workOrderResultsCounter = hasActiveFilters
+    ? `Mostrando ${filtered.length} de ${wo.length} órdenes`
+    : `Mostrando ${wo.length} órdenes`;
+
+  const clearWorkOrderFilters = () => {
+    setFilter('');
+    setFilterActivoId('');
+    setFilterPriority('');
+    setFilterTecnicoId('');
+    setSearchTerm('');
+    setPeriodFilter(WORK_ORDER_PERIOD_FILTER.SELECTED_MONTH);
+    setSelectedMonth(getCurrentMonthValue(new Date()));
+  };
 
   const changeStatus = (id: string, s: string) => {
     setWo((prev) =>
@@ -1177,91 +1353,209 @@ export function WorkOrdersScreen({
         }
       />
 
-      <div className='mb-4 flex flex-wrap gap-2'>
-        <button
-          onClick={() => setFilter('')}
-          className={`${workOrderFilterPillBase} ${
-            !filterStatus
-              ? workOrderFilterPillActive
-              : workOrderFilterPillInactive
-          }`}
-        >
-          Todas ({wo.length})
-        </button>
-        {Object.entries(statusCounts).map(([s, n]) => (
-          <button
-            key={s}
-            onClick={() => setFilter(s)}
-            className={`${workOrderFilterPillBase} ${
-              filterStatus === s
-                ? workOrderFilterPillActive
-                : workOrderFilterPillInactive
-            }`}
-          >
-            {STL[s as keyof typeof STL] || s} ({n})
-          </button>
-        ))}
-        <select
-          value={filterActivoId}
-          onChange={(e) => setFilterActivoId(e.target.value)}
-          className={workOrderSelectClassName}
-        >
-          <option value=''>Todos los activos</option>
-          {ASSETS.map((asset) => (
-            <option key={asset.id} value={asset.id}>
-              {asset.code} - {asset.name}
-            </option>
-          ))}
-        </select>
+      <div className='border-app-border-soft bg-app-surface mb-4 rounded-xl border p-3 shadow-sm'>
+        <div className='-mx-1 overflow-x-auto px-1 pb-1'>
+          <div className='flex min-w-max items-center gap-1.5'>
+            <button
+              onClick={() => setFilter('')}
+              className={`${workOrderFilterPillBase} ${
+                !filterStatus
+                  ? workOrderFilterPillActive
+                  : workOrderFilterPillInactive
+              }`}
+            >
+              Todas ({wo.length})
+            </button>
+            {WORK_ORDER_STATUS_FILTERS.map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`${workOrderFilterPillBase} ${
+                  filterStatus === status
+                    ? workOrderFilterPillActive
+                    : workOrderFilterPillInactive
+                }`}
+              >
+                {status} ({statusCounts[status] || 0})
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className='mt-2 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-end'>
+          <label className='flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:w-44'>
+            Periodo de creación
+            <select
+              value={periodFilter}
+              onChange={(e) =>
+                setPeriodFilter(e.target.value as WorkOrderPeriodFilter)
+              }
+              className={workOrderSelectClassName}
+              aria-label='Periodo de creación'
+            >
+              {Object.entries(WORK_ORDER_PERIOD_LABEL).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {periodFilter === WORK_ORDER_PERIOD_FILTER.SELECTED_MONTH && (
+            <label className='flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:w-36'>
+              Mes
+              <input
+                type='month'
+                value={selectedMonth}
+                onChange={(e) =>
+                  setSelectedMonth(
+                    e.target.value || getCurrentMonthValue(new Date()),
+                  )
+                }
+                onClick={(e) => openNativeMonthPicker(e.currentTarget)}
+                className={workOrderMonthInputClassName}
+                aria-label='Mes'
+              />
+            </label>
+          )}
+          <label className='flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:w-44'>
+            Activo
+            <select
+              value={filterActivoId}
+              onChange={(e) => setFilterActivoId(e.target.value)}
+              className={workOrderSelectClassName}
+            >
+              <option value=''>Todos</option>
+              {ASSETS.map((asset) => (
+                <option key={asset.id} value={asset.id}>
+                  {asset.code} - {asset.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className='flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:w-36'>
+            Prioridad
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className={workOrderSelectClassName}
+              aria-label='Prioridad'
+            >
+              <option value=''>Todas</option>
+              {Object.entries(PRL).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className='flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:w-44'>
+            Técnico
+            <select
+              value={filterTecnicoId}
+              onChange={(e) => setFilterTecnicoId(e.target.value)}
+              className={workOrderSelectClassName}
+              aria-label='Técnico'
+            >
+              <option value=''>Todos</option>
+              {TECNICOS.map((tecnico) => (
+                <option key={tecnico.id} value={tecnico.id}>
+                  {tecnico.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className='flex min-w-0 flex-1 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:min-w-52'>
+            Buscar OT
+            <input
+              type='search'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={workOrderSearchClassName}
+              placeholder='Folio, título, técnico...'
+              aria-label='Buscar OT'
+            />
+          </label>
+          <div className='flex w-full items-center justify-between gap-3 lg:ml-auto lg:w-auto lg:justify-end lg:pb-0.5'>
+            <span className='text-xs font-semibold whitespace-nowrap text-app-text-secondary'>
+              {workOrderResultsCounter}
+            </span>
+            {hasActiveFilters && (
+              <BtnGhost onClick={clearWorkOrderFilters}>Limpiar filtros</BtnGhost>
+            )}
+          </div>
+        </div>
       </div>
 
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         <DataTable
+          minWidth={1040}
           head={[
             'Folio',
-            'Titulo',
+            'Título',
             'Tipo',
             'Asignado',
+            'Creación',
             'Vencimiento',
             'Prioridad',
             'Status',
-            '',
+            'Acción',
           ]}
         >
-          {filtered.map((w) => (
-            <tr
-              key={w.id}
-              className='bg-app-surface hover:bg-app-surface-subtle transition-colors'
-              style={{ cursor: 'pointer' }}
-            >
-              <Td mono>{w.folio}</Td>
-              <Td bold>{w.titulo}</Td>
-              <Td>
-                <Badge
-                  label={w.tipo === 'preventivo' ? 'Preventivo' : 'Correctivo'}
-                  color={w.tipo === 'preventivo' ? '#3b82f6' : '#ef4444'}
-                />
-              </Td>
-              <Td>{w.tecnicoNombre}</Td>
-              <Td mono>
-                {w.fechaCompromiso
-                  ? format(new Date(w.fechaCompromiso), 'dd/MM/yyyy')
-                  : '-'}
-              </Td>
-              <Td>
-                <Badge label={PRL[w.prioridad]} color={PRC[w.prioridad]} />
-              </Td>
-              <Td>
-                <Badge
-                  label={STL[w.status] || w.status}
-                  color={STC[w.status] || '#3b82f6'}
-                />
-              </Td>
-              <Td>
-                <BtnGhost onClick={() => setSelected(w)}>Ver detalle</BtnGhost>
-              </Td>
+          {filtered.length > 0 ? (
+            filtered.map((w) => (
+              <tr
+                key={w.id}
+                className='bg-app-surface hover:bg-app-surface-subtle transition-colors'
+                style={{ cursor: 'pointer' }}
+              >
+                <Td mono>{w.folio}</Td>
+                <Td bold>{w.titulo}</Td>
+                <Td>
+                  <Badge
+                    label={
+                      w.tipo === 'preventivo' ? 'Preventivo' : 'Correctivo'
+                    }
+                    color={w.tipo === 'preventivo' ? '#3b82f6' : '#ef4444'}
+                  />
+                </Td>
+                <Td>{w.tecnicoNombre}</Td>
+                <Td mono>{formatWorkOrderDate(w.fechaCreacion)}</Td>
+                <Td mono>
+                  {formatWorkOrderDate(w.fechaCompromiso)}
+                </Td>
+                <Td>
+                  <Badge label={PRL[w.prioridad]} color={PRC[w.prioridad]} />
+                </Td>
+                <Td>
+                  <Badge
+                    label={STL[w.status] || w.status}
+                    color={STC[w.status] || '#3b82f6'}
+                  />
+                </Td>
+                <Td>
+                  <BtnGhost onClick={() => setSelected(w)}>Ver detalle</BtnGhost>
+                </Td>
+              </tr>
+            ))
+          ) : (
+            <tr className='bg-app-surface'>
+              <td
+                colSpan={9}
+                className='px-4 py-10 text-center text-sm font-semibold text-app-text-secondary'
+              >
+                <div className='flex flex-col items-center gap-3'>
+                  <span>
+                    No hay órdenes de trabajo para los filtros seleccionados.
+                  </span>
+                  {hasActiveFilters && (
+                    <BtnGhost onClick={clearWorkOrderFilters}>
+                      Limpiar filtros
+                    </BtnGhost>
+                  )}
+                </div>
+              </td>
             </tr>
-          ))}
+          )}
         </DataTable>
       </Card>
 

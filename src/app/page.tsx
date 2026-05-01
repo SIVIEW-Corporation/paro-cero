@@ -6,6 +6,7 @@ import Hero from '@/components/landing/Hero';
 import HowItWorksSection from '@/components/landing/HowItWorksSection';
 import IndustriesSection from '@/components/landing/IndustriesSection';
 import ModulesSection from '@/components/landing/ModulesSection';
+import OperationalInsightsSection from '@/components/landing/OperationalInsightsSection';
 
 export default function Page() {
   return (
@@ -14,6 +15,7 @@ export default function Page() {
       <Hero />
       <BenefitsSection />
       <ModulesSection />
+      <OperationalInsightsSection />
       <HowItWorksSection />
       <IndustriesSection />
       <CTASection />
