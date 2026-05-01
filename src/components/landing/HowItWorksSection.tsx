@@ -23,7 +23,7 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section id='solucion' className='bg-app-section-raised scroll-mt-24'>
+    <section id='solucion' className='bg-app-surface-muted scroll-mt-24'>
       <div className='container py-24'>
         <ScrollReveal className='mb-14 max-w-2xl space-y-3'>
           <p className='text-app-brand text-xs font-semibold tracking-[0.2em] uppercase'>

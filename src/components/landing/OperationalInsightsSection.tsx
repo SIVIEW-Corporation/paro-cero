@@ -32,16 +32,11 @@ const miniKpis = [
   { label: 'Activos con alertas', value: '7' },
 ] as const;
 
-const pmComplianceSupportPoints = [
-  'Seguimiento mensual del cumplimiento PM',
-  'Detección de desviaciones por activo o área',
-  'Base para ajustar rutinas antes de la falla',
-] as const;
-
-const downtimeSupportPoints = [
-  'Horas de paro por mes',
-  'Priorización de activos críticos',
-  'Lectura rápida para decisiones operativas',
+const insightChips = [
+  'Cumplimiento PM',
+  'Paros críticos',
+  'OT completadas',
+  'Alertas por activo',
 ] as const;
 
 const baseAxisOptions = {
@@ -203,64 +198,16 @@ function ChartCard({
   );
 }
 
-interface InsightPanelProps {
-  title: string;
-  text: string;
-  supportPoints: readonly string[];
-  microdata: string;
-}
-
-function InsightPanel({
-  title,
-  text,
-  supportPoints,
-  microdata,
-}: InsightPanelProps) {
-  return (
-    <article className='border-app-border-soft bg-app-surface-subtle flex h-full flex-col justify-between rounded-2xl border p-5 shadow-sm sm:p-6'>
-      <div>
-        <div className='mb-5 flex items-center gap-3'>
-          <span className='bg-app-brand h-2.5 w-2.5 rounded-full' />
-          <span className='text-app-text-muted text-xs font-semibold tracking-[0.18em] uppercase'>
-            Insight operativo
-          </span>
-        </div>
-        <h3 className='text-app-text-primary text-xl leading-tight font-semibold'>
-          {title}
-        </h3>
-        <p className='text-app-text-secondary mt-3 text-sm leading-relaxed sm:text-base'>
-          {text}
-        </p>
-        <ul className='mt-6 space-y-3'>
-          {supportPoints.map((point) => (
-            <li key={point} className='flex gap-3'>
-              <span className='border-app-border-soft bg-app-surface mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border'>
-                <span className='bg-app-brand h-1.5 w-1.5 rounded-full' />
-              </span>
-              <span className='text-app-text-secondary text-sm leading-relaxed'>
-                {point}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <p className='border-app-border-soft bg-app-surface text-app-text-primary mt-7 inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold'>
-        {microdata}
-      </p>
-    </article>
-  );
-}
-
 export default function OperationalInsightsSection() {
   return (
     <section
       id='operational-insights'
-      className='bg-app-surface-muted scroll-mt-24'
+      className='bg-app-section-clean scroll-mt-24'
     >
       <div className='container py-24'>
         <ScrollReveal className='mx-auto mb-12 max-w-3xl space-y-4 text-center'>
           <p className='bg-app-brand-soft text-app-text-primary inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-[0.2em] uppercase'>
-            Vista ejecutiva · Datos demo
+            Dashboard ejecutivo · Datos demo
           </p>
           <h2 className='text-app-text-primary text-3xl leading-tight font-semibold md:text-4xl'>
             Salud operativa de planta
@@ -278,7 +225,7 @@ export default function OperationalInsightsSection() {
               <div className='border-app-border-soft flex flex-col gap-4 border-b p-5 lg:flex-row lg:items-center lg:justify-between'>
                 <div>
                   <p className='text-app-text-muted text-xs font-semibold tracking-[0.18em] uppercase'>
-                    Vista ejecutiva · Datos demo
+                    Dashboard ejecutivo · Datos demo
                   </p>
                   <h3 className='text-app-text-primary mt-2 text-xl font-semibold'>
                     Salud operativa de planta
@@ -301,40 +248,49 @@ export default function OperationalInsightsSection() {
                 </div>
               </div>
 
-              <div className='space-y-4 p-4 lg:p-5'>
-                <div className='grid min-w-0 gap-4 lg:grid-cols-[1.2fr_0.8fr]'>
-                  <ChartCard
-                    title='Cumplimiento PM últimos 6 meses'
-                    metric='68%'
-                    note='Meta operativa 90% · tendencia mensual'
-                    options={pmComplianceOptions}
-                    chartHeight={340}
-                  />
+              <div className='grid min-w-0 gap-4 p-4 lg:grid-cols-[1.35fr_0.9fr] lg:p-5'>
+                <ChartCard
+                  title='Cumplimiento PM últimos 6 meses'
+                  metric='68%'
+                  note='Meta operativa 90% · tendencia mensual'
+                  options={pmComplianceOptions}
+                  chartHeight={265}
+                />
 
-                  <InsightPanel
-                    title='Cumplimiento preventivo bajo control'
-                    text='Visualiza si los planes de mantenimiento preventivo se están ejecutando a tiempo y detecta caídas de cumplimiento antes de que se conviertan en fallas recurrentes o paros no planeados.'
-                    supportPoints={pmComplianceSupportPoints}
-                    microdata='Meta operativa: 90%'
-                  />
-                </div>
+                <ChartCard
+                  title='Horas de paro por mes'
+                  metric='7h'
+                  note='Paro registrado en marzo'
+                  options={downtimeOptions}
+                  chartHeight={265}
+                />
+              </div>
 
-                <div className='grid min-w-0 gap-4 lg:grid-cols-[0.8fr_1.2fr]'>
-                  <InsightPanel
-                    title='Paros visibles antes de que se vuelvan costo oculto'
-                    text='Convierte las horas de paro en una señal clara para dirección, supervisión y mantenimiento. PM0 ayuda a identificar periodos críticos, activos repetitivos y oportunidades para reducir indisponibilidad.'
-                    supportPoints={downtimeSupportPoints}
-                    microdata='7h registradas en marzo'
-                  />
-
-                  <ChartCard
-                    title='Horas de paro por mes'
-                    metric='7h'
-                    note='Paro registrado en marzo'
-                    options={downtimeOptions}
-                    chartHeight={320}
-                  />
-                </div>
+              <div className='px-4 pb-4 lg:px-5 lg:pb-5'>
+                <article className='border-app-border-soft bg-app-brand-soft rounded-3xl border p-4 sm:p-5'>
+                  <div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
+                    <div className='max-w-3xl'>
+                      <h3 className='text-app-text-primary text-sm font-semibold'>
+                        Lectura rápida para supervisión y dirección
+                      </h3>
+                      <p className='text-app-text-secondary mt-1 text-sm leading-relaxed'>
+                        Identifica desviaciones de cumplimiento, paros
+                        acumulados y activos con señales de riesgo sin esperar
+                        reportes manuales.
+                      </p>
+                    </div>
+                    <div className='flex flex-wrap gap-2'>
+                      {insightChips.map((chip) => (
+                        <span
+                          key={chip}
+                          className='border-app-border-soft bg-app-surface text-app-text-primary rounded-full border px-3 py-1 text-xs font-semibold'
+                        >
+                          {chip}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </article>
               </div>
             </div>
           </div>

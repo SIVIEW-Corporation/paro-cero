@@ -8,7 +8,7 @@ export default function CTASection() {
   return (
     <section
       id='demo'
-      className='border-app-border-soft bg-app-surface scroll-mt-24 border-b'
+      className='border-app-border-soft bg-app-surface-muted scroll-mt-24 border-b'
     >
       <div className='container py-20'>
         <ScrollReveal className='border-app-border-soft bg-app-brand-soft shadow-app-text-primary/10 rounded-2xl border p-8 shadow-xl sm:p-12'>
