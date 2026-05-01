@@ -23,12 +23,9 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section
-      id='solucion'
-      className='border-app-border-soft bg-app-surface scroll-mt-24 border-b'
-    >
-      <div className='container py-20'>
-        <ScrollReveal className='mb-10 max-w-2xl space-y-3'>
+    <section id='solucion' className='bg-app-section-raised scroll-mt-24'>
+      <div className='container py-24'>
+        <ScrollReveal className='mb-14 max-w-2xl space-y-3'>
           <p className='text-app-brand text-xs font-semibold tracking-[0.2em] uppercase'>
             Como funciona
           </p>
@@ -37,12 +34,12 @@ export default function HowItWorksSection() {
           </h2>
         </ScrollReveal>
 
-        <ol className='grid gap-8 md:grid-cols-3'>
+        <ol className='before:bg-app-section-border relative grid gap-10 before:absolute before:top-10 before:right-0 before:left-0 before:hidden before:h-px before:content-[""] md:grid-cols-3 md:gap-8 md:before:block'>
           {steps.map((item, index) => (
             <ScrollReveal key={item.step} delay={index * 90}>
-              <li className='border-app-border-soft bg-app-surface-subtle hover:border-app-border h-full rounded-xl border p-6 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/10'>
-                <p className='text-app-brand mb-4 text-sm font-semibold tracking-[0.16em]'>
-                  PASO {item.step}
+              <li className='group relative h-full pt-1'>
+                <p className='border-app-section-border bg-app-surface text-app-brand group-hover:border-app-border mb-7 inline-flex size-20 items-center justify-center rounded-full border text-xl font-semibold shadow-sm transition-[border-color,box-shadow,transform] duration-200 ease-out group-hover:-translate-y-0.5 group-hover:shadow-md'>
+                  {item.step}
                 </p>
                 <h3 className='text-app-text-primary mb-2 text-xl font-semibold'>
                   {item.title}

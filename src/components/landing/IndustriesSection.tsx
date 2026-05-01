@@ -25,12 +25,9 @@ const industries = [
 
 export default function IndustriesSection() {
   return (
-    <section
-      id='industrias'
-      className='border-app-border-soft bg-app-bg scroll-mt-24 border-b'
-    >
-      <div className='container py-20'>
-        <ScrollReveal className='mb-10 max-w-2xl space-y-3'>
+    <section id='industrias' className='bg-app-section-alternate scroll-mt-24'>
+      <div className='container py-24'>
+        <ScrollReveal className='mb-12 max-w-2xl space-y-3'>
           <p className='text-app-brand text-xs font-semibold tracking-[0.2em] uppercase'>
             Industrias y casos de uso
           </p>
@@ -39,13 +36,16 @@ export default function IndustriesSection() {
           </h2>
         </ScrollReveal>
 
-        <div className='grid gap-7 md:grid-cols-2'>
+        <div className='border-app-section-border bg-app-surface overflow-hidden rounded-3xl border shadow-sm'>
           {industries.map((industry, index) => (
             <ScrollReveal key={industry.name} delay={index * 70}>
-              <article className='border-app-border-soft bg-app-surface hover:border-app-border h-full space-y-2 rounded-2xl border p-6 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-900/10'>
-                <h3 className='text-app-text-primary text-xl font-semibold'>
-                  {industry.name}
-                </h3>
+              <article className='group border-app-section-border hover:bg-app-surface-subtle grid gap-4 border-b p-6 transition-[background-color] duration-200 ease-out last:border-b-0 md:grid-cols-[0.6fr_1fr] md:p-8'>
+                <div className='flex items-start gap-4'>
+                  <span className='bg-app-brand mt-2 size-2.5 rounded-full transition-transform duration-200 ease-out group-hover:scale-110' />
+                  <h3 className='text-app-text-primary text-xl font-semibold'>
+                    {industry.name}
+                  </h3>
+                </div>
                 <p className='text-app-text-secondary leading-relaxed'>
                   {industry.useCase}
                 </p>
