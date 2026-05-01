@@ -58,6 +58,19 @@ const pricingPlans: PricingPlan[] = [
   },
 ];
 
+const includedPlanFeatures = [
+  'Gestión de activos industriales',
+  'Órdenes de trabajo',
+  'Mantenimiento preventivo',
+  'Inspecciones y checklists',
+  'Reportes y KPIs operativos',
+  'Notificaciones y alertas',
+  'Usuarios y roles',
+  'Historial por activo',
+  'Filtros operativos por periodo, activo, técnico y estado',
+  'Exportación de reportes PDF y CSV',
+] as const;
+
 export default function PricingSection() {
   return (
     <section
@@ -159,6 +172,41 @@ export default function PricingSection() {
             </ScrollReveal>
           ))}
         </div>
+
+        <ScrollReveal className='mt-6 w-full' delay={180}>
+          <article className='border-app-border-soft bg-app-surface-subtle rounded-xl border p-4 shadow-sm sm:p-5 lg:p-7'>
+            <div className='mx-auto max-w-3xl text-center'>
+              <p className='text-app-text-primary text-lg font-semibold md:text-xl'>
+                Todo lo necesario para operar mantenimiento en PM0
+              </p>
+              <p className='text-app-text-secondary mt-2 text-sm leading-relaxed'>
+                Ambos planes incluyen las funciones operativas actuales de Paro
+                Cero para controlar activos, órdenes, preventivos, inspecciones,
+                reportes y usuarios.
+              </p>
+            </div>
+
+            <div className='mt-5'>
+              <ul className='grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+                {includedPlanFeatures.map((feature) => (
+                  <li
+                    key={feature}
+                    className='flex items-start gap-1.5 text-xs leading-relaxed'
+                  >
+                    <Check className='text-app-brand mt-0.5 size-3 shrink-0' />
+                    <span className='text-app-text-secondary'>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <p className='border-app-border-soft text-app-text-muted mt-5 border-t pt-3 text-center text-xs leading-relaxed'>
+                El plan de implementación agrega acompañamiento, integración
+                inicial y carga de datos para arrancar con la operación lista
+                desde el primer día.
+              </p>
+            </div>
+          </article>
+        </ScrollReveal>
       </div>
     </section>
   );
