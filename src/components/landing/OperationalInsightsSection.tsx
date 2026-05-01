@@ -2,7 +2,6 @@
 
 import type { EChartsOption } from 'echarts';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 
 import ScrollReveal from '@/components/landing/ScrollReveal';
 
@@ -30,13 +29,6 @@ const miniKpis = [
   { label: 'Paros críticos', value: '0h' },
   { label: 'OT completadas', value: '33' },
   { label: 'Activos con alertas', value: '7' },
-] as const;
-
-const insightChips = [
-  'Cumplimiento PM',
-  'Paros críticos',
-  'OT completadas',
-  'Alertas por activo',
 ] as const;
 
 const baseAxisOptions = {
@@ -168,6 +160,14 @@ interface ChartCardProps {
   chartHeight: number;
 }
 
+interface InsightPanelProps {
+  eyebrow: string;
+  title: string;
+  description: string;
+  bullets: readonly string[];
+  microdata: string;
+}
+
 function ChartCard({
   title,
   metric,
@@ -198,6 +198,41 @@ function ChartCard({
   );
 }
 
+function InsightPanel({
+  eyebrow,
+  title,
+  description,
+  bullets,
+  microdata,
+}: InsightPanelProps) {
+  return (
+    <article className='border-app-border-soft bg-app-surface-subtle flex h-full min-w-0 flex-col justify-between rounded-3xl border p-5 sm:p-6'>
+      <div>
+        <p className='text-app-text-muted text-xs font-semibold tracking-[0.18em] uppercase'>
+          {eyebrow}
+        </p>
+        <h3 className='text-app-text-primary mt-3 text-2xl leading-tight font-semibold'>
+          {title}
+        </h3>
+        <p className='text-app-text-secondary mt-4 text-sm leading-relaxed'>
+          {description}
+        </p>
+        <ul className='mt-5 space-y-3'>
+          {bullets.map((bullet) => (
+            <li key={bullet} className='flex gap-3 text-sm text-app-text-primary'>
+              <span className='bg-app-brand mt-2 size-1.5 shrink-0 rounded-full' />
+              <span>{bullet}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className='border-app-border-soft text-app-text-primary mt-6 rounded-2xl border bg-app-surface px-4 py-3 text-sm font-semibold'>
+        {microdata}
+      </p>
+    </article>
+  );
+}
+
 export default function OperationalInsightsSection() {
   return (
     <section
@@ -207,7 +242,7 @@ export default function OperationalInsightsSection() {
       <div className='container py-24'>
         <ScrollReveal className='mx-auto mb-12 max-w-3xl space-y-4 text-center'>
           <p className='bg-app-brand-soft text-app-text-primary inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-[0.2em] uppercase'>
-            Dashboard ejecutivo · Datos demo
+            Vista ejecutiva · Datos demo
           </p>
           <h2 className='text-app-text-primary text-3xl leading-tight font-semibold md:text-4xl'>
             Salud operativa de planta
@@ -225,7 +260,7 @@ export default function OperationalInsightsSection() {
               <div className='border-app-border-soft flex flex-col gap-4 border-b p-5 lg:flex-row lg:items-center lg:justify-between'>
                 <div>
                   <p className='text-app-text-muted text-xs font-semibold tracking-[0.18em] uppercase'>
-                    Dashboard ejecutivo · Datos demo
+                    Vista ejecutiva · Datos demo
                   </p>
                   <h3 className='text-app-text-primary mt-2 text-xl font-semibold'>
                     Salud operativa de planta
@@ -248,70 +283,51 @@ export default function OperationalInsightsSection() {
                 </div>
               </div>
 
-              <div className='grid min-w-0 gap-4 p-4 lg:grid-cols-[1.35fr_0.9fr] lg:p-5'>
+              <div className='grid min-w-0 gap-4 p-4 lg:grid-cols-[1.2fr_0.95fr] lg:p-5'>
                 <ChartCard
                   title='Cumplimiento PM últimos 6 meses'
                   metric='68%'
-                  note='Meta operativa 90% · tendencia mensual'
+                  note='Meta operativa: 90% · tendencia mensual'
                   options={pmComplianceOptions}
                   chartHeight={265}
+                />
+
+                <InsightPanel
+                  eyebrow='Cumplimiento PM'
+                  title='Cumplimiento preventivo bajo control'
+                  description='Visualiza si los planes de mantenimiento preventivo se están ejecutando a tiempo y detecta caídas de cumplimiento antes de que se conviertan en fallas recurrentes o paros no planeados.'
+                  bullets={[
+                    'Seguimiento mensual del cumplimiento PM',
+                    'Detección de desviaciones por activo o área',
+                    'Base para ajustar rutinas antes de la falla',
+                  ]}
+                  microdata='Meta operativa: 90%'
+                />
+              </div>
+
+              <div className='grid min-w-0 gap-4 px-4 pb-4 lg:grid-cols-[0.95fr_1.2fr] lg:px-5 lg:pb-5'>
+                <InsightPanel
+                  eyebrow='Horas de paro'
+                  title='Paros visibles antes de que se vuelvan costo oculto'
+                  description='Convierte las horas de paro en una señal clara para dirección, supervisión y mantenimiento. PM0 ayuda a identificar periodos críticos, activos repetitivos y oportunidades para reducir indisponibilidad.'
+                  bullets={[
+                    'Horas de paro por mes',
+                    'Priorización de activos críticos',
+                    'Lectura rápida para decisiones operativas',
+                  ]}
+                  microdata='7h registradas en marzo'
                 />
 
                 <ChartCard
                   title='Horas de paro por mes'
                   metric='7h'
-                  note='Paro registrado en marzo'
+                  note='7h registradas en marzo'
                   options={downtimeOptions}
                   chartHeight={265}
                 />
               </div>
-
-              <div className='px-4 pb-4 lg:px-5 lg:pb-5'>
-                <article className='border-app-border-soft bg-app-brand-soft rounded-3xl border p-4 sm:p-5'>
-                  <div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
-                    <div className='max-w-3xl'>
-                      <h3 className='text-app-text-primary text-sm font-semibold'>
-                        Lectura rápida para supervisión y dirección
-                      </h3>
-                      <p className='text-app-text-secondary mt-1 text-sm leading-relaxed'>
-                        Identifica desviaciones de cumplimiento, paros
-                        acumulados y activos con señales de riesgo sin esperar
-                        reportes manuales.
-                      </p>
-                    </div>
-                    <div className='flex flex-wrap gap-2'>
-                      {insightChips.map((chip) => (
-                        <span
-                          key={chip}
-                          className='border-app-border-soft bg-app-surface text-app-text-primary rounded-full border px-3 py-1 text-xs font-semibold'
-                        >
-                          {chip}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </article>
-              </div>
             </div>
           </div>
-        </ScrollReveal>
-
-        <ScrollReveal
-          delay={140}
-          className='mt-10 flex flex-wrap justify-center gap-3'
-        >
-          <Link
-            href='/recursos/como-funciona'
-            className='border-app-border-soft bg-app-surface text-app-text-primary hover:border-app-border-soft hover:bg-app-surface-subtle inline-flex h-11 items-center justify-center rounded-lg border px-5 text-sm font-semibold transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out outline-none active:translate-y-px'
-          >
-            Ver cómo funciona PM0
-          </Link>
-          <Link
-            href='/demo'
-            className='bg-app-brand text-app-text-primary hover:bg-app-brand-soft inline-flex h-11 items-center justify-center rounded-lg px-5 text-sm font-semibold shadow-sm transition-[background-color,box-shadow,transform] duration-200 ease-out outline-none active:translate-y-px'
-          >
-            Solicitar demo
-          </Link>
         </ScrollReveal>
       </div>
     </section>
