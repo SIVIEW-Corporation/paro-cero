@@ -9,27 +9,27 @@ import ScrollReveal from '@/components/landing/ScrollReveal';
 const industries = [
   {
     name: 'Manufactura continua',
-    imageSrc: '/images/carrusel/manufactura.png',
+    imageSrc: '/images/carrusel/manufactura.webp',
   },
   {
     name: 'Alimentos y bebidas',
-    imageSrc: '/images/carrusel/alimentos.png',
+    imageSrc: '/images/carrusel/alimentos.webp',
   },
   {
     name: 'Minería y metalurgia',
-    imageSrc: '/images/carrusel/mineria.png',
+    imageSrc: '/images/carrusel/mineria.webp',
   },
   {
     name: 'Energía y servicios industriales',
-    imageSrc: '/images/carrusel/energia.png',
+    imageSrc: '/images/carrusel/energia.webp',
   },
   {
     name: 'Plástico, polímeros y empaque',
-    imageSrc: '/images/carrusel/plastico.png',
+    imageSrc: '/images/carrusel/plastico.webp',
   },
   {
     name: 'Logística y distribución',
-    imageSrc: '/images/carrusel/logistica.png',
+    imageSrc: '/images/carrusel/logistica.webp',
   },
 ] as const;
 
