@@ -10,7 +10,7 @@ export default function Hero() {
     <section className='bg-app-bg relative min-h-[calc(100svh-4rem)] overflow-hidden'>
       {/* Place the local hero image at: public/images/hero/paro-cero-hero.jpg */}
       <Image
-        src='/images/hero/paro-cero-hero.jpg'
+        src='/images/hero/paro-cero-hero.webp'
         alt='Equipo tecnico inspeccionando activos industriales en planta'
         fill
         priority
