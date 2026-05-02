@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import ScrollReveal from '@/components/landing/ScrollReveal';
@@ -8,35 +9,27 @@ import ScrollReveal from '@/components/landing/ScrollReveal';
 const industries = [
   {
     name: 'Manufactura continua',
-    description:
-      'Control de activos de alta rotación, cumplimiento PM y respuesta rápida ante eventos de línea.',
-    chips: ['Disponibilidad', 'OT críticas', 'Preventivo'],
-    value:
-      'Reduce desviaciones operativas en líneas donde detenerse no es opción.',
+    imageSrc: '/images/carrusel/manufactura.png',
   },
   {
     name: 'Alimentos y bebidas',
-    description:
-      'Rondas de inspección trazables para asegurar inocuidad, continuidad y cumplimiento operativo.',
-    chips: ['Checklists', 'Evidencia', 'Cumplimiento'],
-    value:
-      'Convierte inspecciones y hallazgos en acciones claras para mantenimiento.',
+    imageSrc: '/images/carrusel/alimentos.png',
   },
   {
     name: 'Minería y metalurgia',
-    description:
-      'Planeación de mantenimientos mayores y monitoreo de equipos críticos en condiciones exigentes.',
-    chips: ['Activos críticos', 'Paros mayores', 'Historial técnico'],
-    value:
-      'Prioriza activos de alto impacto y conserva evidencia técnica por equipo.',
+    imageSrc: '/images/carrusel/mineria.png',
   },
   {
-    name: 'Energía y utilities',
-    description:
-      'Seguimiento de disponibilidad por unidad, análisis de causas y reducción de indisponibilidad no programada.',
-    chips: ['Disponibilidad', 'Causa raíz', 'KPIs'],
-    value:
-      'Da visibilidad a disponibilidad, paros y desempeño operativo por unidad.',
+    name: 'Energía y servicios industriales',
+    imageSrc: '/images/carrusel/energia.png',
+  },
+  {
+    name: 'Plástico, polímeros y empaque',
+    imageSrc: '/images/carrusel/plastico.png',
+  },
+  {
+    name: 'Logística y distribución',
+    imageSrc: '/images/carrusel/logistica.png',
   },
 ] as const;
 
@@ -49,50 +42,59 @@ type CarouselDirection =
   (typeof CAROUSEL_DIRECTION)[keyof typeof CAROUSEL_DIRECTION];
 
 const AUTOPLAY_INTERVAL_MS = 4500;
-const SCROLL_EDGE_THRESHOLD_PX = 8;
 
-function getScrollStep(carousel: HTMLDivElement) {
-  const firstCard = carousel.firstElementChild;
-
-  if (!(firstCard instanceof HTMLElement)) {
-    return carousel.clientWidth;
+function clampCarouselIndex(index: number) {
+  if (index < 0) {
+    return industries.length - 1;
   }
 
-  const carouselStyles = window.getComputedStyle(carousel);
-  const gap = Number.parseFloat(carouselStyles.columnGap || '0');
+  if (index >= industries.length) {
+    return 0;
+  }
 
-  return firstCard.getBoundingClientRect().width + gap;
+  return index;
 }
 
-function scrollCarouselByDirection(
-  carousel: HTMLDivElement,
-  direction: CarouselDirection,
-) {
-  const scrollStep = getScrollStep(carousel);
-  const maxScrollLeft = carousel.scrollWidth - carousel.clientWidth;
-  const isAtStart = carousel.scrollLeft <= SCROLL_EDGE_THRESHOLD_PX;
-  const isAtEnd =
-    carousel.scrollLeft >= maxScrollLeft - SCROLL_EDGE_THRESHOLD_PX;
+function scrollCarouselToIndex(carousel: HTMLDivElement, index: number) {
+  const card = carousel.children[index];
 
-  if (direction === CAROUSEL_DIRECTION.NEXT && isAtEnd) {
-    carousel.scrollTo({ left: 0, behavior: 'smooth' });
+  if (!(card instanceof HTMLElement)) {
     return;
   }
 
-  if (direction === CAROUSEL_DIRECTION.PREVIOUS && isAtStart) {
-    carousel.scrollTo({ left: maxScrollLeft, behavior: 'smooth' });
-    return;
-  }
-
-  carousel.scrollBy({
-    left: direction === CAROUSEL_DIRECTION.NEXT ? scrollStep : -scrollStep,
+  carousel.scrollTo({
+    left: card.offsetLeft - (carousel.clientWidth - card.clientWidth) / 2,
     behavior: 'smooth',
   });
+}
+
+function getCenteredCarouselIndex(carousel: HTMLDivElement) {
+  const carouselCenter = carousel.scrollLeft + carousel.clientWidth / 2;
+  let closestIndex = 0;
+  let closestDistance = Number.POSITIVE_INFINITY;
+
+  Array.from(carousel.children).forEach((child, index) => {
+    if (!(child instanceof HTMLElement)) {
+      return;
+    }
+
+    const childCenter = child.offsetLeft + child.clientWidth / 2;
+    const distance = Math.abs(carouselCenter - childCenter);
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestIndex = index;
+    }
+  });
+
+  return closestIndex;
 }
 
 export default function IndustriesSection() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [autoplayKey, setAutoplayKey] = useState(0);
 
   const scrollCarousel = (direction: CarouselDirection) => {
     const carousel = carouselRef.current;
@@ -101,8 +103,45 @@ export default function IndustriesSection() {
       return;
     }
 
-    scrollCarouselByDirection(carousel, direction);
+    const nextIndex = clampCarouselIndex(
+      activeIndex + (direction === CAROUSEL_DIRECTION.NEXT ? 1 : -1),
+    );
+
+    setActiveIndex(nextIndex);
+    setAutoplayKey((currentKey) => currentKey + 1);
+    scrollCarouselToIndex(carousel, nextIndex);
   };
+
+  const updateActiveIndustry = () => {
+    const carousel = carouselRef.current;
+
+    if (!carousel) {
+      return;
+    }
+
+    setActiveIndex(getCenteredCarouselIndex(carousel));
+  };
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+
+    if (!carousel) {
+      return;
+    }
+
+    const updateCenteredIndustry = () => {
+      setActiveIndex(getCenteredCarouselIndex(carousel));
+    };
+
+    const frameId = window.requestAnimationFrame(updateCenteredIndustry);
+
+    window.addEventListener('resize', updateCenteredIndustry);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener('resize', updateCenteredIndustry);
+    };
+  }, []);
 
   useEffect(() => {
     if (isPaused) {
@@ -116,13 +155,16 @@ export default function IndustriesSection() {
         return;
       }
 
-      scrollCarouselByDirection(carousel, CAROUSEL_DIRECTION.NEXT);
+      const nextIndex = clampCarouselIndex(activeIndex + 1);
+
+      setActiveIndex(nextIndex);
+      scrollCarouselToIndex(carousel, nextIndex);
     }, AUTOPLAY_INTERVAL_MS);
 
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [isPaused]);
+  }, [activeIndex, autoplayKey, isPaused]);
 
   return (
     <section id='industrias' className='bg-app-section-clean scroll-mt-24'>
@@ -178,52 +220,41 @@ export default function IndustriesSection() {
         >
           <div
             ref={carouselRef}
-            className='flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+            onScroll={updateActiveIndustry}
+            className='flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
           >
             {industries.map((industry, index) => (
               <ScrollReveal
                 key={industry.name}
                 delay={index * 70}
-                className='shrink-0 basis-[calc(100%-0.5rem)] snap-start md:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-2.5rem)/3)]'
+                className='shrink-0 basis-full snap-start md:basis-[calc((100%-1.25rem)/2)] lg:basis-[calc((100%-2.5rem)/3)]'
               >
-                <article className='border-app-border-soft bg-app-surface group flex h-full min-h-[22.5rem] flex-col rounded-3xl border p-5 shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md md:min-h-[23.5rem] md:p-6'>
-                  <div className='mb-5 flex items-center justify-between gap-4'>
-                    <span className='bg-app-brand-soft flex size-10 shrink-0 items-center justify-center rounded-2xl'>
-                      <span className='bg-app-brand size-3 rounded-full transition-transform duration-200 ease-out group-hover:scale-125' />
-                    </span>
-                    <span className='text-app-text-muted text-xs font-semibold tracking-[0.18em] uppercase'>
-                      0{index + 1}
-                    </span>
+                <article
+                  className={`group transition-all duration-500 ease-out ${
+                    activeIndex === index
+                      ? 'scale-[1.02] opacity-100'
+                      : 'scale-[0.94] opacity-70'
+                  }`}
+                >
+                  <div
+                    className={`border-app-border-soft bg-app-surface relative aspect-[9/16] overflow-hidden rounded-[2rem] border shadow-sm transition-all duration-500 ease-out ${
+                      activeIndex === index
+                        ? 'border-app-brand/60 shadow-xl'
+                        : 'hover:opacity-90 hover:shadow-md'
+                    }`}
+                  >
+                    <Image
+                      src={industry.imageSrc}
+                      alt={industry.name}
+                      fill
+                      sizes='(min-width: 1024px) 31vw, (min-width: 768px) 38vw, 82vw'
+                      className='object-cover transition-transform duration-700 ease-out group-hover:scale-105'
+                    />
                   </div>
 
-                  <div className='space-y-3'>
-                    <h3 className='text-app-text-primary text-lg leading-tight font-semibold md:text-xl'>
-                      {industry.name}
-                    </h3>
-                    <p className='text-app-text-secondary text-sm leading-relaxed'>
-                      {industry.description}
-                    </p>
-                  </div>
-
-                  <div className='mt-5 flex flex-wrap gap-2'>
-                    {industry.chips.map((chip) => (
-                      <span
-                        key={chip}
-                        className='border-app-border-soft bg-app-surface-muted text-app-text-secondary rounded-full border px-3 py-1 text-xs font-medium'
-                      >
-                        {chip}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className='bg-app-surface-subtle mt-auto rounded-2xl p-3.5 md:p-4'>
-                    <p className='text-app-text-muted text-xs font-semibold tracking-[0.18em] uppercase'>
-                      PM0 ayuda a
-                    </p>
-                    <p className='text-app-text-primary mt-2 text-sm leading-relaxed font-medium'>
-                      {industry.value}
-                    </p>
-                  </div>
+                  <p className='text-app-text-primary mt-4 text-center text-sm font-semibold md:text-base'>
+                    {industry.name}
+                  </p>
                 </article>
               </ScrollReveal>
             ))}
