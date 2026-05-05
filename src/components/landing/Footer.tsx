@@ -6,20 +6,26 @@ export default function Footer() {
   return (
     <footer
       id='contacto'
-      className='border-app-border-soft bg-app-surface scroll-mt-24 border-t'
+      className='bg-app-surface scroll-mt-24'
     >
-      <div className='container py-16'>
-        <div className='border-app-border-soft mb-10 flex flex-wrap items-center justify-between gap-4 border-b pb-8'>
-          <div>
-            <p className='text-app-text-primary text-lg font-bold tracking-[0.14em]'>
+      {/* Brand band - full-width dark section */}
+      <div className='bg-zinc-950'>
+        <div className='mx-auto flex max-w-7xl flex-col gap-4 px-6 py-10 sm:flex-row sm:items-center sm:justify-between sm:gap-8'>
+          <div className='flex flex-col gap-1'>
+            <p className='text-white text-3xl font-bold tracking-[0.14em] sm:text-4xl'>
               PM0
             </p>
-            <p className='text-app-text-secondary text-sm'>Paro Cero</p>
+            <p className='text-zinc-400 text-base sm:text-lg'>Paro Cero</p>
           </div>
-          <p className='text-app-text-secondary text-sm'>
-            Plataforma industrial para mantenimiento sin paros no planificados.
+          <p className='text-zinc-300 max-w-md text-lg leading-relaxed sm:text-xl'>
+            Plataforma industrial para mantenimiento sin paros no
+            planificados.
           </p>
         </div>
+      </div>
+
+      <div className='container border-app-border-soft border-t py-16'>
+        {/* Columns and copyright remain below */}
 
         <div className='grid gap-8 sm:grid-cols-2 lg:grid-cols-4'>
           {footerNavColumns.map((column) => (
