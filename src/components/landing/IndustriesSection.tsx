@@ -221,7 +221,7 @@ export default function IndustriesSection() {
           <div
             ref={carouselRef}
             onScroll={updateActiveIndustry}
-            className='flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+            className='flex snap-x snap-mandatory gap-5 overflow-x-auto overflow-y-hidden scroll-smooth py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
           >
             {industries.map((industry, index) => (
               <ScrollReveal
@@ -237,7 +237,7 @@ export default function IndustriesSection() {
                   }`}
                 >
                   <div
-                    className={`border-app-border-soft bg-app-surface relative aspect-[9/16] overflow-hidden rounded-[2rem] border shadow-sm transition-all duration-500 ease-out ${
+                    className={`border-app-border-soft bg-app-surface relative aspect-9/16 overflow-hidden rounded-[2rem] border shadow-sm transition-all duration-500 ease-out ${
                       activeIndex === index
                         ? 'border-app-brand/60 shadow-xl'
                         : 'hover:opacity-90 hover:shadow-md'

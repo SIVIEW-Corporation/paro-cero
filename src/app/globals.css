@@ -4,12 +4,13 @@
   --foreground: #12110f;
   --background: #f5f5f5;
   --radius: 0.625rem;
+  scroll-behavior: smooth;
 }
 
 .auth-shell,
 .public-shell {
   --app-bg: #f5f7fa;
-  
+
   --app-surface: #ffffff;
   --app-surface-subtle: #f8fafc;
   --app-surface-muted: #e5eaf1;
@@ -139,7 +140,7 @@ html {
   scroll-padding-top: 64px;
 }
 
-@theme inline { 
+@theme inline {
   --font-inter: 'Inter', sans-serif;
   --font-inconsolata: 'Inconsolata', monospace;
 
