@@ -79,6 +79,7 @@ Follow conventional-commit style: `<type>(<scope>): <description>`
 1. ALWAYS use the `commits` skill to generate messages.
 2. NEVER commit automatically. The agent must ALWAYS ask the user for permission in the next step before executing the commit command.
 3. Keep the first line under 72 characters.
+4. ALWAYS write the commits in spanish (Mexico).
 
 ## 4. Code Style & Conventions
 
