@@ -34,7 +34,7 @@ export default function Hero() {
             <br />
             que no pueden detenerse.
           </h1>
-          <p className='text-shNeutral-500 max-w-xl text-base sm:text-lg'>
+          <p className='text-shNeutral-600 max-w-2/3 text-base sm:text-lg'>
             Conecta activos, OT, PM, inspecciones y KPIs en una sola capa de
             operacion para anticipar fallas, bajar costos y sostener la
             disponibilidad de linea.

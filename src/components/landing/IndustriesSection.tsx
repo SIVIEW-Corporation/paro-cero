@@ -173,7 +173,7 @@ export default function IndustriesSection() {
           <ScrollReveal className='max-w-3xl space-y-4'>
             <div className='flex items-center gap-3'>
               <span className='bg-app-brand h-1.5 w-8 rounded-full' />
-              <p className='text-app-text-secondary text-xs font-semibold tracking-[0.2em] uppercase'>
+              <p className='text-shAccent-500 from-shNeutral-600 to-shNeutral-800/85 w-fit bg-linear-to-b px-2 py-1 text-xs font-bold tracking-[0.2em] uppercase shadow-xs lg:text-sm'>
                 Industrias y casos de uso
               </p>
             </div>
