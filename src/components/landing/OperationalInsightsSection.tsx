@@ -219,14 +219,17 @@ function InsightPanel({
         </p>
         <ul className='mt-5 space-y-3'>
           {bullets.map((bullet) => (
-            <li key={bullet} className='flex gap-3 text-sm text-app-text-primary'>
+            <li
+              key={bullet}
+              className='text-app-text-primary flex gap-3 text-sm'
+            >
               <span className='bg-app-brand mt-2 size-1.5 shrink-0 rounded-full' />
               <span>{bullet}</span>
             </li>
           ))}
         </ul>
       </div>
-      <p className='border-app-border-soft text-app-text-primary mt-6 rounded-2xl border bg-app-surface px-4 py-3 text-sm font-semibold'>
+      <p className='border-app-border-soft text-app-text-primary bg-app-surface mt-6 rounded-2xl border px-4 py-3 text-sm font-semibold'>
         {microdata}
       </p>
     </article>
@@ -242,7 +245,7 @@ export default function OperationalInsightsSection() {
       <div className='container py-24'>
         <ScrollReveal className='mx-auto mb-12 max-w-3xl space-y-4 text-center'>
           <p className='bg-app-brand-soft text-app-text-primary inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-[0.2em] uppercase'>
-            Vista ejecutiva · Datos demo
+            Vista ejecutiva
           </p>
           <h2 className='text-app-text-primary text-3xl leading-tight font-semibold md:text-4xl'>
             Salud operativa de planta
@@ -260,7 +263,7 @@ export default function OperationalInsightsSection() {
               <div className='border-app-border-soft flex flex-col gap-4 border-b p-5 lg:flex-row lg:items-center lg:justify-between'>
                 <div>
                   <p className='text-app-text-muted text-xs font-semibold tracking-[0.18em] uppercase'>
-                    Vista ejecutiva · Datos demo
+                    Vista ejecutiva
                   </p>
                   <h3 className='text-app-text-primary mt-2 text-xl font-semibold'>
                     Salud operativa de planta

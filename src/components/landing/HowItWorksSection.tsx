@@ -26,7 +26,7 @@ export default function HowItWorksSection() {
     <section id='solucion' className='bg-app-surface-muted scroll-mt-24'>
       <div className='container py-24'>
         <ScrollReveal className='mb-14 max-w-2xl space-y-3'>
-          <p className='text-app-brand text-xs font-semibold tracking-[0.2em] uppercase'>
+          <p className='text-shAccent-500 from-shNeutral-600 to-shNeutral-800/85 w-fit bg-linear-to-b px-2 py-1 text-xs font-bold tracking-[0.2em] uppercase shadow-xs lg:text-sm'>
             Como funciona
           </p>
           <h2 className='text-app-text-primary text-3xl font-semibold md:text-4xl'>

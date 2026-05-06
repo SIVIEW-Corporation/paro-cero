@@ -12,7 +12,7 @@ export default function CTASection() {
     >
       <div className='container py-20'>
         <ScrollReveal className='border-app-border-soft bg-app-brand-soft shadow-app-text-primary/10 rounded-2xl border p-8 shadow-xl sm:p-12'>
-          <p className='text-app-brand mb-3 text-xs font-semibold tracking-[0.2em] uppercase'>
+          <p className='text-shAccent-500 from-shNeutral-600 to-shNeutral-800/85 w-fit bg-linear-to-b px-2 py-1 text-xs font-bold tracking-[0.2em] uppercase shadow-xs lg:text-sm'>
             Demo ejecutiva
           </p>
           <h2 className='text-app-text-primary max-w-3xl text-3xl leading-tight font-semibold md:text-4xl'>

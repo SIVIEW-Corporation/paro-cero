@@ -28,10 +28,13 @@ const benefits = [
 
 export default function BenefitsSection() {
   return (
-    <section id='beneficios' className='bg-app-section-clean scroll-mt-24'>
-      <div className='container py-24'>
+    <section
+      id='beneficios'
+      className='to-shNeutral-50 scroll-mt-24 bg-linear-to-br from-white'
+    >
+      <div className='container py-24 lg:py-48'>
         <ScrollReveal className='mb-12 max-w-2xl space-y-3'>
-          <p className='text-app-brand text-xs font-semibold tracking-[0.2em] uppercase'>
+          <p className='text-shAccent-500 from-shNeutral-600 to-shNeutral-800/85 w-fit bg-linear-to-b px-2 py-1 text-xs font-bold tracking-[0.2em] uppercase shadow-xs lg:text-sm'>
             Beneficios
           </p>
           <h2 className='text-app-text-primary text-3xl font-semibold md:text-4xl'>

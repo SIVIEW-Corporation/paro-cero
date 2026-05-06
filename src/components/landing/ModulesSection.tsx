@@ -85,7 +85,7 @@ export default function ModulesSection() {
     <section id='modulos' className='bg-app-section-muted scroll-mt-24'>
       <div className='container py-24'>
         <ScrollReveal className='mb-12 max-w-2xl space-y-3'>
-          <p className='text-app-brand text-xs font-semibold tracking-[0.2em] uppercase'>
+          <p className='text-shAccent-500 from-shNeutral-600 to-shNeutral-800/85 w-fit bg-linear-to-b px-2 py-1 text-xs font-bold tracking-[0.2em] uppercase shadow-xs lg:text-sm'>
             Modulos
           </p>
           <h2 className='text-app-text-primary text-3xl font-semibold md:text-4xl'>
@@ -166,11 +166,12 @@ export default function ModulesSection() {
                     />
                     <div
                       className={cn(
-                        'public-reveal-child bg-app-surface border-app-border-soft absolute z-20 flex size-18 items-center justify-center rounded-2xl border shadow-sm transition-[border-color,box-shadow,transform,opacity] duration-200 ease-out',
+                        'public-reveal-child border-app-border-soft absolute z-20 flex size-18 items-center justify-center rounded-2xl border shadow-sm transition-all duration-500',
                         module.mapPosition,
                         activeModule !== null && !isActive && 'opacity-65',
+                        !isActive && 'bg-app-surface',
                         isActive &&
-                          'border-app-border scale-105 opacity-100 shadow-md',
+                          'border-app-border bg-shPrimary-300 scale-125 opacity-100 shadow-md',
                       )}
                       style={
                         {
