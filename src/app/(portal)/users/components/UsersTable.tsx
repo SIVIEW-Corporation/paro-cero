@@ -17,6 +17,7 @@ import {
 import * as motion from 'motion/react-client';
 import { User } from '@/store/auth-store';
 import ConfirmModal from './confirm-modal';
+import EditUserModal from './EditUserModal';
 
 import formatDate from '@/utils/format-date';
 import { useOperatorsQuery } from '../hooks/use-users-query';
@@ -58,6 +59,10 @@ export default function UsersTable() {
     userId: '',
     userName: '',
   });
+  const [editModal, setEditModal] = useState<{
+    isOpen: boolean;
+    user: User | null;
+  }>({ isOpen: false, user: null });
 
   const { data, isPending, isFetching, error } = useOperatorsQuery(page, size);
   const deleteMutation = useDeleteUserMutation();
@@ -68,6 +73,10 @@ export default function UsersTable() {
 
   const handleCloseModal = () => {
     setConfirmModal({ isOpen: false, userId: '', userName: '' });
+  };
+
+  const handleCloseEditModal = () => {
+    setEditModal({ isOpen: false, user: null });
   };
 
   const handleConfirmDelete = () => {
@@ -167,6 +176,7 @@ export default function UsersTable() {
             scale='101'
             shadowSize='none'
             className='size-8 rounded-lg p-0'
+            onClick={() => setEditModal({ isOpen: true, user: row.original })}
           />
           <Button
             type='button'
@@ -358,6 +368,16 @@ export default function UsersTable() {
         onConfirm={handleConfirmDelete}
         isPending={deleteMutation.isPending}
       />
+
+      {/* Edit User Modal */}
+      {editModal.user && (
+        <EditUserModal
+          key={editModal.user.id}
+          isOpen={editModal.isOpen}
+          user={editModal.user}
+          onClose={handleCloseEditModal}
+        />
+      )}
     </div>
   );
 }

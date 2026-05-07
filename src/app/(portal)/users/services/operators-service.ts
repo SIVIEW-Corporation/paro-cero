@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api-client';
 import { NewUserSchema } from '../lib/new-user-schema';
+import type { EditUserSchema } from '../lib/edit-user-schema';
 import { User } from '@/store/auth-store';
 
 export interface PaginatedUsersResponse {
@@ -49,6 +50,37 @@ export const operatorsService = {
     }
 
     return response.data as PaginatedUsersResponse;
+  },
+
+  /**
+   * Partially update an existing user by ID via PATCH.
+   * Transforms camelCase fields to snake_case for API compatibility.
+   * Only includes fields that have values (not undefined and not empty strings).
+   */
+  updateOperator: async (id: string, values: EditUserSchema): Promise<User> => {
+    const body: Record<string, unknown> = {};
+
+    if (values.email !== undefined && values.email !== '')
+      body.email = values.email;
+    if (values.fullName !== undefined && values.fullName !== '')
+      body.full_name = values.fullName;
+    if (values.role !== undefined) body.role = values.role;
+    if (values.area !== undefined && values.area !== '')
+      body.area = values.area;
+    if (values.jobTitle !== undefined && values.jobTitle !== '')
+      body.job_title = values.jobTitle;
+    if (values.profileImage !== undefined && values.profileImage !== '')
+      body.profile_image = values.profileImage;
+    if (values.password !== undefined && values.password !== '')
+      body.password = values.password;
+
+    const response = await apiClient.patch<User>(`/users/${id}`, body);
+
+    if (!response.ok) {
+      throw new Error(response.error?.message || 'Error al actualizar usuario');
+    }
+
+    return response.data as User;
   },
 
   /**
