@@ -8,7 +8,7 @@ export async function setAuthTokenAction(token: string) {
     path: '/',
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 900, // 15 minutes — slightly longer than JWT expiry
+    maxAge: 1800, // 30 minutes — matches JWT expiry
   });
   return { success: true };
 }
@@ -20,7 +20,7 @@ export async function setRefreshTokenAction(refreshToken: string) {
     path: '/',
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 86400, // 1 day
+    maxAge: 604800, // 7 days
   });
   return { success: true };
 }
@@ -40,7 +40,7 @@ export async function setAuthCookiesAction(
     path: '/',
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 900, // 15 minutes — slightly longer than JWT expiry
+    maxAge: 1800, // 30 minutes — matches JWT expiry
   });
 
   cookieStore.set('refresh_token', refreshToken, {
@@ -48,7 +48,7 @@ export async function setAuthCookiesAction(
     path: '/',
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 86400, // 1 day
+    maxAge: 604800, // 7 days
   });
 
   return { success: true };
@@ -118,14 +118,14 @@ export async function refreshTokenAction(): Promise<{
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 900,
+      maxAge: 1800, // 30 minutes — matches JWT expiry
     });
     cookieStore.set('refresh_token', data.refresh_token, {
       httpOnly: true,
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 86400,
+      maxAge: 604800, // 7 days
     });
 
     return { success: true, accessToken: data.access_token };
