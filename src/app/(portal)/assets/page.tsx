@@ -1,0 +1,143 @@
+'use client';
+
+import { useAuthStore } from '@/store/auth-store';
+import { useState, useEffect } from 'react';
+import { LayersPlus, Layers } from 'lucide-react';
+import * as motion from 'motion/react-client';
+import { AnimatePresence } from 'motion/react';
+import Image from 'next/image';
+
+import NewUserForm from './NewUserForm';
+import UsersTable from './components/UsersTable';
+
+export default function Users() {
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const [activeTab, setActiveTab] = useState('historico');
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+    if (isAdmin) {
+      setActiveTab('all-operators');
+    }
+  }, [isAdmin]);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+  };
+
+  const tabs = [
+    {
+      id: 'all-operators',
+      label: 'Activos disponibles',
+      icon: <Layers size={20} />,
+    },
+    {
+      id: 'new-operator',
+      label: 'Crear nuevo',
+      icon: <LayersPlus size={20} />,
+    },
+  ];
+
+  if (!isHydrated) {
+    return (
+      <div className='flex h-full items-center justify-center p-4'>
+        <div className='flex flex-col items-center gap-4'>
+          <div className='relative h-fit w-fit'>
+            <Image
+              src='/PM0-logo.webp'
+              alt='Logo PM0 by SIVIEW corporation'
+              height={240}
+              width={240}
+              className='h-40 w-auto animate-pulse object-contain'
+              loading='eager'
+            />
+          </div>
+          <p className='text-shNeutral-400'>Cargando sesión...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin guard — redirect non-admin users
+  if (!isAdmin) {
+    return (
+      <main className='z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
+        <div className='flex flex-col items-center justify-center py-16'>
+          <h2 className='text-shNeutral-900 text-xl font-bold'>
+            Acceso restringido
+          </h2>
+          <p className='text-shNeutral-500 mt-2 text-sm'>
+            Solo los administradores pueden crear activos.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className='z-10 container mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8'>
+      <section className='mb-6 md:mb-8'>
+        <h1 className='font-inter text-shNeutral-900 mb-1 text-2xl font-semibold tracking-[-0.02em] md:text-3xl'>
+          Gestión de activos
+        </h1>
+        <p className='text-shNeutral-500 font-inter max-w-2xl text-sm leading-6 md:text-base'>
+          Aquí puedes ver los assets disponibles y sus procesos relacionados.
+        </p>
+      </section>
+
+      <section className='w-full overflow-x-auto'>
+        <div className='border-shNeutral-200 flex min-w-max items-center gap-1 border-b md:min-w-0 md:gap-3'>
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              title={tab.label}
+              className={`focus-visible:ring-shAccent-500 focus-visible:ring-offset-shBackground relative flex shrink-0 cursor-pointer items-center gap-2 rounded-t-lg px-3 py-3 text-sm font-semibold transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:px-5 md:py-4 ${
+                activeTab === tab.id
+                  ? 'text-shPrimary-800'
+                  : 'text-shNeutral-500 hover:text-shNeutral-900 hover:bg-white'
+              }`}
+              onClick={() => handleTabChange(tab.id)}
+            >
+              <span className='size-5 shrink-0'>{tab.icon}</span>
+              <span className='hidden md:inline'>{tab.label}</span>
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId='underline'
+                  className='bg-shPrimary-500 absolute right-0 bottom-0 left-0 h-0.5'
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className='w-full flex-1 shrink-0 grow pt-4 md:pt-6'>
+        <div className='relative h-full w-full'>
+          <AnimatePresence mode='wait'>
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 15 }}
+              transition={{ duration: 0.2 }}
+              className='h-full w-full'
+            >
+              {activeTab === 'all-operators' && (
+                <div className='mx-auto max-w-7xl'>
+                  <UsersTable />
+                </div>
+              )}
+              {activeTab === 'new-operator' && (
+                <div className='mx-auto max-w-7xl'>
+                  <NewUserForm company_id={user?.company_id} />
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </section>
+    </main>
+  );
+}

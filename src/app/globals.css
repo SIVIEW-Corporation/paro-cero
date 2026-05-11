@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 
 :root {
-  --foreground: #12110f;
-  --background: #f5f5f5;
+  --background: #f7f9fb;
+  --foreground: #2b2d2f;
   --radius: 0.625rem;
   scroll-behavior: smooth;
 }
@@ -155,8 +155,8 @@ html {
   /* =========================================
      BASE
      ========================================= */
-  --color-shBackground: #f8fafc;
-  --color-shForeground: #0f172a;
+  --color-shBackground: #f7f9fb;
+  --color-shForeground: #2b2d2f;
 
   /* =========================================
      PRIMARY (TECHNICAL MARINE) - Autoridad, estructura y bajo contraste visual
@@ -388,4 +388,15 @@ body {
 
 .custom-select:active {
   background-color: var(--app-surface-subtle, #f8fafc);
+}
+
+.somecard {
+  backdrop-filter: blur(15px);
+  box-shadow:
+    inset 0 0 20px rgba(255, 255, 255, 0.192),
+    inset 0 0 5px rgba(255, 255, 255, 0.274),
+    0 5px 5px rgba(98, 125, 152, 0.1),
+    16px 16px 48px rgba(98, 125, 152, 0.06),
+    -12px -12px 36px #ffffff;
+  border: 1px solid #e2e8f0;
 }
