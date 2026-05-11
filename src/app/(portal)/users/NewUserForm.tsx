@@ -6,7 +6,7 @@ import { newUserSchema } from './lib/new-user-schema';
 import * as motion from 'motion/react-client';
 import { Mail, User, Briefcase, MapPin, Shield, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FormField, PasswordField } from '@/global-components/form-field';
+import { FormField, PasswordField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
 
 interface NewUserFormProps {

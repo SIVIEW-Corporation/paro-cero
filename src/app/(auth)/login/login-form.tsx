@@ -7,7 +7,7 @@ import { Mail, Lock } from 'lucide-react';
 
 import { loginSchema } from '@/lib/auth-schema';
 import { useLoginMutation } from '@/hooks/use-login-mutation';
-import { FormField, PasswordField } from '@/global-components/form-field';
+import { FormField, PasswordField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
 
 export default function LoginForm() {

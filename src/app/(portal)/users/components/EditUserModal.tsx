@@ -14,7 +14,7 @@ import * as motion from 'motion/react-client';
 import { useForm } from '@tanstack/react-form';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { FormField, PasswordField } from '@/global-components/form-field';
+import { FormField, PasswordField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
 import type { User as UserType } from '@/store/auth-store';
 import { editUserSchema } from '../lib/edit-user-schema';
