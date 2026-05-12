@@ -27,6 +27,30 @@ export interface User {
   updated_at?: string | null;
 }
 
+export interface Asset {
+  id: string;
+  name: string;
+  code: string;
+  area: string;
+  serial: string | null;
+  model: string | null;
+  manufacturer: string | null;
+  cost: number | null;
+  company_id: string;
+  status:
+    | 'commissioning'
+    | 'operational'
+    | 'standby'
+    | 'maintenance'
+    | 'down'
+    | 'decommissioned';
+  criticality: 'low' | 'medium' | 'high' | 'critical';
+  installed_at: string | null;
+  isActive: boolean;
+  created_at: string;
+  updated_at: string | null;
+}
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;

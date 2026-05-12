@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api-client';
-import { NewUserSchema } from '../lib/new-user-schema';
+import { NewUserSchema } from '../lib/new-asset-schema';
 import type { EditUserSchema } from '../lib/edit-user-schema';
 import { User } from '@/store/auth-store';
 

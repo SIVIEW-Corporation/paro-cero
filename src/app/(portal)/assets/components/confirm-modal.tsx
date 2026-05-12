@@ -5,7 +5,7 @@ import Button from '@/global-components/Button';
 
 interface ConfirmModalProps {
   isOpen: boolean;
-  userName: string;
+  assetName: string;
   onCancel: () => void;
   onConfirm: () => void;
   isPending?: boolean;
@@ -13,7 +13,7 @@ interface ConfirmModalProps {
 
 export default function ConfirmModal({
   isOpen,
-  userName,
+  assetName,
   onCancel,
   onConfirm,
   isPending,
@@ -32,7 +32,7 @@ export default function ConfirmModal({
         {/* Header */}
         <div className='border-shNeutral-200 flex items-center justify-between border-b px-6 py-4'>
           <h2 className='text-shNeutral-900 text-lg font-bold'>
-            ¿Eliminar usuario?
+            ¿Eliminar activo?
           </h2>
           <Button
             type='button'
@@ -48,8 +48,8 @@ export default function ConfirmModal({
         {/* Body */}
         <div className='px-6 py-5'>
           <p className='text-shNeutral-500'>
-            ¿Estás seguro de eliminar a{' '}
-            <span className='text-shNeutral-900 font-bold'>{userName}</span>?{' '}
+            ¿Estás seguro de eliminar el activo{' '}
+            <span className='text-shNeutral-900 font-bold'>{assetName}</span>?{' '}
             <br />
             Esta acción no se puede deshacer.
           </p>

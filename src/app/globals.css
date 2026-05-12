@@ -336,14 +336,12 @@ body {
   appearance: none;
 
   /* 2. Reset de bordes y fondos para Safari */
-  background-color: var(--app-surface, #ffffff);
-  border: 1px solid var(--app-border-soft, #dde3ea);
+  background-color: var(--background, #ffffff);
+  border: 1px solid #d9e2ec;
   border-radius: 8px;
 
-  font-size: 12px;
-
   padding: 8px 48px 8px 12px;
-  color: var(--app-text-primary, #111827);
+  color: var(--foreground, #111827);
   width: 100%;
   cursor: pointer;
   outline: none;
@@ -351,16 +349,13 @@ body {
   transition: all 0.3s ease;
 }
 
-@media (width >= 768px) {
-  .custom-select {
-    font-size: 14px;
-  }
+.custom-select:hover {
+  border: 1px solid #9fb3c8;
 }
 
 @media (width >= 1280px) {
   .custom-select {
-    font-size: 16px;
-    padding: 10px 48px 10px 16px;
+    padding: 8px 48px 8px 16px;
   }
 }
 
@@ -375,7 +370,7 @@ body {
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   /* flecha */
-  border-top: 6px solid var(--app-text-muted, #94a3b8);
+  border-top: 6px solid #9fb3c8;
 
   transform: translateY(-50%);
   pointer-events: none;
@@ -384,10 +379,12 @@ body {
 
 .custom-select-container:focus-within::after {
   transform: translateY(-50%) rotate(180deg);
+  border-top: 6px solid #f59e0b;
 }
 
-.custom-select:active {
-  background-color: var(--app-surface-subtle, #f8fafc);
+.custom-select:focus {
+  background-color: var(--background, #ffffff);
+  border: 1px solid #f59e0b;
 }
 
 .somecard {
@@ -398,5 +395,4 @@ body {
     0 5px 5px rgba(98, 125, 152, 0.1),
     16px 16px 48px rgba(98, 125, 152, 0.06),
     -12px -12px 36px #ffffff;
-  border: 1px solid #e2e8f0;
 }

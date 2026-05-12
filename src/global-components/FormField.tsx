@@ -65,7 +65,7 @@ export function FormField({
           placeholder={placeholder}
           autoComplete={autocomplete}
           className={cn(
-            'text-shNeutral-900 placeholder:text-shNeutral-600 border-shNeutral-100! bg-shNeutral-50! flex-1 rounded-md! border-0! border-l! py-2.5 pr-4 pl-2 shadow-inner! ring-0! outline-none!',
+            'placeholder:text-shNeutral-400 border-shNeutral-100! bg-shNeutral-50! flex-1 rounded-md! border-0! border-l! py-2.5 pr-4 pl-2 text-black shadow-inner! ring-0! outline-none!',
             !Icon && 'pl-4!',
           )}
         />
@@ -180,7 +180,7 @@ export function PasswordField({
           placeholder='••••••••'
           autoComplete={autocomplete}
           className={cn(
-            'text-shNeutral-900 placeholder:text-shNeutral-600 border-shNeutral-100! bg-shNeutral-50! flex-1 rounded-md! border-0! border-l! py-2.5 pr-4 pl-2 shadow-inner! ring-0! outline-none!',
+            'placeholder:text-shNeutral-400 border-shNeutral-100! bg-shNeutral-50! flex-1 rounded-md! border-0! border-l! py-2.5 pr-4 pl-2 text-black shadow-inner! ring-0! outline-none!',
             !Icon && 'pl-4!',
           )}
         />

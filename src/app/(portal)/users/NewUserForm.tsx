@@ -5,7 +5,6 @@ import { useCreateUserMutation } from '@/app/(portal)/users/hooks/use-newOperato
 import { newUserSchema } from './lib/new-user-schema';
 import * as motion from 'motion/react-client';
 import { Mail, User, Briefcase, MapPin, Shield, UserPlus } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { FormField, PasswordField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
 
@@ -193,12 +192,7 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                     >
                       Rol
                     </label>
-                    <div
-                      className={cn(
-                        'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
-                        'border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 focus-within:ring-2',
-                      )}
-                    >
+                    <div className='custom-select-container border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
                       <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
                         <Shield size={16} />
                       </div>
@@ -211,26 +205,11 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
                             () => e.target.value as 'operator' | 'viewer',
                           )
                         }
-                        className='text-shNeutral-900 placeholder:text-shNeutral-500 flex-1 appearance-none border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!'
+                        className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 cursor-pointer appearance-none rounded-none! border-0! border-l! py-2.5 pr-12 pl-2 shadow-inner! ring-0! outline-none!'
                       >
                         <option value='operator'>Operador</option>
                         <option value='viewer'>Visor</option>
                       </select>
-                      <div className='text-shNeutral-600 flex w-12 shrink-0 items-center justify-center'>
-                        <svg
-                          className='h-4 w-4'
-                          fill='none'
-                          viewBox='0 0 24 24'
-                          stroke='currentColor'
-                        >
-                          <path
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            strokeWidth={2}
-                            d='M19 9l-7 7-7-7'
-                          />
-                        </svg>
-                      </div>
                     </div>
                   </div>
                 )}

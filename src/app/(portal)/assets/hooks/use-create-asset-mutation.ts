@@ -1,20 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { assetsService } from '../services/assets-service';
+import { NewAssetSchema } from '../lib/new-asset-schema';
 
-export function useDeleteAssetMutation() {
+export function useCreateAssetMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      await assetsService.deleteAsset(id);
-    },
+    mutationFn: (values: NewAssetSchema) => assetsService.createAsset(values),
     onSuccess: () => {
-      toast.success('Activo eliminado correctamente');
       queryClient.invalidateQueries({ queryKey: ['assets', 'list'] });
+      toast.success('Activo creado correctamente');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Error al eliminar activo');
+      toast.error(error.message || 'Error al crear activo');
     },
   });
 }

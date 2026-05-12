@@ -7,8 +7,8 @@ import * as motion from 'motion/react-client';
 import { AnimatePresence } from 'motion/react';
 import Image from 'next/image';
 
-import NewUserForm from './NewUserForm';
-import UsersTable from './components/UsersTable';
+import NewAssetForm from './NewAssetForm';
+import AssetsTable from './components/AssetsTable';
 import {
   SectionTabs,
   type tabInterface,
@@ -17,15 +17,15 @@ import {
 export default function AssetsPage() {
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
-  const [activeTab, setActiveTab] = useState('historico');
+  const [activeTab, setActiveTab] = useState('all-operators');
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
-    if (isAdmin) {
+    if (!isAdmin && activeTab === 'new-operator') {
       setActiveTab('all-operators');
     }
-  }, [isAdmin]);
+  }, [isAdmin, activeTab]);
 
   const tabs: tabInterface[] = [
     {
@@ -33,11 +33,15 @@ export default function AssetsPage() {
       label: 'Activos disponibles',
       icon: <Layers size={20} />,
     },
-    {
-      id: 'new-operator',
-      label: 'Crear nuevo',
-      icon: <LayersPlus size={20} />,
-    },
+    ...(isAdmin
+      ? [
+          {
+            id: 'new-operator' as const,
+            label: 'Crear nuevo',
+            icon: <LayersPlus size={20} />,
+          },
+        ]
+      : []),
   ];
 
   if (!isHydrated) {
@@ -57,22 +61,6 @@ export default function AssetsPage() {
           <p className='text-shNeutral-400'>Cargando sesión...</p>
         </div>
       </div>
-    );
-  }
-
-  // Admin guard — redirect non-admin users
-  if (!isAdmin) {
-    return (
-      <main className='z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
-        <div className='flex flex-col items-center justify-center py-16'>
-          <h2 className='text-shNeutral-900 text-xl font-bold'>
-            Acceso restringido
-          </h2>
-          <p className='text-shNeutral-500 mt-2 text-sm'>
-            Solo los administradores pueden crear activos.
-          </p>
-        </div>
-      </main>
     );
   }
 
@@ -106,12 +94,12 @@ export default function AssetsPage() {
             >
               {activeTab === 'all-operators' && (
                 <div className='mx-auto max-w-7xl'>
-                  <UsersTable />
+                  <AssetsTable />
                 </div>
               )}
               {activeTab === 'new-operator' && (
                 <div className='mx-auto max-w-7xl'>
-                  <NewUserForm company_id={user?.company_id} />
+                  <NewAssetForm company_id={user?.company_id} />
                 </div>
               )}
             </motion.div>
