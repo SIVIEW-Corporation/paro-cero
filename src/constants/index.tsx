@@ -23,7 +23,7 @@ export const tabs = [
     id: 1,
     label: 'Activos',
     tooltip: 'Gestión de Activos',
-    path: '/dashboard/assets',
+    path: '/assets',
     icon: <Boxes className='icon-size' />,
   },
   {

@@ -2,74 +2,83 @@
 
 import {
   X,
-  Mail,
-  User,
-  Briefcase,
+  Tag,
+  Hash,
   MapPin,
-  Shield,
-  Image,
+  Fingerprint,
+  Cpu,
+  Factory,
+  Banknote,
+  Activity,
+  AlertTriangle,
+  Calendar,
   Save,
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import { useForm } from '@tanstack/react-form';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
-import { FormField, PasswordField } from '@/global-components/FormField';
+import type { Asset } from '@/store/auth-store';
+import { newAssetSchema } from '../lib/new-asset-schema';
+import { useUpdateAssetMutation } from '../hooks/use-update-asset-mutation';
+import { FormField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
-import type { User as UserType } from '@/store/auth-store';
-import { editUserSchema } from '../lib/edit-user-schema';
-import { useUpdateUserMutation } from '../hooks/use-update-user-mutation';
 
-interface EditUserModalProps {
+interface EditAssetModalProps {
   isOpen: boolean;
-  user: UserType;
+  asset: Asset;
   onClose: () => void;
 }
 
-const ROLES = {
-  ADMIN: 'admin',
-  SUPERVISOR: 'supervisor',
-  OPERATOR: 'operator',
-  VIEWER: 'viewer',
-} as const;
-
-type Role = (typeof ROLES)[keyof typeof ROLES];
-
-const ALL_ROLE_LABELS: Record<Role, string> = {
-  admin: 'Admin',
-  supervisor: 'Supervisor',
-  operator: 'Operador',
-  viewer: 'Visor',
-};
-
-/** Roles que un usuario con permisos puede asignar desde el formulario de edición.
- *  admin/supervisor están excluidos — su rol no se puede modificar desde acá. */
-const EDITABLE_ROLES: Role[] = [ROLES.OPERATOR, ROLES.VIEWER];
-
-export default function EditUserModal({
+export default function EditAssetModal({
   isOpen,
-  user,
+  asset,
   onClose,
-}: EditUserModalProps) {
-  const updateUser = useUpdateUserMutation();
-
-  const isPrivilegedRole =
-    user.role === ROLES.ADMIN || user.role === ROLES.SUPERVISOR;
-
-  const [showPassword, setShowPassword] = useState(false);
+}: EditAssetModalProps) {
+  const updateAsset = useUpdateAssetMutation();
 
   const form = useForm({
     defaultValues: {
-      email: user.email ?? '',
-      fullName: user.full_name ?? '',
-      role: (user.role as Role) ?? ROLES.OPERATOR,
-      area: user.area ?? '',
-      jobTitle: user.job_title ?? '',
-      profileImage: user.profile_image ?? '',
-      password: '',
+      name: asset.name,
+      code: asset.code,
+      area: asset.area,
+      serial: asset.serial ?? '',
+      model: asset.model ?? '',
+      manufacturer: asset.manufacturer ?? '',
+      cost: asset.cost ?? undefined,
+      status: asset.status,
+      criticality: asset.criticality,
+      installedAt: asset.installed_at ? new Date(asset.installed_at) : null,
     },
     onSubmit: async ({ value }) => {
-      await updateUser.mutateAsync({ id: user.id, values: value });
+      const values: Record<string, unknown> = {};
+
+      if (value.name !== '') values.name = value.name;
+      if (value.code !== '') values.code = value.code;
+      if (value.area !== '') values.area = value.area;
+      if (value.serial !== '') values.serial = value.serial;
+      if (value.model !== '') values.model = value.model;
+      if (value.manufacturer !== '') values.manufacturer = value.manufacturer;
+      if (value.cost !== undefined) values.cost = value.cost;
+      values.status = value.status;
+      values.criticality = value.criticality;
+      if (value.installedAt)
+        values.installedAt = value.installedAt.toISOString();
+
+      await updateAsset.mutateAsync({
+        id: asset.id,
+        values: values as {
+          name?: string;
+          area?: string;
+          code?: string;
+          serial?: string | null;
+          model?: string | null;
+          manufacturer?: string | null;
+          cost?: number | null;
+          status?: string;
+          criticality?: string;
+          installedAt?: string | null;
+          isActive?: boolean;
+        },
+      });
       onClose();
     },
   });
@@ -91,7 +100,7 @@ export default function EditUserModal({
         {/* Header */}
         <div className='border-shNeutral-200 flex items-center justify-between border-b px-6 py-4'>
           <h2 className='text-shNeutral-900 text-lg font-bold'>
-            Editar usuario
+            Editar activo
           </h2>
           <Button
             type='button'
@@ -114,112 +123,46 @@ export default function EditUserModal({
           {/* Body */}
           <div className='max-h-[calc(100vh-16rem)] overflow-y-auto px-4 py-5 sm:px-6 md:px-8'>
             <div className='space-y-5'>
-              {/* Row 1: Email + Full Name */}
+              {/* Row 1: Nombre + Código */}
               <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
                 <form.Field
-                  name='email'
+                  name='name'
                   validators={{
-                    onChange: editUserSchema.shape.email.unwrap(),
+                    onChange: newAssetSchema.shape.name,
                   }}
                   children={(field) => (
                     <FormField
-                      name='email'
-                      label='Correo electrónico'
-                      placeholder='ejemplo@winba.com'
-                      type='email'
-                      icon={Mail}
+                      name='name'
+                      label='Nombre'
+                      placeholder='Motor principal'
+                      icon={Tag}
                       field={field}
-                      autocomplete='off'
                     />
                   )}
                 />
                 <form.Field
-                  name='fullName'
+                  name='code'
                   validators={{
-                    onChange: editUserSchema.shape.fullName.unwrap(),
+                    onChange: newAssetSchema.shape.code,
                   }}
                   children={(field) => (
                     <FormField
-                      name='fullName'
-                      label='Nombre completo'
-                      placeholder='Esteban Rodriguez Barrios'
-                      icon={User}
+                      name='code'
+                      label='Código'
+                      placeholder='EQP-001'
+                      icon={Hash}
                       field={field}
                     />
                   )}
                 />
               </div>
 
-              {/* Row 2: Role + Area */}
+              {/* Row 2: Área + Serial */}
               <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
-                <form.Field
-                  name='role'
-                  validators={{
-                    onChange: editUserSchema.shape.role.unwrap(),
-                  }}
-                  children={(field) => (
-                    <div className='group'>
-                      <label
-                        htmlFor='role'
-                        className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
-                      >
-                        Rol
-                      </label>
-                      <div
-                        className={cn(
-                          'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
-                          'border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 focus-within:ring-2',
-                        )}
-                      >
-                        <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
-                          <Shield size={16} />
-                        </div>
-                        <select
-                          id='role'
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) =>
-                            field.handleChange(() => e.target.value as Role)
-                          }
-                          disabled={isPrivilegedRole}
-                          className={cn(
-                            'text-shNeutral-900 placeholder:text-shNeutral-500 flex-1 appearance-none border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!',
-                            isPrivilegedRole &&
-                              'text-shNeutral-500 cursor-not-allowed',
-                          )}
-                        >
-                          {(isPrivilegedRole
-                            ? (Object.keys(ALL_ROLE_LABELS) as Role[])
-                            : EDITABLE_ROLES
-                          ).map((value) => (
-                            <option key={value} value={value}>
-                              {ALL_ROLE_LABELS[value]}
-                            </option>
-                          ))}
-                        </select>
-                        <div className='text-shNeutral-600 flex w-12 shrink-0 items-center justify-center'>
-                          <svg
-                            className='h-4 w-4'
-                            fill='none'
-                            viewBox='0 0 24 24'
-                            stroke='currentColor'
-                          >
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              strokeWidth={2}
-                              d='M19 9l-7 7-7-7'
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                />
                 <form.Field
                   name='area'
                   validators={{
-                    onChange: editUserSchema.shape.area.unwrap(),
+                    onChange: newAssetSchema.shape.area,
                   }}
                   children={(field) => (
                     <FormField
@@ -231,108 +174,202 @@ export default function EditUserModal({
                     />
                   )}
                 />
+                <form.Field
+                  name='serial'
+                  children={(field) => (
+                    <FormField
+                      name='serial'
+                      label='Serial'
+                      placeholder='SN-2024-001'
+                      icon={Fingerprint}
+                      field={field}
+                    />
+                  )}
+                />
               </div>
 
-              {/* Row 3: Job Title + Profile Image */}
+              {/* Row 3: Modelo + Fabricante */}
               <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
                 <form.Field
-                  name='jobTitle'
-                  validators={{
-                    onChange: editUserSchema.shape.jobTitle.unwrap(),
-                  }}
+                  name='model'
                   children={(field) => (
                     <FormField
-                      name='jobTitle'
-                      label='Puesto'
-                      placeholder='Técnico de Campo'
-                      icon={Briefcase}
+                      name='model'
+                      label='Modelo'
+                      placeholder='XYZ-5000'
+                      icon={Cpu}
                       field={field}
                     />
                   )}
                 />
                 <form.Field
-                  name='profileImage'
-                  validators={{
-                    onChange: editUserSchema.shape.profileImage.unwrap(),
-                  }}
+                  name='manufacturer'
                   children={(field) => (
                     <FormField
-                      name='profileImage'
-                      label='Imagen de perfil'
-                      placeholder='https://...'
-                      icon={Image}
+                      name='manufacturer'
+                      label='Fabricante'
+                      placeholder='Siemens'
+                      icon={Factory}
                       field={field}
                     />
                   )}
                 />
               </div>
 
-              {/* Row 4: Password toggle */}
-              <div className='space-y-4'>
-                <label className='text-shNeutral-400 group hover:text-shPrimary-700 flex w-fit cursor-pointer items-center gap-3 rounded-lg bg-white p-3.5 transition-colors'>
-                  <div
-                    className={cn(
-                      'group-hover:border-shPrimary-600 flex size-5 shrink-0 items-center justify-center rounded border transition-colors',
-                      showPassword
-                        ? 'border-shPrimary-500 bg-shPrimary-500'
-                        : 'border-shNeutral-400 bg-white',
-                    )}
-                  >
-                    {showPassword && (
-                      <svg
-                        className='size-3 text-white'
-                        fill='none'
-                        viewBox='0 0 24 24'
-                        stroke='currentColor'
-                        strokeWidth={3}
+              {/* Row 4: Costo + Estado */}
+              <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
+                <form.Field
+                  name='cost'
+                  children={(field) => {
+                    const costField = {
+                      ...field,
+                      state: {
+                        ...field.state,
+                        value:
+                          field.state.value === undefined
+                            ? ''
+                            : field.state.value,
+                      },
+                      handleChange: (value: string) => {
+                        if (value === '') {
+                          return field.handleChange(undefined);
+                        }
+                        return field.handleChange(Number(value));
+                      },
+                    };
+                    return (
+                      <FormField
+                        name='cost'
+                        label='Costo'
+                        placeholder='0.00'
+                        type='number'
+                        icon={Banknote}
+                        field={costField}
+                      />
+                    );
+                  }}
+                />
+                <form.Field
+                  name='status'
+                  children={(field) => (
+                    <div className='group'>
+                      <label
+                        htmlFor='status'
+                        className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
                       >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          d='M5 13l4 4L19 7'
-                        />
-                      </svg>
-                    )}
-                  </div>
-                  <span className='text-sm font-medium'>
-                    Cambiar contraseña
-                  </span>
-                  <input
-                    type='checkbox'
-                    checked={showPassword}
-                    onChange={(e) => {
-                      setShowPassword(e.target.checked);
-                      if (!e.target.checked) {
-                        form.setFieldValue('password', '');
-                      }
-                    }}
-                    className='sr-only'
-                  />
-                </label>
+                        Estado
+                      </label>
+                      <div className='custom-select-container border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
+                        <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
+                          <Activity size={16} />
+                        </div>
+                        <select
+                          id='status'
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) =>
+                            field.handleChange(
+                              () =>
+                                e.target.value as
+                                  | 'commissioning'
+                                  | 'operational'
+                                  | 'standby'
+                                  | 'maintenance'
+                                  | 'down'
+                                  | 'decommissioned',
+                            )
+                          }
+                          className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 cursor-pointer appearance-none rounded-none! border-0! border-l! py-2.5 pr-12 pl-2 shadow-inner! ring-0! outline-none!'
+                        >
+                          <option value='commissioning'>En instalación</option>
+                          <option value='operational'>Operando</option>
+                          <option value='standby'>En espera</option>
+                          <option value='maintenance'>En mantenimiento</option>
+                          <option value='down'>Fuera de servicio</option>
+                          <option value='decommissioned'>Dado de baja</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                />
+              </div>
 
-                {showPassword && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <form.Field
-                      name='password'
-                      validators={{
-                        onChange: editUserSchema.shape.password.unwrap(),
-                      }}
-                      children={(field) => (
-                        <PasswordField
-                          field={field}
-                          label='Nueva contraseña'
-                          name='password'
-                          autocomplete='new-password'
+              {/* Row 5: Criticidad + Fecha instalación */}
+              <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
+                <form.Field
+                  name='criticality'
+                  children={(field) => (
+                    <div className='group'>
+                      <label
+                        htmlFor='criticality'
+                        className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
+                      >
+                        Criticidad
+                      </label>
+                      <div className='custom-select-container border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
+                        <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
+                          <AlertTriangle size={16} />
+                        </div>
+                        <select
+                          id='criticality'
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) =>
+                            field.handleChange(
+                              () =>
+                                e.target.value as
+                                  | 'low'
+                                  | 'medium'
+                                  | 'high'
+                                  | 'critical',
+                            )
+                          }
+                          className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 cursor-pointer appearance-none rounded-none! border-0! border-l! py-2.5 pr-12 pl-2 shadow-inner! ring-0! outline-none!'
+                        >
+                          <option value='low'>Baja</option>
+                          <option value='medium'>Media</option>
+                          <option value='high'>Alta</option>
+                          <option value='critical'>Crítica</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                />
+                <form.Field
+                  name='installedAt'
+                  children={(field) => (
+                    <div className='group'>
+                      <label
+                        htmlFor='installedAt'
+                        className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
+                      >
+                        Fecha instalación
+                      </label>
+                      <div className='border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
+                        <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
+                          <Calendar size={16} />
+                        </div>
+                        <input
+                          id='installedAt'
+                          type='date'
+                          value={
+                            field.state.value instanceof Date
+                              ? field.state.value.toISOString().split('T')[0]
+                              : ''
+                          }
+                          onBlur={field.handleBlur}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            field.handleChange(
+                              val ? new Date(val + 'T00:00:00') : null,
+                            );
+                          }}
+                          className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 appearance-none rounded-none! border-0! border-l! py-2.5 pr-4 pl-2 shadow-inner! ring-0! outline-none!'
                         />
-                      )}
-                    />
-                  </motion.div>
-                )}
+                      </div>
+                    </div>
+                  )}
+                />
               </div>
             </div>
           </div>
@@ -342,7 +379,7 @@ export default function EditUserModal({
             <Button
               type='button'
               onClick={onClose}
-              disabled={updateUser.isPending}
+              disabled={updateAsset.isPending}
               intent='neutral'
               variant='secondary'
               fullWidth
@@ -351,7 +388,7 @@ export default function EditUserModal({
             </Button>
             <Button
               type='submit'
-              loading={updateUser.isPending}
+              loading={updateAsset.isPending}
               loadingText='Guardando...'
               icon={<Save size={18} />}
               intent='accent'

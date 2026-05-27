@@ -18,9 +18,9 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
-import { Asset } from '@/store/auth-store';
+import { Asset, useAuthStore } from '@/store/auth-store';
 import ConfirmModal from './confirm-modal';
-import EditUserModal from './EditAssetModal';
+import EditAssetModal from './EditAssetModal';
 
 import formatDate from '@/utils/format-date';
 import { useAssetsQuery } from '../hooks/use-users-query';
@@ -112,6 +112,9 @@ interface ConfirmModalState {
 }
 
 export default function AssetsTable() {
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+
   const [page, setPage] = useState(1);
   const size = 10;
 
@@ -271,40 +274,46 @@ export default function AssetsTable() {
         );
       },
     },
-    {
-      id: 'actions',
-      header: 'Acciones',
-      cell: ({ row }) => (
-        <div className='flex items-center gap-1.5'>
-          <Button
-            type='button'
-            aria-label='Editar activo'
-            title='Editar'
-            intent='primary'
-            variant='ghost'
-            icon={<Pencil size={16} />}
-            scale='101'
-            shadowSize='none'
-            className='size-8 rounded-lg p-0'
-            onClick={() => setEditModal({ isOpen: true, asset: row.original })}
-          />
-          <Button
-            type='button'
-            aria-label='Eliminar activo'
-            title='Eliminar'
-            intent='danger'
-            variant='ghost'
-            icon={<Trash2 size={16} />}
-            scale='101'
-            shadowSize='none'
-            className='size-8 rounded-lg p-0'
-            onClick={() =>
-              handleDeleteClick(row.original.id, row.original.name)
-            }
-          />
-        </div>
-      ),
-    },
+    ...(isAdmin
+      ? [
+          {
+            id: 'actions',
+            header: 'Acciones',
+            cell: ({ row }: { row: { original: Asset } }) => (
+              <div className='flex items-center gap-1.5'>
+                <Button
+                  type='button'
+                  aria-label='Editar activo'
+                  title='Editar'
+                  intent='primary'
+                  variant='ghost'
+                  icon={<Pencil size={16} />}
+                  scale='101'
+                  shadowSize='none'
+                  className='size-8 rounded-lg p-0'
+                  onClick={() =>
+                    setEditModal({ isOpen: true, asset: row.original })
+                  }
+                />
+                <Button
+                  type='button'
+                  aria-label='Eliminar activo'
+                  title='Eliminar'
+                  intent='danger'
+                  variant='ghost'
+                  icon={<Trash2 size={16} />}
+                  scale='101'
+                  shadowSize='none'
+                  className='size-8 rounded-lg p-0'
+                  onClick={() =>
+                    handleDeleteClick(row.original.id, row.original.name)
+                  }
+                />
+              </div>
+            ),
+          } satisfies ColumnDef<Asset>,
+        ]
+      : []),
   ];
 
   const table = useReactTable({
@@ -615,10 +624,10 @@ export default function AssetsTable() {
 
       {/* Edit Asset Modal */}
       {editModal.asset && (
-        <EditUserModal
+        <EditAssetModal
           key={editModal.asset.id}
           isOpen={editModal.isOpen}
-          user={editModal.asset}
+          asset={editModal.asset}
           onClose={handleCloseEditModal}
         />
       )}
