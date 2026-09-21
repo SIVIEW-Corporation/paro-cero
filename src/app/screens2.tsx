@@ -19,14 +19,24 @@ import { es } from 'date-fns/locale';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/style.css';
 
-import { EChartsArea, EChartsBar, EChartsPie } from '@/components/charts';
+import {
+  EChartsArea,
+  EChartsBar,
+  EChartsPie,
+  EChartsChart,
+} from '@/components/charts';
 
 import { ASSETS, PLANS, STC, STL, PRC, PRL, NTL, NTI } from '@/app/data';
 import { TECNICOS } from '@/app/data/constants';
 import { generarDatosSeisMeses } from '@/app/data/mock-data';
+import {
+  calculateMonthlyMaintenanceFinancials,
+  formatMxnCurrency,
+  type MonthlyMaintenanceFinancialData,
+} from '@/app/dashboard/reports/_utils/maintenance-financials';
 import { useWorkOrdersStore } from '@/app/stores/useWorkOrdersStore';
 import { cn } from '@/lib/cn';
-import { exportToCsv, type CsvColumn } from '@/utils/exportCsv';
+import type { CsvColumn } from '@/utils/exportCsv';
 
 import {
   Badge,
@@ -970,21 +980,19 @@ export function WorkOrdersScreen({
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const hasActiveFilters = Boolean(
     filterStatus ||
-      filterActivoId ||
-      filterPriority ||
-      filterTecnicoId ||
-      normalizedSearch ||
-      periodFilter !== WORK_ORDER_PERIOD_FILTER.SELECTED_MONTH ||
-      selectedMonth !== getCurrentMonthValue(new Date()),
+    filterActivoId ||
+    filterPriority ||
+    filterTecnicoId ||
+    normalizedSearch ||
+    periodFilter !== WORK_ORDER_PERIOD_FILTER.SELECTED_MONTH ||
+    selectedMonth !== getCurrentMonthValue(new Date()),
   );
 
   const filtered = wo.filter((w) => {
     const matchesStatus = !filterStatus || w.status === filterStatus;
     const matchesActivo = !filterActivoId || w.activoId === filterActivoId;
-    const matchesPriority =
-      !filterPriority || w.prioridad === filterPriority;
-    const matchesTecnico =
-      !filterTecnicoId || w.tecnicoId === filterTecnicoId;
+    const matchesPriority = !filterPriority || w.prioridad === filterPriority;
+    const matchesTecnico = !filterTecnicoId || w.tecnicoId === filterTecnicoId;
     // Los filtros de periodo se aplican sobre la fecha de creación de la OT.
     const matchesPeriod = isDateInRange(w.fechaCreacion, periodRange);
     const asset = ASSETS.find((item) => item.id === w.activoId);
@@ -1383,7 +1391,7 @@ export function WorkOrdersScreen({
         </div>
 
         <div className='mt-2 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-end'>
-          <label className='flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:w-44'>
+          <label className='text-app-text-secondary flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide uppercase lg:w-44'>
             Periodo de creación
             <select
               value={periodFilter}
@@ -1401,7 +1409,7 @@ export function WorkOrdersScreen({
             </select>
           </label>
           {periodFilter === WORK_ORDER_PERIOD_FILTER.SELECTED_MONTH && (
-            <label className='flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:w-36'>
+            <label className='text-app-text-secondary flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide uppercase lg:w-36'>
               Mes
               <input
                 type='month'
@@ -1417,7 +1425,7 @@ export function WorkOrdersScreen({
               />
             </label>
           )}
-          <label className='flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:w-44'>
+          <label className='text-app-text-secondary flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide uppercase lg:w-44'>
             Activo
             <select
               value={filterActivoId}
@@ -1432,7 +1440,7 @@ export function WorkOrdersScreen({
               ))}
             </select>
           </label>
-          <label className='flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:w-36'>
+          <label className='text-app-text-secondary flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide uppercase lg:w-36'>
             Prioridad
             <select
               value={filterPriority}
@@ -1448,7 +1456,7 @@ export function WorkOrdersScreen({
               ))}
             </select>
           </label>
-          <label className='flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:w-44'>
+          <label className='text-app-text-secondary flex min-w-0 flex-col gap-1 text-[11px] font-bold tracking-wide uppercase lg:w-44'>
             Técnico
             <select
               value={filterTecnicoId}
@@ -1464,7 +1472,7 @@ export function WorkOrdersScreen({
               ))}
             </select>
           </label>
-          <label className='flex min-w-0 flex-1 flex-col gap-1 text-[11px] font-bold tracking-wide text-app-text-secondary uppercase lg:min-w-52'>
+          <label className='text-app-text-secondary flex min-w-0 flex-1 flex-col gap-1 text-[11px] font-bold tracking-wide uppercase lg:min-w-52'>
             Buscar OT
             <input
               type='search'
@@ -1476,11 +1484,13 @@ export function WorkOrdersScreen({
             />
           </label>
           <div className='flex w-full items-center justify-between gap-3 lg:ml-auto lg:w-auto lg:justify-end lg:pb-0.5'>
-            <span className='text-xs font-semibold whitespace-nowrap text-app-text-secondary'>
+            <span className='text-app-text-secondary text-xs font-semibold whitespace-nowrap'>
               {workOrderResultsCounter}
             </span>
             {hasActiveFilters && (
-              <BtnGhost onClick={clearWorkOrderFilters}>Limpiar filtros</BtnGhost>
+              <BtnGhost onClick={clearWorkOrderFilters}>
+                Limpiar filtros
+              </BtnGhost>
             )}
           </div>
         </div>
@@ -1520,9 +1530,7 @@ export function WorkOrdersScreen({
                 </Td>
                 <Td>{w.tecnicoNombre}</Td>
                 <Td mono>{formatWorkOrderDate(w.fechaCreacion)}</Td>
-                <Td mono>
-                  {formatWorkOrderDate(w.fechaCompromiso)}
-                </Td>
+                <Td mono>{formatWorkOrderDate(w.fechaCompromiso)}</Td>
                 <Td>
                   <Badge label={PRL[w.prioridad]} color={PRC[w.prioridad]} />
                 </Td>
@@ -1533,7 +1541,9 @@ export function WorkOrdersScreen({
                   />
                 </Td>
                 <Td>
-                  <BtnGhost onClick={() => setSelected(w)}>Ver detalle</BtnGhost>
+                  <BtnGhost onClick={() => setSelected(w)}>
+                    Ver detalle
+                  </BtnGhost>
                 </Td>
               </tr>
             ))
@@ -1541,7 +1551,7 @@ export function WorkOrdersScreen({
             <tr className='bg-app-surface'>
               <td
                 colSpan={9}
-                className='px-4 py-10 text-center text-sm font-semibold text-app-text-secondary'
+                className='text-app-text-secondary px-4 py-10 text-center text-sm font-semibold'
               >
                 <div className='flex flex-col items-center gap-3'>
                   <span>
@@ -1705,93 +1715,90 @@ export function WorkOrdersScreen({
               }
             />
           </Field>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 12,
-              marginBottom: 12,
-            }}
-          >
-            <label
-              style={{
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-                fontSize: 13,
-                color: '#667085',
-              }}
-            >
-              <input
-                type='checkbox'
-                checked={newOtData.gastoDinero}
-                onChange={(e) =>
-                  setNewOtData((prev) => ({
-                    ...prev,
-                    gastoDinero: e.target.checked,
-                    montoGastado: e.target.checked ? prev.montoGastado : '',
-                  }))
-                }
-              />
-              ¿Se gastó dinero?
-            </label>
-            <label
-              style={{
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-                fontSize: 13,
-                color: '#667085',
-              }}
-            >
-              <input
-                type='checkbox'
-                checked={newOtData.usoRefaccionConsumible}
-                onChange={(e) =>
-                  setNewOtData((prev) => ({
-                    ...prev,
-                    usoRefaccionConsumible: e.target.checked,
-                    refaccionConsumibleDetalle: e.target.checked
-                      ? prev.refaccionConsumibleDetalle
-                      : '',
-                  }))
-                }
-              />
-              ¿Se usó refacción o consumible?
-            </label>
-          </div>
-          {newOtData.gastoDinero && (
-            <Field label='Monto gastado'>
-              <input
-                type='number'
-                min={0}
-                step='0.01'
-                placeholder='Ej: 1500.00'
-                value={newOtData.montoGastado}
-                onChange={(e) =>
-                  setNewOtData((prev) => ({
-                    ...prev,
-                    montoGastado: e.target.value,
-                  }))
-                }
-              />
-            </Field>
-          )}
-          {newOtData.usoRefaccionConsumible && (
-            <Field label='Detalle de refacción o consumible *'>
-              <input
-                type='text'
-                placeholder='Ej: Rodamiento SKF 6205'
-                value={newOtData.refaccionConsumibleDetalle}
-                onChange={(e) =>
-                  setNewOtData((prev) => ({
-                    ...prev,
-                    refaccionConsumibleDetalle: e.target.value,
-                  }))
-                }
-              />
-            </Field>
-          )}
+          <section className='border-shNeutral-200 bg-shNeutral-50 mb-4 rounded-xl border p-4'>
+            <div className='mb-4'>
+              <h3 className='text-shPrimary-900 text-sm font-extrabold'>
+                Costos y consumibles
+              </h3>
+              <p className='text-shNeutral-500 mt-1 text-xs leading-5'>
+                Registra si la OT generó gasto directo o utilizó refacciones
+                para alimentar los KPIs financieros.
+              </p>
+            </div>
+
+            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8'>
+              <label className='text-shNeutral-800 flex items-center gap-2 text-sm font-semibold'>
+                <input
+                  type='checkbox'
+                  checked={newOtData.gastoDinero}
+                  onChange={(e) =>
+                    setNewOtData((prev) => ({
+                      ...prev,
+                      gastoDinero: e.target.checked,
+                      montoGastado: e.target.checked ? prev.montoGastado : '',
+                    }))
+                  }
+                  className='accent-shPrimary-700 h-4 w-4'
+                />
+                ¿Se gastó dinero?
+              </label>
+
+              <label className='text-shNeutral-800 flex items-center gap-2 text-sm font-semibold'>
+                <input
+                  type='checkbox'
+                  checked={newOtData.usoRefaccionConsumible}
+                  onChange={(e) =>
+                    setNewOtData((prev) => ({
+                      ...prev,
+                      usoRefaccionConsumible: e.target.checked,
+                      refaccionConsumibleDetalle: e.target.checked
+                        ? prev.refaccionConsumibleDetalle
+                        : '',
+                    }))
+                  }
+                  className='accent-shPrimary-700 h-4 w-4'
+                />
+                ¿Se usó refacción o consumible?
+              </label>
+            </div>
+
+            {(newOtData.gastoDinero || newOtData.usoRefaccionConsumible) && (
+              <div className='mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2'>
+                {newOtData.gastoDinero && (
+                  <Field label='Monto gastado *'>
+                    <input
+                      type='number'
+                      min={0}
+                      step='0.01'
+                      placeholder='Ej: 1500.00'
+                      value={newOtData.montoGastado}
+                      onChange={(e) =>
+                        setNewOtData((prev) => ({
+                          ...prev,
+                          montoGastado: e.target.value,
+                        }))
+                      }
+                    />
+                  </Field>
+                )}
+                {newOtData.usoRefaccionConsumible && (
+                  <Field label='Detalle de refacción o consumible *'>
+                    <input
+                      type='text'
+                      placeholder='Ej: Rodamiento SKF 6205'
+                      value={newOtData.refaccionConsumibleDetalle}
+                      onChange={(e) =>
+                        setNewOtData((prev) => ({
+                          ...prev,
+                          refaccionConsumibleDetalle: e.target.value,
+                        }))
+                      }
+                    />
+                  </Field>
+                )}
+              </div>
+            )}
+          </section>
           <ModalFooter
             onCancel={closeCreateModal}
             onConfirm={createWorkOrder}
@@ -2094,6 +2101,18 @@ const REPORT_EXPORT_KIND = {
 type ReportExportKind =
   (typeof REPORT_EXPORT_KIND)[keyof typeof REPORT_EXPORT_KIND];
 
+const REPORT_VIEW = {
+  OPERATIONAL: 'operational',
+  FINANCIAL: 'financial',
+} as const;
+
+type ReportView = (typeof REPORT_VIEW)[keyof typeof REPORT_VIEW];
+
+const reportViewOptions = [
+  { label: 'KPIs operativos', value: REPORT_VIEW.OPERATIONAL },
+  { label: 'KPIs financieros', value: REPORT_VIEW.FINANCIAL },
+] as const satisfies ReadonlyArray<{ label: string; value: ReportView }>;
+
 const reportStatusFilterOptions = [
   { label: 'Todos', value: '' },
   { label: 'Nueva', value: 'nueva' },
@@ -2108,7 +2127,7 @@ const reportStatusFilterOptions = [
 const closedStatuses: EstadoOT[] = ['completada', 'cerrada', 'cancelada'];
 
 const REPORT_MONTHLY_TREND_OMITTED_NOTE =
-  'Las gráficas de tendencia mensual se omiten en periodos de un mes o menos. Selecciona un rango mayor para incluir análisis histórico.';
+  'La tendencia mensual se omite para periodos de un mes o menos.';
 
 const reportStatusLabel: Record<EstadoOT, string> = {
   nueva: 'Nueva',
@@ -2511,6 +2530,192 @@ function getPriorityBadgeClass(priority: PrioridadOT) {
   return 'border-shSuccess-200 bg-shSuccess-50 text-shSuccess-800';
 }
 
+function FinancialMaintenanceChart({
+  data,
+}: {
+  data: MonthlyMaintenanceFinancialData[];
+}) {
+  const preventiveValues = data.map((item) => item.preventiveCost);
+  const correctiveValues = data.map((item) => item.correctiveCost);
+  const canShowPreventiveStats =
+    data.length >= 2 && preventiveValues.some((value) => value > 0);
+  const canShowCorrectiveStats =
+    data.length >= 2 && correctiveValues.some((value) => value > 0);
+  const buildMarkPoint = (show: boolean) =>
+    show
+      ? {
+          data: [
+            { type: 'max' as const, name: 'Máx' },
+            { type: 'min' as const, name: 'Mín' },
+          ],
+          symbolSize: 42,
+          label: { fontSize: 10, fontWeight: 700 },
+        }
+      : undefined;
+  const buildMarkLine = (show: boolean) =>
+    show
+      ? {
+          data: [{ type: 'average' as const, name: 'Promedio' }],
+          label: {
+            formatter: 'Promedio',
+            fontSize: 10,
+          },
+          lineStyle: { type: 'dashed' as const, width: 1.5 },
+        }
+      : undefined;
+  const options: echarts.EChartsOption = {
+    color: ['#486581', '#b91c1c'],
+    calculable: true,
+    grid: {
+      left: '3%',
+      right: '4%',
+      top: 58,
+      bottom: '8%',
+      containLabel: true,
+    },
+    legend: {
+      data: ['Preventivo', 'Correctivo'],
+      top: 0,
+      left: 0,
+      textStyle: { color: '#667085', fontSize: 11, fontWeight: 600 },
+    },
+    toolbox: {
+      show: true,
+      right: 0,
+      top: 0,
+      feature: {
+        magicType: { show: true, type: ['line', 'bar'] },
+        restore: { show: true },
+        saveAsImage: { show: true },
+      },
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+        shadowStyle: { opacity: 0.08 },
+      },
+      backgroundColor: '#ffffff',
+      borderColor: '#dde3ea',
+      borderRadius: 8,
+      extraCssText: 'box-shadow: 0 8px 24px rgba(15,23,42,0.12);',
+      textStyle: { color: '#111827', fontSize: 12 },
+      formatter: (params) => {
+        const items = Array.isArray(params) ? params : [params];
+        const firstItem = items[0];
+        const dataIndex =
+          typeof firstItem?.dataIndex === 'number' ? firstItem.dataIndex : 0;
+        const month = data[dataIndex];
+
+        if (!month) return '';
+
+        return [
+          `<strong>${month.monthLabel}</strong>`,
+          `Gasto preventivo: ${formatMxnCurrency(month.preventiveCost)}`,
+          `Gasto correctivo: ${formatMxnCurrency(month.correctiveCost)}`,
+          `Gasto total mensual: ${formatMxnCurrency(month.totalCost)}`,
+          `Número de OT: ${month.workOrderCount}`,
+          `OT con refacción/consumible: ${month.sparePartWorkOrderCount}`,
+        ].join('<br/>');
+      },
+    },
+    xAxis: [
+      {
+        type: 'category',
+        data: data.map((item) => item.monthLabel),
+        axisLine: { lineStyle: { color: '#dde3ea' } },
+        axisTick: { alignWithLabel: true },
+        axisLabel: { color: '#667085', fontSize: 11, interval: 'auto' },
+      },
+    ],
+    yAxis: [
+      {
+        type: 'value',
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          color: '#667085',
+          fontSize: 11,
+          formatter: (value: number) => formatMxnCurrency(value),
+        },
+        splitLine: { lineStyle: { color: '#dde3ea', type: 'dashed' } },
+      },
+    ],
+    series: [
+      {
+        name: 'Preventivo',
+        type: 'bar',
+        data: preventiveValues,
+        barMaxWidth: 42,
+        barGap: '10%',
+        barCategoryGap: '35%',
+        itemStyle: { borderRadius: [4, 4, 0, 0] },
+        markPoint: buildMarkPoint(canShowPreventiveStats),
+        markLine: buildMarkLine(canShowPreventiveStats),
+      },
+      {
+        name: 'Correctivo',
+        type: 'bar',
+        data: correctiveValues,
+        barMaxWidth: 42,
+        barCategoryGap: '35%',
+        itemStyle: { borderRadius: [4, 4, 0, 0] },
+        markPoint: buildMarkPoint(canShowCorrectiveStats),
+        markLine: buildMarkLine(canShowCorrectiveStats),
+      },
+    ],
+  };
+
+  return <EChartsChart options={options} height={300} />;
+}
+
+function escapeCsvCell(
+  value: string | number | boolean | Date | null | undefined,
+) {
+  const normalizedValue = value instanceof Date ? value.toISOString() : value;
+  const stringValue = String(normalizedValue ?? '');
+
+  if (
+    stringValue.includes(',') ||
+    stringValue.includes('"') ||
+    stringValue.includes('\n')
+  ) {
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+
+  return stringValue;
+}
+
+function buildCsvSection<TRecord>({
+  columns,
+  rows,
+}: {
+  columns: CsvColumn<TRecord>[];
+  rows: TRecord[];
+}) {
+  return [
+    columns.map((column) => escapeCsvCell(column.header)).join(','),
+    ...rows.map((row) =>
+      columns.map((column) => escapeCsvCell(column.value(row))).join(','),
+    ),
+  ].join('\r\n');
+}
+
+function downloadCsvContent(filename: string, csvContent: string) {
+  const blob = new Blob([`\uFEFF${csvContent}`], {
+    type: 'text/csv;charset=utf-8;',
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = filename.endsWith('.csv') ? filename : `${filename}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
   const setOrdenes = useWorkOrdersStore((state) => state.setOrdenes);
   const [filters, setFilters] = useState<ReportFilters>(
@@ -2521,6 +2726,9 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
   );
   const [showPicker, setShowPicker] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [reportView, setReportView] = useState<ReportView>(
+    REPORT_VIEW.OPERATIONAL,
+  );
 
   const {
     assets: filteredAssets,
@@ -2542,6 +2750,11 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
     end: endOfMonth(filters.dateRange.to),
   });
   const areas = Array.from(new Set(ASSETS.map((asset) => asset.area))).sort();
+  const financialSummary = calculateMonthlyMaintenanceFinancials({
+    workOrders: filteredWo,
+    respectActiveStatusFilter: Boolean(filters.status),
+  });
+  const financialMonthlyData = financialSummary.monthlyData;
   const technicians = Array.from(
     new Map(
       wo.map((workOrder) => [
@@ -2635,7 +2848,10 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
       down: Math.round(group.down / 60),
     }))
     .sort((first, second) => second.count - first.count);
-  const kpiSummary: ReportKpiSummary[] = [
+  const financialStatusPolicyLabel = filters.status
+    ? `Respeta filtro de estado: ${reportStatusLabel[filters.status]}`
+    : 'Gasto ejecutado: OTs completadas/cerradas';
+  const operationalKpiSummary: ReportKpiSummary[] = [
     {
       metric: 'Cumplimiento PM',
       value: `${compliancePct}%`,
@@ -2651,6 +2867,33 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
       metric: '% Correctivo',
       value: `${pct}%`,
       detail: `Prev: ${preventivos} · Corr: ${correctivos}`,
+    },
+  ];
+  const financialKpiSummary: ReportKpiSummary[] = [
+    {
+      metric: 'Gasto total en mantenimiento',
+      value: formatMxnCurrency(financialSummary.totalMaintenanceCost),
+      detail: financialStatusPolicyLabel,
+    },
+    {
+      metric: 'Costo promedio por OT',
+      value: formatMxnCurrency(financialSummary.averageCostPerWorkOrder),
+      detail: `${financialSummary.includedWorkOrderCount} OTs con costo`,
+    },
+    {
+      metric: 'Gasto preventivo',
+      value: formatMxnCurrency(financialSummary.preventiveMaintenanceCost),
+      detail: 'Suma de OTs preventivas',
+    },
+    {
+      metric: 'Gasto correctivo',
+      value: formatMxnCurrency(financialSummary.correctiveMaintenanceCost),
+      detail: 'Suma de OTs correctivas',
+    },
+    {
+      metric: 'OT con refacción/consumible',
+      value: financialSummary.workOrdersWithSparePartsCount,
+      detail: 'Con costo y consumible activo',
     },
   ];
   const periodLabel =
@@ -2717,7 +2960,12 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
   };
 
   const clearFilters = () => {
-    const nextFilters = { ...filters, area: '', technicianId: '', status: '' };
+    const nextFilters: ReportFilters = {
+      ...filters,
+      area: '',
+      technicianId: '',
+      status: '',
+    };
 
     setDraftFilters({
       ...draftFilters,
@@ -2782,9 +3030,9 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
     </section>
   `;
 
-  const buildKpiCards = () => `
+  const buildKpiCards = (summary: ReportKpiSummary[]) => `
     <section class="grid">
-      ${kpiSummary
+      ${summary
         .map(
           (kpi) => `
             <article class="card">
@@ -2798,7 +3046,7 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
     </section>
   `;
 
-  const buildSummaryTables = () => {
+  const buildOperationalSummaryTables = () => {
     const chartRows = historyData.map((item) => ({
       Mes: item.mes,
       'Cumplimiento PM (%)': item.compliance,
@@ -2822,6 +3070,22 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
       ${buildPrintRows(failureRows, 'Sin fallas para los filtros aplicados.')}
       <h2>Preventivo vs correctivo</h2>
       ${buildPrintRows(typeRows, 'Sin órdenes para comparar.')}
+    `;
+  };
+
+  const buildFinancialSummaryTables = () => {
+    const financialRows = financialMonthlyData.map((item) => ({
+      Mes: item.monthLabel,
+      'Gasto preventivo': formatMxnCurrency(item.preventiveCost),
+      'Gasto correctivo': formatMxnCurrency(item.correctiveCost),
+      'Gasto total': formatMxnCurrency(item.totalCost),
+      'Número de OT': item.workOrderCount,
+      'OT con refacción/consumible': item.sparePartWorkOrderCount,
+    }));
+
+    return `
+      <h2>Gasto mensual en mantenimiento</h2>
+      ${buildPrintRows(financialRows, 'Aún no hay costos registrados en órdenes de trabajo para este periodo.')}
     `;
   };
 
@@ -2881,19 +3145,31 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
         'Acción tomada': getWorkOrderAction(workOrder) || '—',
       };
     });
+    const isFinancialReport = reportView === REPORT_VIEW.FINANCIAL;
 
     openReportPrintWindow({
-      title: 'Reportes y KPIs',
+      title: isFinancialReport ? 'KPIs financieros' : 'Reportes y KPIs',
       filename: buildReportFilename(filters, REPORT_EXPORT_KIND.FULL_PDF),
-      body: `
-        ${buildPrintHeader('Reportes y KPIs')}
-        ${buildKpiCards()}
+      body: isFinancialReport
+        ? `
+        ${buildPrintHeader('KPIs financieros')}
+        ${buildKpiCards(financialKpiSummary)}
         ${
           shouldIncludeMonthlyTrendCharts
             ? buildVisualCharts(capturedCharts)
             : buildMonthlyTrendChartsOmittedNote()
         }
-        ${buildSummaryTables()}
+        ${buildFinancialSummaryTables()}
+      `
+        : `
+        ${buildPrintHeader('Reportes y KPIs')}
+        ${buildKpiCards(operationalKpiSummary)}
+        ${
+          shouldIncludeMonthlyTrendCharts
+            ? buildVisualCharts(capturedCharts)
+            : buildMonthlyTrendChartsOmittedNote()
+        }
+        ${buildOperationalSummaryTables()}
         <h2>Detalle visible del reporte</h2>
         ${buildPrintRows(detailPrintRows, 'Sin órdenes de trabajo para los filtros aplicados.')}
       `,
@@ -2901,12 +3177,45 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
   };
 
   const exportExecutivePdf = () => {
+    const isFinancialReport = reportView === REPORT_VIEW.FINANCIAL;
+
     openReportPrintWindow({
-      title: 'Reporte ejecutivo PM0 / Paro Cero',
+      title: isFinancialReport
+        ? 'Reporte financiero PM0 / Paro Cero'
+        : 'Reporte ejecutivo PM0 / Paro Cero',
       filename: buildReportFilename(filters, REPORT_EXPORT_KIND.EXECUTIVE_PDF),
-      body: `
+      body: isFinancialReport
+        ? `
+        ${buildPrintHeader('Reporte financiero PM0 / Paro Cero')}
+        ${buildKpiCards(financialKpiSummary)}
+        <h2>Resumen financiero</h2>
+        ${buildPrintRows(
+          [
+            {
+              Indicador: 'Gasto total en mantenimiento',
+              Valor: formatMxnCurrency(financialSummary.totalMaintenanceCost),
+              Lectura: financialStatusPolicyLabel,
+            },
+            {
+              Indicador: 'Costo promedio por OT',
+              Valor: formatMxnCurrency(
+                financialSummary.averageCostPerWorkOrder,
+              ),
+              Lectura: `${financialSummary.includedWorkOrderCount} OTs con costo`,
+            },
+            {
+              Indicador: 'OT con refacción/consumible',
+              Valor: financialSummary.workOrdersWithSparePartsCount,
+              Lectura: 'Con gasto y consumible activo',
+            },
+          ],
+          'Sin KPIs financieros para el periodo.',
+        )}
+        ${buildFinancialSummaryTables()}
+      `
+        : `
         ${buildPrintHeader('Reporte ejecutivo PM0 / Paro Cero')}
-        ${buildKpiCards()}
+        ${buildKpiCards(operationalKpiSummary)}
         <h2>Resumen ejecutivo</h2>
         ${buildPrintRows(
           [
@@ -2947,54 +3256,94 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
   };
 
   const exportDatabaseCsv = () => {
-    exportToCsv({
-      filename: `${buildReportFilename(filters, REPORT_EXPORT_KIND.DATABASE_CSV)}.csv`,
-      columns: [
-        { header: 'Folio', value: (workOrder) => workOrder.folio },
-        {
-          header: 'Activo',
-          value: (workOrder) => {
-            const asset = getAssetById(workOrder.activoId);
-            return asset ? `${asset.code} - ${asset.name}` : workOrder.activoId;
-          },
+    const workOrderColumns = [
+      { header: 'Folio', value: (workOrder: OrdenTrabajo) => workOrder.folio },
+      {
+        header: 'Activo',
+        value: (workOrder: OrdenTrabajo) => {
+          const asset = getAssetById(workOrder.activoId);
+          return asset ? `${asset.code} - ${asset.name}` : workOrder.activoId;
         },
-        {
-          header: 'Área',
-          value: (workOrder) => getAssetById(workOrder.activoId)?.area || '',
-        },
-        {
-          header: 'Técnico',
-          value: (workOrder) => workOrder.tecnicoNombre,
-        },
-        { header: 'Tipo', value: (workOrder) => workOrder.tipo },
-        {
-          header: 'Estado',
-          value: (workOrder) => reportStatusLabel[workOrder.status],
-        },
-        {
-          header: 'Prioridad',
-          value: (workOrder) => reportPriorityLabel[workOrder.prioridad],
-        },
-        {
-          header: 'Fecha',
-          value: (workOrder) => formatDate(workOrder.fechaCreacion),
-        },
-        {
-          header: 'Paro',
-          value: (workOrder) =>
-            Math.round((workOrder.downtimeMinutos / 60) * 10) / 10,
-        },
-        {
-          header: 'Causa raíz',
-          value: (workOrder) => getWorkOrderRootCause(workOrder),
-        },
-        {
-          header: 'Acción tomada',
-          value: (workOrder) => getWorkOrderAction(workOrder),
-        },
-      ] satisfies CsvColumn<OrdenTrabajo>[],
-      rows: filteredWo,
-    });
+      },
+      {
+        header: 'Área',
+        value: (workOrder: OrdenTrabajo) =>
+          getAssetById(workOrder.activoId)?.area || '',
+      },
+      {
+        header: 'Técnico',
+        value: (workOrder: OrdenTrabajo) => workOrder.tecnicoNombre,
+      },
+      { header: 'Tipo', value: (workOrder: OrdenTrabajo) => workOrder.tipo },
+      {
+        header: 'Estado',
+        value: (workOrder: OrdenTrabajo) => reportStatusLabel[workOrder.status],
+      },
+      {
+        header: 'Prioridad',
+        value: (workOrder: OrdenTrabajo) =>
+          reportPriorityLabel[workOrder.prioridad],
+      },
+      {
+        header: 'Fecha',
+        value: (workOrder: OrdenTrabajo) => formatDate(workOrder.fechaCreacion),
+      },
+      {
+        header: 'Paro',
+        value: (workOrder: OrdenTrabajo) =>
+          Math.round((workOrder.downtimeMinutos / 60) * 10) / 10,
+      },
+      {
+        header: 'Causa raíz',
+        value: (workOrder: OrdenTrabajo) => getWorkOrderRootCause(workOrder),
+      },
+      {
+        header: 'Acción tomada',
+        value: (workOrder: OrdenTrabajo) => getWorkOrderAction(workOrder),
+      },
+    ] satisfies CsvColumn<OrdenTrabajo>[];
+    const monthlyFinancialColumns = [
+      {
+        header: 'Mes',
+        value: (item: MonthlyMaintenanceFinancialData) => item.monthLabel,
+      },
+      {
+        header: 'Gasto preventivo',
+        value: (item: MonthlyMaintenanceFinancialData) => item.preventiveCost,
+      },
+      {
+        header: 'Gasto correctivo',
+        value: (item: MonthlyMaintenanceFinancialData) => item.correctiveCost,
+      },
+      {
+        header: 'Gasto total',
+        value: (item: MonthlyMaintenanceFinancialData) => item.totalCost,
+      },
+      {
+        header: 'Número de OT',
+        value: (item: MonthlyMaintenanceFinancialData) => item.workOrderCount,
+      },
+      {
+        header: 'OT con refacción o consumible',
+        value: (item: MonthlyMaintenanceFinancialData) =>
+          item.sparePartWorkOrderCount,
+      },
+    ] satisfies CsvColumn<MonthlyMaintenanceFinancialData>[];
+    const csvContent =
+      reportView === REPORT_VIEW.FINANCIAL
+        ? [
+            'Gasto mensual en mantenimiento',
+            buildCsvSection({
+              columns: monthlyFinancialColumns,
+              rows: financialMonthlyData,
+            }),
+          ].join('\r\n')
+        : buildCsvSection({ columns: workOrderColumns, rows: filteredWo });
+
+    downloadCsvContent(
+      `${buildReportFilename(filters, REPORT_EXPORT_KIND.DATABASE_CSV)}.csv`,
+      csvContent,
+    );
   };
 
   const runExport = (kind: ReportExportKind) => {
@@ -3098,6 +3447,29 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
             <p className='text-shNeutral-500 mt-1 text-sm'>
               {activeFilterSummary}
             </p>
+            <div
+              className='border-shNeutral-200 mt-3 inline-flex rounded-full border bg-white p-1 shadow-sm'
+              role='tablist'
+              aria-label='Tipo de reporte'
+            >
+              {reportViewOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type='button'
+                  role='tab'
+                  aria-selected={reportView === option.value}
+                  onClick={() => setReportView(option.value)}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-xs font-bold transition-colors',
+                    reportView === option.value
+                      ? 'bg-shPrimary-800 text-white shadow-sm'
+                      : 'text-shNeutral-600 hover:bg-shNeutral-50 hover:text-shPrimary-800',
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className='flex flex-wrap items-center gap-2'>
             {datePresetOptions.map((option) => (
@@ -3212,239 +3584,345 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
       </section>
 
       <div className='print-content'>
-        <div className='report-kpi-grid mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4'>
-          <KpiCard
-            label='Cumplimiento PM'
-            value={`${compliancePct}%`}
-            sub={
-              selectedAsset
-                ? 'Basado en histórico del activo'
-                : 'Meta: 90% · General'
-            }
-            color='#486581'
-            icon={<span>📊</span>}
-          />
-          <KpiCard
-            label='MTTR Promedio'
-            value={`${avgMTTR}h`}
-            sub='Mean time to repair'
-            color='#047857'
-            icon={<span>🔧</span>}
-          />
-          <KpiCard
-            label='Paro Acumulado'
-            value={`${Math.round(totalDown / 60)}h`}
-            sub={selectedAsset ? 'Paro total activo' : 'Total acumulado'}
-            color='#b91c1c'
-            icon={<span>⏱</span>}
-          />
-          <KpiCard
-            label='% Correctivo'
-            value={`${pct}%`}
-            sub={`Prev: ${preventivos} · Corr: ${correctivos}`}
-            color='#d97706'
-            icon={<span>🔴</span>}
-          />
-        </div>
-
-        <div className='report-main-charts mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2'>
-          <Card>
-            <CardTitle>Cumplimiento PM — periodo filtrado (%)</CardTitle>
-            <div
-              data-report-chart-export='true'
-              data-report-chart-id='pm-compliance'
-              data-report-chart-title='Cumplimiento PM — periodo filtrado (%)'
-            >
-              <EChartsArea
-                data={chartCompliance}
-                dataKey='val'
+        {reportView === REPORT_VIEW.OPERATIONAL ? (
+          <>
+            <div className='report-kpi-grid mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4'>
+              <KpiCard
+                label='Cumplimiento PM'
+                value={`${compliancePct}%`}
+                sub={
+                  selectedAsset
+                    ? 'Basado en histórico del activo'
+                    : 'Meta: 90% · General'
+                }
                 color='#486581'
-                name='Cumplimiento %'
-                height={210}
-                yDomain={[0, 100]}
+                icon={<span>📊</span>}
               />
-            </div>
-          </Card>
-          <Card>
-            <CardTitle>Horas de Paro por Mes</CardTitle>
-            <div
-              data-report-chart-export='true'
-              data-report-chart-id='downtime-by-month'
-              data-report-chart-title='Horas de Paro por Mes'
-            >
-              <EChartsBar
-                data={chartDowntime}
-                dataKey='hrs'
+              <KpiCard
+                label='MTTR Promedio'
+                value={`${avgMTTR}h`}
+                sub='Mean time to repair'
+                color='#047857'
+                icon={<span>🔧</span>}
+              />
+              <KpiCard
+                label='Paro Acumulado'
+                value={`${Math.round(totalDown / 60)}h`}
+                sub={selectedAsset ? 'Paro total activo' : 'Total acumulado'}
                 color='#b91c1c'
-                name='Horas paro'
-                height={210}
+                icon={<span>⏱</span>}
+              />
+              <KpiCard
+                label='% Correctivo'
+                value={`${pct}%`}
+                sub={`Prev: ${preventivos} · Corr: ${correctivos}`}
+                color='#d97706'
+                icon={<span>🔴</span>}
               />
             </div>
-          </Card>
-        </div>
 
-        <div className='report-bottom-grid mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2'>
-          <Card>
-            <CardTitle>Ranking de Fallas por Activo</CardTitle>
-            <DataTable head={['#', 'Activo', 'Fallas', 'Paro (h)']}>
-              {dynamicTopFallas.length > 0 ? (
-                dynamicTopFallas.map((failure, index) => (
-                  <tr key={failure.asset}>
-                    <Td mono>{index + 1}</Td>
-                    <Td bold={index < 2}>{failure.asset}</Td>
-                    <Td>
-                      <span className='text-shDanger-700 font-mono font-bold'>
-                        {failure.count}
-                      </span>
-                    </Td>
-                    <Td>
-                      <span className='text-shAccent-700 font-mono'>
-                        {failure.down}
-                      </span>
-                    </Td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <Td>Sin datos</Td>
-                  <Td>Sin fallas para los filtros aplicados</Td>
-                  <Td>0</Td>
-                  <Td>0</Td>
-                </tr>
-              )}
-            </DataTable>
-          </Card>
-          <Card>
-            <CardTitle>Preventivo vs. Correctivo</CardTitle>
-            <div
-              data-report-chart-export='true'
-              data-report-chart-id='preventive-vs-corrective'
-              data-report-chart-title='Preventivo vs. Correctivo'
-            >
-              <EChartsPie data={chartTipo} height={185} />
-            </div>
-            <div className='mt-3 flex flex-wrap justify-center gap-5'>
-              {chartTipo.map((item) => (
-                <div key={item.name} className='flex items-center gap-2'>
-                  <div
-                    className='h-2.5 w-2.5 rounded-sm'
-                    style={{ background: item.color }}
+            <div className='report-main-charts mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2'>
+              <Card>
+                <CardTitle>Cumplimiento PM — periodo filtrado (%)</CardTitle>
+                <div
+                  data-report-chart-export='true'
+                  data-report-chart-id='pm-compliance'
+                  data-report-chart-title='Cumplimiento PM — periodo filtrado (%)'
+                >
+                  <EChartsArea
+                    data={chartCompliance}
+                    dataKey='val'
+                    color='#486581'
+                    name='Cumplimiento %'
+                    height={210}
+                    yDomain={[0, 100]}
                   />
-                  <span className='text-shNeutral-600 text-sm'>
-                    {item.name}:{' '}
-                    <strong className='text-shNeutral-900'>{item.value}</strong>
-                  </span>
                 </div>
-              ))}
+              </Card>
+              <Card>
+                <CardTitle>Horas de Paro por Mes</CardTitle>
+                <div
+                  data-report-chart-export='true'
+                  data-report-chart-id='downtime-by-month'
+                  data-report-chart-title='Horas de Paro por Mes'
+                >
+                  <EChartsBar
+                    data={chartDowntime}
+                    dataKey='hrs'
+                    color='#b91c1c'
+                    name='Horas paro'
+                    height={210}
+                  />
+                </div>
+              </Card>
             </div>
-          </Card>
-        </div>
 
-        <Card className='mb-4'>
-          <div className='mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between'>
-            <div>
-              <CardTitle>Detalle del reporte</CardTitle>
-              <p className='text-shNeutral-500 text-sm'>
-                {activeFilterSummary}
-              </p>
-            </div>
-            <span className='text-shNeutral-500 text-xs font-semibold'>
-              {filteredWo.length} OTs · {filteredAssets.length} activos ·{' '}
-              {filteredPlans.length} planes PM
-            </span>
-          </div>
-          <div className='border-shNeutral-200 overflow-x-auto rounded-xl border'>
-            <table className='w-full min-w-[980px] border-collapse bg-white text-sm'>
-              <thead className='bg-shNeutral-50 text-shNeutral-600'>
-                <tr>
-                  {[
-                    'Folio',
-                    'Activo',
-                    'Área',
-                    'Tipo',
-                    'Técnico',
-                    'Estado',
-                    'Prioridad',
-                    'Fecha',
-                    'Paro (h)',
-                  ].map((heading) => (
-                    <th
-                      key={heading}
-                      className='border-shNeutral-200 border-b px-4 py-3 text-left text-xs font-bold tracking-wide uppercase'
-                    >
-                      {heading}
-                    </th>
+            <div className='report-bottom-grid mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2'>
+              <Card>
+                <CardTitle>Ranking de Fallas por Activo</CardTitle>
+                <DataTable head={['#', 'Activo', 'Fallas', 'Paro (h)']}>
+                  {dynamicTopFallas.length > 0 ? (
+                    dynamicTopFallas.map((failure, index) => (
+                      <tr key={failure.asset}>
+                        <Td mono>{index + 1}</Td>
+                        <Td bold={index < 2}>{failure.asset}</Td>
+                        <Td>
+                          <span className='text-shDanger-700 font-mono font-bold'>
+                            {failure.count}
+                          </span>
+                        </Td>
+                        <Td>
+                          <span className='text-shAccent-700 font-mono'>
+                            {failure.down}
+                          </span>
+                        </Td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <Td>Sin datos</Td>
+                      <Td>Sin fallas para los filtros aplicados</Td>
+                      <Td>0</Td>
+                      <Td>0</Td>
+                    </tr>
+                  )}
+                </DataTable>
+              </Card>
+              <Card>
+                <CardTitle>Preventivo vs. Correctivo</CardTitle>
+                <div
+                  data-report-chart-export='true'
+                  data-report-chart-id='preventive-vs-corrective'
+                  data-report-chart-title='Preventivo vs. Correctivo'
+                >
+                  <EChartsPie data={chartTipo} height={185} />
+                </div>
+                <div className='mt-3 flex flex-wrap justify-center gap-5'>
+                  {chartTipo.map((item) => (
+                    <div key={item.name} className='flex items-center gap-2'>
+                      <div
+                        className='h-2.5 w-2.5 rounded-sm'
+                        style={{ background: item.color }}
+                      />
+                      <span className='text-shNeutral-600 text-sm'>
+                        {item.name}:{' '}
+                        <strong className='text-shNeutral-900'>
+                          {item.value}
+                        </strong>
+                      </span>
+                    </div>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {detailRows.length > 0 ? (
-                  detailRows.map((workOrder) => {
-                    const asset = getAssetById(workOrder.activoId);
-                    return (
-                      <tr
-                        key={workOrder.id}
-                        className='hover:bg-shNeutral-50 transition-colors'
-                      >
-                        <td className='border-shNeutral-100 text-shPrimary-800 border-b px-4 py-3 font-mono text-xs font-bold'>
-                          {workOrder.folio}
-                        </td>
-                        <td className='border-shNeutral-100 text-shNeutral-900 border-b px-4 py-3'>
-                          <div className='font-semibold'>
-                            {asset?.code || workOrder.activoId}
-                          </div>
-                          <div className='text-shNeutral-500 text-xs'>
-                            {asset?.name || 'Sin activo'}
-                          </div>
-                        </td>
-                        <td className='border-shNeutral-100 text-shNeutral-600 border-b px-4 py-3'>
-                          {asset?.area || '—'}
-                        </td>
-                        <td className='border-shNeutral-100 text-shNeutral-700 border-b px-4 py-3'>
-                          {workOrder.tipo}
-                        </td>
-                        <td className='border-shNeutral-100 text-shNeutral-700 border-b px-4 py-3'>
-                          {workOrder.tecnicoNombre}
-                        </td>
-                        <td className='border-shNeutral-100 border-b px-4 py-3'>
-                          <SoftBadge
-                            tone={getStatusBadgeClass(workOrder.status)}
+                </div>
+              </Card>
+            </div>
+
+            <Card className='mb-4'>
+              <div className='mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between'>
+                <div>
+                  <CardTitle>Detalle del reporte</CardTitle>
+                  <p className='text-shNeutral-500 text-sm'>
+                    {activeFilterSummary}
+                  </p>
+                </div>
+                <span className='text-shNeutral-500 text-xs font-semibold'>
+                  {filteredWo.length} OTs · {filteredAssets.length} activos ·{' '}
+                  {filteredPlans.length} planes PM
+                </span>
+              </div>
+              <div className='border-shNeutral-200 overflow-x-auto rounded-xl border'>
+                <table className='w-full min-w-[980px] border-collapse bg-white text-sm'>
+                  <thead className='bg-shNeutral-50 text-shNeutral-600'>
+                    <tr>
+                      {[
+                        'Folio',
+                        'Activo',
+                        'Área',
+                        'Tipo',
+                        'Técnico',
+                        'Estado',
+                        'Prioridad',
+                        'Fecha',
+                        'Paro (h)',
+                      ].map((heading) => (
+                        <th
+                          key={heading}
+                          className='border-shNeutral-200 border-b px-4 py-3 text-left text-xs font-bold tracking-wide uppercase'
+                        >
+                          {heading}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailRows.length > 0 ? (
+                      detailRows.map((workOrder) => {
+                        const asset = getAssetById(workOrder.activoId);
+                        return (
+                          <tr
+                            key={workOrder.id}
+                            className='hover:bg-shNeutral-50 transition-colors'
                           >
-                            {reportStatusLabel[workOrder.status]}
-                          </SoftBadge>
-                        </td>
-                        <td className='border-shNeutral-100 border-b px-4 py-3'>
-                          <SoftBadge
-                            tone={getPriorityBadgeClass(workOrder.prioridad)}
-                          >
-                            {reportPriorityLabel[workOrder.prioridad]}
-                          </SoftBadge>
-                        </td>
-                        <td className='border-shNeutral-100 text-shNeutral-600 border-b px-4 py-3'>
-                          {formatDate(workOrder.fechaCreacion)}
-                        </td>
-                        <td className='border-shNeutral-100 text-shDanger-700 border-b px-4 py-3 font-mono font-bold'>
-                          {Math.round((workOrder.downtimeMinutos / 60) * 10) /
-                            10}
+                            <td className='border-shNeutral-100 text-shPrimary-800 border-b px-4 py-3 font-mono text-xs font-bold'>
+                              {workOrder.folio}
+                            </td>
+                            <td className='border-shNeutral-100 text-shNeutral-900 border-b px-4 py-3'>
+                              <div className='font-semibold'>
+                                {asset?.code || workOrder.activoId}
+                              </div>
+                              <div className='text-shNeutral-500 text-xs'>
+                                {asset?.name || 'Sin activo'}
+                              </div>
+                            </td>
+                            <td className='border-shNeutral-100 text-shNeutral-600 border-b px-4 py-3'>
+                              {asset?.area || '—'}
+                            </td>
+                            <td className='border-shNeutral-100 text-shNeutral-700 border-b px-4 py-3'>
+                              {workOrder.tipo}
+                            </td>
+                            <td className='border-shNeutral-100 text-shNeutral-700 border-b px-4 py-3'>
+                              {workOrder.tecnicoNombre}
+                            </td>
+                            <td className='border-shNeutral-100 border-b px-4 py-3'>
+                              <SoftBadge
+                                tone={getStatusBadgeClass(workOrder.status)}
+                              >
+                                {reportStatusLabel[workOrder.status]}
+                              </SoftBadge>
+                            </td>
+                            <td className='border-shNeutral-100 border-b px-4 py-3'>
+                              <SoftBadge
+                                tone={getPriorityBadgeClass(
+                                  workOrder.prioridad,
+                                )}
+                              >
+                                {reportPriorityLabel[workOrder.prioridad]}
+                              </SoftBadge>
+                            </td>
+                            <td className='border-shNeutral-100 text-shNeutral-600 border-b px-4 py-3'>
+                              {formatDate(workOrder.fechaCreacion)}
+                            </td>
+                            <td className='border-shNeutral-100 text-shDanger-700 border-b px-4 py-3 font-mono font-bold'>
+                              {Math.round(
+                                (workOrder.downtimeMinutos / 60) * 10,
+                              ) / 10}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={9}
+                          className='text-shNeutral-500 px-4 py-10 text-center'
+                        >
+                          Sin resultados para los filtros aplicados. Probá
+                          ampliar el periodo o limpiar filtros.
                         </td>
                       </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={9}
-                      className='text-shNeutral-500 px-4 py-10 text-center'
-                    >
-                      Sin resultados para los filtros aplicados. Probá ampliar
-                      el periodo o limpiar filtros.
-                    </td>
-                  </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </>
+        ) : (
+          <>
+            <section className='mb-6'>
+              <div className='mb-3'>
+                <h2 className='text-shPrimary-900 text-base font-extrabold'>
+                  KPIs financieros
+                </h2>
+                <p className='text-shNeutral-500 mt-1 text-sm'>
+                  {financialStatusPolicyLabel}. Los montos salen de “Monto
+                  gastado” únicamente cuando “¿Se gastó dinero?” está activo.
+                </p>
+              </div>
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5'>
+                <KpiCard
+                  label='Gasto total en mantenimiento'
+                  value={formatMxnCurrency(
+                    financialSummary.totalMaintenanceCost,
+                  )}
+                  sub={`${financialSummary.includedWorkOrderCount} OTs con costo`}
+                  color='#486581'
+                  icon={<span>💰</span>}
+                />
+                <KpiCard
+                  label='Costo promedio por OT'
+                  value={formatMxnCurrency(
+                    financialSummary.averageCostPerWorkOrder,
+                  )}
+                  sub='Sobre OTs con gasto registrado'
+                  color='#047857'
+                  icon={<span>Ø</span>}
+                />
+                <KpiCard
+                  label='Gasto preventivo'
+                  value={formatMxnCurrency(
+                    financialSummary.preventiveMaintenanceCost,
+                  )}
+                  sub='Mantenimiento preventivo'
+                  color='#486581'
+                  icon={<span>🛡</span>}
+                />
+                <KpiCard
+                  label='Gasto correctivo'
+                  value={formatMxnCurrency(
+                    financialSummary.correctiveMaintenanceCost,
+                  )}
+                  sub='Mantenimiento correctivo'
+                  color='#b91c1c'
+                  icon={<span>🔧</span>}
+                />
+                <KpiCard
+                  label='OT con refacción/consumible'
+                  value={financialSummary.workOrdersWithSparePartsCount}
+                  sub='Con consumible y costo'
+                  color='#d97706'
+                  icon={<span>📦</span>}
+                />
+              </div>
+            </section>
+
+            <Card className='mb-4'>
+              <div className='mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between'>
+                <div>
+                  <CardTitle>Gasto mensual en mantenimiento</CardTitle>
+                  <p className='text-shNeutral-500 text-sm'>
+                    Costo acumulado de órdenes de trabajo cerradas, separado por
+                    mantenimiento preventivo y correctivo.
+                  </p>
+                </div>
+                {financialSummary.mostExpensiveWorkOrder && (
+                  <span className='text-shNeutral-500 text-xs font-semibold'>
+                    Mayor OT:{' '}
+                    <strong className='text-shNeutral-800'>
+                      {financialSummary.mostExpensiveWorkOrder.folio}
+                    </strong>{' '}
+                    ·{' '}
+                    {formatMxnCurrency(
+                      financialSummary.mostExpensiveWorkOrderCost,
+                    )}
+                  </span>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+              </div>
+              {financialSummary.hasRegisteredCosts ? (
+                <div
+                  data-report-chart-export='true'
+                  data-report-chart-id='maintenance-cost-by-month'
+                  data-report-chart-title='Gasto mensual en mantenimiento'
+                >
+                  <FinancialMaintenanceChart data={financialMonthlyData} />
+                </div>
+              ) : (
+                <div className='border-shNeutral-200 bg-shNeutral-50 text-shNeutral-500 rounded-xl border border-dashed px-4 py-10 text-center text-sm font-semibold'>
+                  Aún no hay costos registrados en órdenes de trabajo para este
+                  periodo.
+                </div>
+              )}
+            </Card>
+          </>
+        )}
       </div>
 
       <style jsx global>{`

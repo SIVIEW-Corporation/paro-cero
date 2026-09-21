@@ -963,6 +963,119 @@ function generarFechaAleatoria(inicio: Date, fin: Date): Date {
   );
 }
 
+const ESTADOS_OT_DEMO: OrdenTrabajo['status'][] = [
+  'completada',
+  'cerrada',
+  'completada',
+  'nueva',
+  'asignada',
+  'en_proceso',
+  'en_espera',
+  'cerrada',
+  'cancelada',
+  'completada',
+];
+
+const COSTOS_DEMO_OT: Record<
+  'preventivo' | 'correctivo',
+  Array<{
+    monto: number;
+    usaConsumible: boolean;
+    detalle: string;
+  }>
+> = {
+  preventivo: [
+    {
+      monto: 480,
+      usaConsumible: true,
+      detalle: 'Lubricante grado alimenticio',
+    },
+    {
+      monto: 280,
+      usaConsumible: true,
+      detalle: 'Relevador industrial 24VDC',
+    },
+    {
+      monto: 620,
+      usaConsumible: true,
+      detalle: 'Sensor inductivo M18',
+    },
+    {
+      monto: 3500,
+      usaConsumible: false,
+      detalle: 'Servicio externo de calibración',
+    },
+  ],
+  correctivo: [
+    {
+      monto: 850,
+      usaConsumible: true,
+      detalle: 'Cambio de rodamiento SKF 6205',
+    },
+    {
+      monto: 2400,
+      usaConsumible: true,
+      detalle: 'Banda transportadora secundaria',
+    },
+    {
+      monto: 1350,
+      usaConsumible: true,
+      detalle: 'Kit de sellos neumáticos',
+    },
+    {
+      monto: 390,
+      usaConsumible: true,
+      detalle: 'Manguera neumática y racores',
+    },
+    {
+      monto: 950,
+      usaConsumible: true,
+      detalle: 'Guardamotor',
+    },
+  ],
+};
+
+function generarCostoDemoOT({
+  tipo,
+  status,
+  indiceOrden,
+  indiceMes,
+}: {
+  tipo: OrdenTrabajo['tipo'];
+  status: OrdenTrabajo['status'];
+  indiceOrden: number;
+  indiceMes: number;
+}) {
+  const estadoEjecutado = status === 'completada' || status === 'cerrada';
+  const puedeTenerCosto = tipo === 'preventivo' || tipo === 'correctivo';
+  const tieneCostoEjecutado =
+    estadoEjecutado && puedeTenerCosto && (indiceOrden + indiceMes) % 5 < 3;
+  const tieneCostoAbierto =
+    status === 'en_proceso' &&
+    puedeTenerCosto &&
+    (indiceOrden + indiceMes) % 8 === 0;
+  const gastoDinero = tieneCostoEjecutado || tieneCostoAbierto;
+
+  if (!gastoDinero) {
+    return {
+      gastoDinero: false,
+      montoGastado: 0,
+      usoRefaccionConsumible: false,
+      refaccionConsumibleDetalle: '',
+    };
+  }
+
+  const catalogo = COSTOS_DEMO_OT[tipo];
+  const costo = catalogo[(indiceOrden + indiceMes) % catalogo.length];
+
+  return {
+    gastoDinero: true,
+    montoGastado: costo.monto,
+    usoRefaccionConsumible: costo.usaConsumible,
+    refaccionConsumibleDetalle: costo.usaConsumible ? costo.detalle : '',
+  };
+}
+
 export function generarDatosSeisMeses(): OrdenTrabajo[] {
   const ordenes: OrdenTrabajo[] = [];
   const ahora = new Date();
@@ -988,46 +1101,50 @@ export function generarDatosSeisMeses(): OrdenTrabajo[] {
       : new Date(meses[i + 1].fecha.getTime() - 1);
     for (let j = 0; j < m.cant; j++) {
       const fc = generarFechaAleatoria(m.fecha, fin);
-      const estado = getRandomItem([
-        'nueva',
-        'asignada',
-        'en_proceso',
-        'en_espera',
-        'completada',
-        'cerrada',
-        'cancelada',
-      ] as const);
+      const estado = ESTADOS_OT_DEMO[(j + i) % ESTADOS_OT_DEMO.length];
+      const tipo = getRandomItem(TIPOS);
+      const tecnico = getRandomItem(TECNICOS_IDS);
+      const fechaCierre =
+        estado === 'completada' || estado === 'cerrada'
+          ? new Date(
+              Math.min(
+                fc.getTime() + Math.random() * 5 * 24 * 60 * 60 * 1000,
+                ahora.getTime(),
+              ),
+            )
+          : undefined;
+      const costoDemo = generarCostoDemoOT({
+        tipo,
+        status: estado,
+        indiceOrden: j,
+        indiceMes: i,
+      });
+
       ordenes.push({
         id: `OT${String(n).padStart(3, '0')}`,
         empresaId: 'EMP001',
         folio: `OT-${fc.getFullYear()}-${String(n).padStart(3, '0')}`,
         activoId: getRandomItem(ACTIVOS_IDS),
-        titulo: getRandomItem(TITULOS_OT[getRandomItem(TIPOS)]),
+        titulo: getRandomItem(TITULOS_OT[tipo]),
         descripcion: 'Generado automáticamente',
         descripcionProblema: '',
         descripcionServicio: '',
-        tipo: getRandomItem(TIPOS),
+        tipo,
         status: estado,
         prioridad: getRandomItem(PRIORIDADES),
-        tecnicoId: getRandomItem(TECNICOS_IDS).id,
-        tecnicoNombre: getRandomItem(TECNICOS_IDS).nombre,
+        tecnicoId: tecnico.id,
+        tecnicoNombre: tecnico.nombre,
         fechaCreacion: fc,
         fechaCompromiso: new Date(fc.getTime() + 7 * 24 * 60 * 60 * 1000),
-        fechaCierre:
-          estado === 'completada' || estado === 'cerrada'
-            ? new Date(fc.getTime() + Math.random() * 5 * 24 * 60 * 60 * 1000)
-            : undefined,
+        fechaCierre,
         observaciones: '',
-        gastoDinero: false,
-        montoGastado: 0,
-        usoRefaccionConsumible: false,
-        refaccionConsumibleDetalle: '',
+        ...costoDemo,
         evidencias: [],
         historial: [],
         downtimeMinutos:
           estado === 'completada' ? Math.floor(Math.random() * 480) : 0,
         createdAt: fc,
-        updatedAt: fc,
+        updatedAt: fechaCierre ?? fc,
       });
       n++;
     }
