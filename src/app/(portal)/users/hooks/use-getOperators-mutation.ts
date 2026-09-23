@@ -2,10 +2,15 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { operatorsService } from '@/app/(portal)/users/services/operators-service';
 
+interface GetOperatorsInput {
+  page?: number;
+  size?: number;
+}
+
 export function useGetOperatorsMutation() {
   return useMutation({
-    mutationFn: async () => {
-      const result = await operatorsService.getOperators();
+    mutationFn: async ({ page = 1, size = 10 }: GetOperatorsInput = {}) => {
+      const result = await operatorsService.getOperators(page, size);
       return result;
     },
     onSuccess: () => {

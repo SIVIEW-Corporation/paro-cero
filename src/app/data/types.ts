@@ -193,10 +193,10 @@ export interface Checklist {
 export interface Hallazgo {
   id: string;
   empresaId: string;
-  checklistId: string;
-  checklistFolio: string;
-  itemId: number;
-  itemDescripcion: string;
+  checklistId: string | null;
+  checklistFolio: string | null;
+  itemId: number | null;
+  itemDescripcion: string | null;
   descripcion: string;
   severidad: SeveridadHallazgo;
   status: EstadoHallazgo;

@@ -51,7 +51,6 @@ export function EChartsPie({
           itemStyle: { color: d.color },
         })),
         radius: ['15%', '70%'],
-        roseType: false as const,
         center: ['50%', '45%'],
         avoidLabelOverlap: true,
         itemStyle: {

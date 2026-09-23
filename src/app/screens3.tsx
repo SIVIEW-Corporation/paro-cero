@@ -11,8 +11,16 @@ import {
   SEVERIDADES,
   SEVERIDAD_COLORES,
   CHECKLIST_ITEMS_DEFAULT,
-} from '@/app/data';
-import type { OrdenTrabajo } from '@/app/data/types';
+  PLANTILLAS_CHECKLIST,
+} from '@/app/data/index';
+import type {
+  Checklist,
+  ChecklistItemRespuesta,
+  Hallazgo,
+  ItemChecklistValor,
+  OrdenTrabajo,
+  Turno,
+} from '@/app/data/types';
 import { TECNICOS } from '@/app/data/constants';
 import { useWorkOrdersStore } from '@/app/stores/useWorkOrdersStore';
 
@@ -33,56 +41,12 @@ import {
   ModalFooter,
 } from '@/components/ui';
 
-type ChecklistItem = {
-  itemId: string;
-  valor: 'ok' | 'nok' | 'na' | null;
+type PlantillaChecklist = (typeof PLANTILLAS_CHECKLIST)[number];
+
+type ChecklistFormItem = {
+  itemId: number;
+  valor: ItemChecklistValor | null;
   nota: string;
-};
-
-type Checklist = {
-  id: string;
-  folio: string;
-  plantillaId: string;
-  plantillaName: string;
-  activoId: string;
-  activoCode: string;
-  activoName: string;
-  area: string;
-  fecha: string;
-  turno: string;
-  responsable: string;
-  horometro: number;
-  estado: string;
-  items: ChecklistItem[];
-  createdAt: string;
-};
-
-type Hallazgo = {
-  id: string;
-  empresaId: string;
-  checklistId: string | null;
-  checklistFolio: string | null;
-  itemId: string | null;
-  itemDescripcion: string | null;
-  descripcion: string;
-  severidad: 'baja' | 'media' | 'alta' | 'critica';
-  status: 'abierto' | 'en_proceso' | 'resuelto';
-  activoId: string;
-  activoCode: string;
-  activoName: string;
-  responsable: string;
-  createdAt: string;
-  otId: string | null;
-  resolvedAt: string | null;
-};
-
-type PlantillaChecklist = {
-  id: string;
-  nombre: string;
-  activoId: string;
-  activoCode: string;
-  activoName: string;
-  items: { id: string; descripcion: string }[];
 };
 
 type SetListState<T> = (value: T[] | ((prev: T[]) => T[])) => void;
@@ -271,8 +235,7 @@ export function InspeccionesScreen({
                   (p) => p.id === updatedChecklist.plantillaId,
                 );
                 const itemDesc = plantilla?.items.find(
-                  (it: { id: string; descripcion: string }) =>
-                    it.id === i.itemId,
+                  (it) => it.id === i.itemId,
                 )?.descripcion;
                 return {
                   id: `H${Date.now()}_${i.itemId}`,
@@ -612,12 +575,7 @@ export function InspeccionesScreen({
                   <Badge label={`${p.items.length} items`} color='#3b82f6' />
                 </div>
                 <div className='mt-2 text-xs text-slate-400'>
-                  Items:{' '}
-                  {p.items
-                    .map(
-                      (i: { id: string; descripcion: string }) => i.descripcion,
-                    )
-                    .join(', ')}
+                  Items: {p.items.map((i) => i.descripcion).join(', ')}
                 </div>
               </div>
             ))}
@@ -656,13 +614,13 @@ function ExecuteChecklistScreen({
   onBack: () => void;
   onSave: (updatedChecklist: Checklist) => void;
 }) {
-  const [items, setItems] = useState<ChecklistItem[]>(
+  const [items, setItems] = useState<ChecklistFormItem[]>(
     checklist.items.length > 0
       ? checklist.items
       : plantillas
           .find((p) => p.id === checklist.plantillaId)
           ?.items.map((i) => ({
-            itemId: String(i.id),
+            itemId: i.id,
             valor: null,
             nota: '',
           })) || [],
@@ -671,7 +629,7 @@ function ExecuteChecklistScreen({
 
   const plantilla = plantillas.find((p) => p.id === checklist.plantillaId);
 
-  const handleValorChange = (itemId: string, valor: 'ok' | 'nok' | 'na') => {
+  const handleValorChange = (itemId: number, valor: ItemChecklistValor) => {
     setItems((prev) =>
       prev.map((i) =>
         i.itemId === itemId
@@ -681,7 +639,7 @@ function ExecuteChecklistScreen({
     );
   };
 
-  const handleNotaChange = (itemId: string, nota: string) => {
+  const handleNotaChange = (itemId: number, nota: string) => {
     setItems((prev) =>
       prev.map((i) => (i.itemId === itemId ? { ...i, nota } : i)),
     );
@@ -696,9 +654,17 @@ function ExecuteChecklistScreen({
   const canSave = allItemsAnswered && (!hasNOK || allNOKWithNote);
 
   const handleSave = () => {
+    const completedItems = items.filter(
+      (item): item is ChecklistItemRespuesta => item.valor !== null,
+    );
+
+    if (completedItems.length !== items.length) {
+      return;
+    }
+
     const updatedChecklist: Checklist = {
       ...checklist,
-      items,
+      items: completedItems,
       horometro,
       estado: 'completado',
     };
@@ -781,7 +747,7 @@ function ExecuteChecklistScreen({
         <CardTitle>Items de Inspeccion</CardTitle>
         <div className='space-y-3'>
           {plantilla?.items.map((item, index) => {
-            const itemData = items.find((i) => i.itemId === String(item.id));
+            const itemData = items.find((i) => i.itemId === item.id);
             const valor = itemData?.valor || null;
             const nota = itemData?.nota || '';
 
@@ -796,7 +762,7 @@ function ExecuteChecklistScreen({
                   </span>
                   <div className='flex gap-2'>
                     <button
-                      onClick={() => handleValorChange(String(item.id), 'ok')}
+                      onClick={() => handleValorChange(item.id, 'ok')}
                       className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
                         valor === 'ok'
                           ? 'border border-green-500 bg-green-500/20 text-green-500'
@@ -806,7 +772,7 @@ function ExecuteChecklistScreen({
                       OK
                     </button>
                     <button
-                      onClick={() => handleValorChange(String(item.id), 'nok')}
+                      onClick={() => handleValorChange(item.id, 'nok')}
                       className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
                         valor === 'nok'
                           ? 'border border-red-500 bg-red-500/20 text-red-500'
@@ -816,7 +782,7 @@ function ExecuteChecklistScreen({
                       No OK
                     </button>
                     <button
-                      onClick={() => handleValorChange(String(item.id), 'na')}
+                      onClick={() => handleValorChange(item.id, 'na')}
                       className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
                         valor === 'na'
                           ? 'border border-slate-500 bg-slate-500/20 text-slate-400'
@@ -832,7 +798,7 @@ function ExecuteChecklistScreen({
                     <textarea
                       value={nota}
                       onChange={(e) =>
-                        handleNotaChange(String(item.id), e.target.value)
+                        handleNotaChange(item.id, e.target.value)
                       }
                       placeholder='Descripcion del problema (obligatorio)'
                       className='min-h-[60px] w-full text-sm'
@@ -865,7 +831,7 @@ function CreateChecklistForm({
   onSave: (newChecklist: Checklist) => void;
 }) {
   const [plantillaId, setPlantillaId] = useState(plantillas[0]?.id || '');
-  const [turno, setTurno] = useState('Matutino');
+  const [turno, setTurno] = useState<Turno>('Matutino');
   const [responsable, setResponsable] = useState('');
   const [horometro, setHorometro] = useState(0);
 
@@ -884,6 +850,7 @@ function CreateChecklistForm({
 
     const newChecklist: Checklist = {
       id: `CHK_${Date.now()}`,
+      empresaId: 'EMP001',
       folio,
       plantillaId: selectedPlantilla.id,
       plantillaName: selectedPlantilla.nombre,
@@ -918,7 +885,10 @@ function CreateChecklistForm({
         </select>
       </Field>
       <Field label='Turno'>
-        <select value={turno} onChange={(e) => setTurno(e.target.value)}>
+        <select
+          value={turno}
+          onChange={(e) => setTurno(e.target.value as Turno)}
+        >
           {TURNOS.map((t) => (
             <option key={t} value={t}>
               {t}
@@ -958,9 +928,9 @@ function CreatePlantillaForm({
 }) {
   const [nombre, setNombre] = useState('');
   const [activoId, setActivoId] = useState('');
-  const [items, setItems] = useState<{ id: string; descripcion: string }[]>(
+  const [items, setItems] = useState<{ id: number; descripcion: string }[]>(
     CHECKLIST_ITEMS_DEFAULT.map((i) => ({
-      id: String(i.id),
+      id: i.id,
       descripcion: i.descripcion,
     })),
   );
@@ -972,13 +942,13 @@ function CreatePlantillaForm({
     if (newItem.trim()) {
       setItems((prev) => [
         ...prev,
-        { id: String(Date.now()), descripcion: newItem.trim() },
+        { id: Date.now(), descripcion: newItem.trim() },
       ]);
       setNewItem('');
     }
   };
 
-  const handleRemoveItem = (id: string) => {
+  const handleRemoveItem = (id: number) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
