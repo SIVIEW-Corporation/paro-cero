@@ -7,6 +7,7 @@ export const USER_TYPES = {
   SA: 'superadmin',
   ADMIN: 'admin',
   SUPERVISOR: 'supervisor',
+  TECHNICIAN: 'tecnico',
   OPERATOR: 'operator',
   VIEWER: 'viewer',
 } as const;

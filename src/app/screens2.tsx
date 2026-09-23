@@ -2,6 +2,8 @@
 
 import {
   useState,
+  useEffect,
+  useRef,
   type CSSProperties,
   type Dispatch,
   type ReactNode,
@@ -835,6 +837,15 @@ export function WorkOrdersScreen({
   setWo: Dispatch<SetStateAction<OrdenTrabajo[]>>;
 }) {
   const [selected, setSelected] = useState<OrdenTrabajo | null>(null);
+  const openedPlanningOrder = useRef<string | null>(null);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('ot');
+    const order = wo.find((item) => item.id === id);
+    if (id && order && openedPlanningOrder.current !== id) {
+      openedPlanningOrder.current = id;
+      setSelected(order);
+    }
+  }, [wo]);
   const [filterStatus, setFilter] = useState('');
   const [filterActivoId, setFilterActivoId] = useState('');
   const [filterPriority, setFilterPriority] = useState('');

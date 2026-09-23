@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Navbar from './components/Navbar';
+import DashboardAccess from '@/features/technician/dashboard-access';
 
 export const metadata: Metadata = {
   title: 'Panel operativo',
@@ -17,7 +18,9 @@ export default function DashboardLayout({
   return (
     <div className='auth-shell bg-app-bg text-app-text-primary w-full overflow-x-hidden'>
       <Navbar />
-      <main className='container max-w-7xl pt-20 pb-8'>{children}</main>
+      <main className='container max-w-7xl pt-20 pb-8'>
+        <DashboardAccess>{children}</DashboardAccess>
+      </main>
     </div>
   );
 }
