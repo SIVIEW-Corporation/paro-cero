@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
 import { toast } from 'sonner';
-import { Mail, Lock } from 'lucide-react';
+import { ArrowLeft, Mail, Lock } from 'lucide-react';
 
 import { loginSchema } from '@/lib/auth-schema';
 import { useLoginMutation } from '@/hooks/use-login-mutation';
@@ -41,6 +41,17 @@ export default function LoginForm() {
     <div className='border-shNeutral-200 [@media(hover:hover)_and_(pointer:fine)]:hover:border-shAccent-500/30 relative w-full max-w-md overflow-hidden rounded-3xl border bg-white p-6 shadow-2xl backdrop-blur transition-[border-color,box-shadow,background-color] duration-300 ease-out motion-reduce:transition-none sm:p-8 lg:p-10 [@media(hover:hover)_and_(pointer:fine)]:hover:shadow-2xl'>
       <div className='from-shAccent-500/10 via-shAccent-400/50 pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r to-transparent' />
       <div className='from-shAccent-500/10 pointer-events-none absolute -top-24 right-8 h-40 w-40 rounded-full bg-gradient-to-br to-transparent blur-3xl' />
+
+      <Button
+        type='button'
+        intent='neutral'
+        variant='ghost'
+        icon={<ArrowLeft aria-hidden='true' className='size-4' />}
+        onClick={() => router.push('/')}
+        className='mb-6 px-0'
+      >
+        Volver al inicio
+      </Button>
 
       <div className='relative mb-8 text-center'>
         <div className='bg-shAccent-500 mx-auto mb-5 h-1 w-14 rounded-full' />

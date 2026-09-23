@@ -28,7 +28,7 @@ import {
   EChartsChart,
 } from '@/components/charts';
 
-import { ASSETS, PLANS, STC, STL, PRC, PRL, NTL, NTI } from '@/app/data';
+import { ASSETS, PLANS, STC, STL, PRC, PRL, NTL, NTI } from '@/app/data/index';
 import { TECNICOS } from '@/app/data/constants';
 import { generarDatosSeisMeses } from '@/app/data/mock-data';
 import {
@@ -57,7 +57,12 @@ import {
   ModalFooter,
 } from '@/components/ui';
 
-import type { EstadoOT, OrdenTrabajo, PrioridadOT } from '@/app/data/types';
+import type {
+  EstadoOT,
+  Notificacion,
+  OrdenTrabajo,
+  PrioridadOT,
+} from '@/app/data/types';
 
 const workOrderFilterPillBase =
   'inline-flex h-8 items-center justify-center whitespace-nowrap rounded-full border px-2.5 text-[11px] font-bold transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-app-brand focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg focus-visible:outline-none';
@@ -1280,7 +1285,7 @@ export function WorkOrdersScreen({
                 </p>
               </div>
             )}
-            {curWo.causa && (
+            {curWo.causaRaiz && (
               <div style={{ marginBottom: 14 }}>
                 <div
                   style={{
@@ -1295,11 +1300,11 @@ export function WorkOrdersScreen({
                   Causa Raiz
                 </div>
                 <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.6 }}>
-                  {curWo.causa}
+                  {curWo.causaRaiz}
                 </p>
               </div>
             )}
-            {curWo.accion && (
+            {curWo.accionTomada && (
               <div>
                 <div
                   style={{
@@ -1314,7 +1319,7 @@ export function WorkOrdersScreen({
                   Accion Tomada
                 </div>
                 <p style={{ fontSize: 13, color: '#111827', lineHeight: 1.6 }}>
-                  {curWo.accion}
+                  {curWo.accionTomada}
                 </p>
               </div>
             )}
@@ -1322,8 +1327,8 @@ export function WorkOrdersScreen({
               !descripcionServicio &&
               !curWo.gastoDinero &&
               !curWo.usoRefaccionConsumible &&
-              !curWo.causa &&
-              !curWo.accion && (
+              !curWo.causaRaiz &&
+              !curWo.accionTomada && (
                 <p style={{ fontSize: 13, color: '#94a3b8' }}>
                   Sin descripciones registradas.
                 </p>
@@ -1821,15 +1826,6 @@ export function WorkOrdersScreen({
   );
 }
 
-interface Notificacion {
-  id: string;
-  titulo: string;
-  msg: string;
-  tipo: 'vencida' | 'proxima' | 'asignada';
-  leida: boolean;
-  fecha: string;
-}
-
 interface NotificationTone {
   accent: string;
   iconBg: string;
@@ -1870,14 +1866,20 @@ export function NotificationsScreen({
   notifs,
   setNotifs,
 }: {
-  notifs: any[];
-  setNotifs: any;
+  notifs: Notificacion[];
+  setNotifs: (notificaciones: Notificacion[]) => void;
 }) {
   const unread = notifs.filter((n) => !n.leida).length;
   const markRead = (id: string) =>
-    setNotifs((ns) => ns.map((n) => (n.id === id ? { ...n, leida: true } : n)));
+    setNotifs(
+      notifs.map((notification) =>
+        notification.id === id
+          ? { ...notification, leida: true }
+          : notification,
+      ),
+    );
   const markAll = () =>
-    setNotifs((ns) => ns.map((n) => ({ ...n, leida: true })));
+    setNotifs(notifs.map((notification) => ({ ...notification, leida: true })));
 
   return (
     <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
@@ -2244,7 +2246,7 @@ function getFilteredPlans(filters: ReportFilters) {
   );
 
   return PLANS.filter((plan) => {
-    if (!filteredAssetIds.has(plan.assetId)) return false;
+    if (!filteredAssetIds.has(plan.activoId)) return false;
     return true;
   });
 }

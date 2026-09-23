@@ -19,10 +19,10 @@ const CHART_COLORS = {
   grid: '#DDE3EA',
 } as const;
 
-const months = ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'] as const;
+const months = ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'];
 
-const pmComplianceValues = [82, 78, 85, 88, 75, 68] as const;
-const downtimeValues = [34, 29, 7, 22, 28, 7] as const;
+const pmComplianceValues = [82, 78, 85, 88, 75, 68];
+const downtimeValues = [34, 29, 7, 22, 28, 7];
 
 const miniKpis = [
   { label: 'Cumplimiento PM', value: '68%' },

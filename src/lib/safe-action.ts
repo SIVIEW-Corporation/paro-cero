@@ -11,15 +11,9 @@ import type { UserType } from '@/store/auth-store';
  * @param handler - Async handler function receiving (input, session)
  * @param allowedRoles - Array of roles permitted to execute this action
  */
-export function protectedAction<
-  Input,
-  _Schema extends { parse: (input: unknown) => Input },
->(
+export function protectedAction<Input>(
   schema: { parse: (input: unknown) => Input },
-  handler: (
-    input: Input,
-    session: { userId: string; email: string; role: UserType } | null,
-  ) => Promise<unknown>,
+  handler: (input: Input, session: Session) => Promise<unknown>,
   ...allowedRoles: UserType[]
 ) {
   return async (input: unknown) => {
