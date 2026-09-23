@@ -5,9 +5,12 @@ import DemoTopBar from '@/components/demo/DemoTopBar';
 import Footer from '@/components/landing/Footer';
 
 export const metadata: Metadata = {
-  title: 'Solicitar demo | PM0 Paro Cero',
+  title: 'Solicitar demo',
   description:
     'Solicita una demo ejecutiva de PM0 y desbloquea el recorrido completo de la plataforma.',
+  alternates: {
+    canonical: '/demo',
+  },
 };
 
 export default function DemoPage() {

@@ -7,9 +7,12 @@ import ScrollReveal from '@/components/landing/ScrollReveal';
 import { blogArticles } from '@/app/blog/_content/blog-articles';
 
 export const metadata: Metadata = {
-  title: 'Blog de mantenimiento industrial | PM0 Paro Cero',
+  title: 'Blog de mantenimiento industrial',
   description:
     'Guías prácticas para reducir paros, estructurar mantenimiento y mejorar el control operativo en planta.',
+  alternates: {
+    canonical: '/blog',
+  },
 };
 
 export default function BlogIndexPage() {
