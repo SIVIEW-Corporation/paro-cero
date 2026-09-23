@@ -29,14 +29,21 @@ export async function generateMetadata({
 
   if (!page) {
     return {
-      title: 'PM0 | Paro Cero',
+      title: 'Página no encontrada',
       description: 'Plataforma para mantenimiento y operacion industrial.',
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
   return {
-    title: `${page.title} | PM0`,
+    title: page.title,
     description: page.subtitle,
+    alternates: {
+      canonical: `/${page.slug.join('/')}`,
+    },
   };
 }
 

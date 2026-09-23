@@ -138,13 +138,20 @@ export async function generateMetadata({
 
   if (!article) {
     return {
-      title: 'Artículo no encontrado | PM0 Paro Cero',
+      title: 'Artículo no encontrado',
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
   return {
-    title: `${article.title} | PM0 Blog`,
+    title: article.title,
     description: article.description,
+    alternates: {
+      canonical: `/blog/${article.slug}`,
+    },
   };
 }
 

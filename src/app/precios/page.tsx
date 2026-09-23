@@ -5,9 +5,12 @@ import Header from '@/components/landing/Header';
 import PricingSection from '@/components/landing/PricingSection';
 
 export const metadata: Metadata = {
-  title: 'Precios | PM0 Paro Cero',
+  title: 'Precios',
   description:
     'Planes simples para digitalizar mantenimiento industrial con Paro Cero.',
+  alternates: {
+    canonical: '/precios',
+  },
 };
 
 export default function PricingPage() {

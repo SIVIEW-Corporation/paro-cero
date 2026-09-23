@@ -4,6 +4,7 @@ import { Inter, Inconsolata } from 'next/font/google';
 //Components
 import { Toaster } from 'sonner';
 import Providers from './providers';
+import { SITE_URL } from '@/lib/site-config';
 //Styles
 import './globals.css';
 
@@ -16,8 +17,40 @@ const inconsolata = Inconsolata({
 });
 
 export const metadata: Metadata = {
-  title: 'PM0 - Gestión de Mantenimiento | SIVIEW',
-  description: 'Sistema de gestión para procesos de mantenimiento',
+  metadataBase: SITE_URL,
+  title: {
+    default: 'PM0 | Gestión de mantenimiento industrial',
+    template: '%s | PM0 Paro Cero',
+  },
+  description:
+    'Plataforma de gestión de mantenimiento industrial para reducir paros no planificados y mejorar el control operativo.',
+  applicationName: 'PM0',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'PM0 | Paro Cero',
+    title: 'PM0 | Gestión de mantenimiento industrial',
+    description:
+      'Plataforma de gestión de mantenimiento industrial para reducir paros no planificados y mejorar el control operativo.',
+    url: '/',
+    images: [
+      {
+        url: '/images/hero/paro-cero-hero.webp',
+        width: 2752,
+        height: 1536,
+        alt: 'Equipo técnico inspeccionando activos industriales en planta',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PM0 | Gestión de mantenimiento industrial',
+    description:
+      'Plataforma de gestión de mantenimiento industrial para reducir paros no planificados y mejorar el control operativo.',
+    images: ['/images/hero/paro-cero-hero.webp'],
+  },
 };
 
 export default function RootLayout({
