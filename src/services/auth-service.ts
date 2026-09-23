@@ -1,6 +1,11 @@
-import { apiClient, ApiClientOptions } from '@/lib/api-client';
-import { LoginInput } from '@/lib/auth-schema';
-import { User } from '@/store/auth-store';
+import { apiClient } from '@/lib/api-client';
+import type { ApiClientOptions } from '@/lib/api-client';
+import type { LoginInput } from '@/lib/auth-schema';
+import type { User } from '@/store/auth-store';
+
+export type UserProfileUpdateInput = Partial<
+  Pick<User, 'email' | 'full_name' | 'area' | 'job_title' | 'profile_image'>
+>;
 
 export interface LoginResponse {
   access_token: string;
@@ -37,27 +42,27 @@ export const authService = {
   /**
    * Obtener el perfil del usuario actual
    */
-  getProfile: async () => {
-    const response = await apiClient.get('/auth/profile');
+  getProfile: async (): Promise<User> => {
+    const response = await apiClient.get<User>('/users/me');
 
     if (!response.ok) {
       throw new Error(response.error?.message || 'Error al obtener perfil');
     }
 
-    return response.data;
+    return response.data as User;
   },
 
   /**
    * Actualización de datos
    */
-  updateProfile: async (data: Partial<LoginInput>) => {
-    const response = await apiClient.put('/auth/profile', data);
+  updateProfile: async (data: UserProfileUpdateInput): Promise<User> => {
+    const response = await apiClient.patch<User>('/users/me', data);
 
     if (!response.ok) {
       throw new Error(response.error?.message || 'Error al actualizar perfil');
     }
 
-    return response.data;
+    return response.data as User;
   },
 
   /**
