@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { canVisitDashboard } from '@/features/technician/access';
 // Store & Hooks
 import { useAuthStore } from '@/store/auth-store';
 import { useLogoutMutation } from '@/hooks/use-logout-mutation';
@@ -49,7 +50,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const normalizedPathname = pathname.replace(/\/$/, '') || '/';
 
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
+  const visibleTabs = tabs.filter((tab) => canVisitDashboard(user, tab.path));
   const logoutMutation = useLogoutMutation();
 
   const handleLogout = () => {
@@ -79,7 +81,12 @@ export default function Navbar() {
   return (
     <header className='app-topbar bg-shBackground/15 fixed top-0 z-50 grid w-screen place-items-center p-2 backdrop-blur-lg sm:p-3 lg:px-4 xl:px-5'>
       <nav className='flex w-full max-w-[1540px] items-center justify-between'>
-        <Link href='/dashboard' scroll={false}>
+        <Link
+          href={
+            user?.role === 'tecnico' ? '/dashboard/mis-tareas' : '/dashboard'
+          }
+          scroll={false}
+        >
           <Image
             src='/PM0-logo.webp'
             alt='PM0 logo'
@@ -91,8 +98,8 @@ export default function Navbar() {
         </Link>
 
         {/* Menu --- Desktop */}
-        <div className='hidden items-center gap-6 lg:gap-8 xl:flex xl:gap-10'>
-          {tabs.map((tab) => {
+        <div className='hidden items-center gap-2 xl:flex 2xl:gap-5'>
+          {visibleTabs.map((tab) => {
             const isActive =
               tab.path === '/dashboard'
                 ? normalizedPathname === '/dashboard'
@@ -188,7 +195,7 @@ export default function Navbar() {
         <div
           className={`bg-app-surface text-app-text-secondary absolute top-full left-0 z-50 flex w-full flex-col items-center overflow-y-scroll pt-10 pb-40 transition duration-300 ease-in-out xl:hidden ${isOpen ? 'h-dvh opacity-100' : 'pointer-events-none h-0 opacity-0'}`}
         >
-          {tabs.map((tab) => {
+          {visibleTabs.map((tab) => {
             const isActive =
               tab.path === '/dashboard'
                 ? normalizedPathname === '/dashboard'
