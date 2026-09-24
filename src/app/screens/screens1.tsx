@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useRef, useState } from 'react';
 import { EChartsArea, EChartsPie } from '@/components/charts';
+import { toast } from 'sonner';
 
 import {
   PLANS,
@@ -29,6 +30,18 @@ import {
 } from '@/components/ui';
 
 import type { Activo, OrdenTrabajo } from '@/app/data/types';
+import { useCreateAssetMutation } from '@/hooks/use-asset-mutations';
+import AssetFormFields from '@/components/assets/asset-form-fields';
+import AssetDetailActions from '@/components/assets/asset-detail-actions';
+import {
+  buildAssetCreate,
+  initialAssetForm,
+  type AssetFormState,
+} from '@/components/assets/asset-form';
+import {
+  isAssetSessionCurrent,
+  useAssetSession,
+} from '@/hooks/use-asset-session';
 
 interface LoginScreenProps {
   onLogin: () => void;
@@ -369,6 +382,7 @@ interface AssetsScreenProps {
   assets?: Activo[];
   assetsLoading?: boolean;
   assetsError?: Error | null;
+  canManageAssets?: boolean;
 }
 
 export function AssetsScreen({
@@ -376,12 +390,18 @@ export function AssetsScreen({
   assets,
   assetsLoading = false,
   assetsError = null,
+  canManageAssets = false,
 }: AssetsScreenProps) {
   const [search, setSearch] = useState('');
   const [filterArea, setFilterArea] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [selected, setSelected] = useState<Activo | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [assetForm, setAssetForm] = useState<AssetFormState>(initialAssetForm);
+  const createAssetMutation = useCreateAssetMutation();
+  const createSubmitting = useRef(false);
+  const session = useAssetSession();
+  const canWrite = canManageAssets && session.canManage;
 
   const sourceAssets = assets ?? [];
   const areas = [...new Set(sourceAssets.map((a) => a.area))];
@@ -394,7 +414,61 @@ export function AssetsScreen({
     );
   });
 
-  if (assetsLoading) {
+  function updateAssetForm<K extends keyof AssetFormState>(
+    field: K,
+    value: AssetFormState[K],
+  ) {
+    setAssetForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function openCreateModal() {
+    if (!canWrite || !isAssetSessionCurrent(session)) return;
+    setAssetForm(initialAssetForm);
+    setShowCreate(true);
+  }
+
+  function closeCreateModal() {
+    if (createSubmitting.current) return;
+    setShowCreate(false);
+  }
+
+  function handleCreateAsset() {
+    if (
+      createSubmitting.current ||
+      !canWrite ||
+      !isAssetSessionCurrent(session)
+    )
+      return;
+
+    let payload;
+    try {
+      payload = buildAssetCreate(assetForm);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Revisa los datos del activo.',
+      );
+      return;
+    }
+
+    createSubmitting.current = true;
+    createAssetMutation.mutate(payload, {
+      onSuccess: () => {
+        if (!isAssetSessionCurrent(session)) return;
+        toast.success('Activo creado correctamente.');
+        setShowCreate(false);
+        setAssetForm(initialAssetForm);
+      },
+      onError: (error) => {
+        if (isAssetSessionCurrent(session))
+          toast.error(error.message || 'No se pudo crear el activo.');
+      },
+      onSettled: () => {
+        createSubmitting.current = false;
+      },
+    });
+  }
+
+  if (assetsLoading && !selected && !showCreate) {
     return (
       <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
         <PageHeader title='Activos' sub='Cargando activos...' />
@@ -407,7 +481,7 @@ export function AssetsScreen({
     );
   }
 
-  if (assetsError) {
+  if (assetsError && !selected && !showCreate) {
     return (
       <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
         <PageHeader title='Activos' sub='No se pudieron cargar los activos' />
@@ -439,6 +513,14 @@ export function AssetsScreen({
             </p>
           </div>
           <div className='flex flex-wrap justify-end gap-2'>
+            {canWrite && (
+              <AssetDetailActions
+                key={selected.id}
+                asset={selected}
+                onUpdated={setSelected}
+                onDeleted={() => setSelected(null)}
+              />
+            )}
             <Badge
               label={STL[selected.status] || selected.status}
               color={
@@ -616,9 +698,9 @@ export function AssetsScreen({
         title='Activos'
         sub={'de ' + sourceAssets.length + ' equipos'}
         action={
-          <BtnPrimary onClick={() => setShowCreate(true)}>
-            + Nuevo Activo
-          </BtnPrimary>
+          canWrite ? (
+            <BtnPrimary onClick={openCreateModal}>+ Nuevo Activo</BtnPrimary>
+          ) : undefined
         }
       />
 
@@ -693,55 +775,21 @@ export function AssetsScreen({
         </DataTable>
       </Card>
 
-      {showCreate && (
-        <Modal
-          title='Registrar Nuevo Activo'
-          onClose={() => setShowCreate(false)}
-        >
-          <Field label='Codigo de Equipo'>
-            <input defaultValue='EQP-008' />
-          </Field>
-          <Field label='Nombre del Equipo'>
-            <input placeholder='Ej: Bomba centrifuga #3' />
-          </Field>
-          <div className='grid grid-cols-2 gap-3'>
-            <Field label='Area'>
-              <select>
-                <option>Planta de Utilidades</option>
-                <option>Linea de Empaque A</option>
-                <option>Taller Central</option>
-                <option>Almacen Principal</option>
-              </select>
-            </Field>
-            <Field label='Criticidad'>
-              <select>
-                <option>baja</option>
-                <option>media</option>
-                <option>alta</option>
-              </select>
-            </Field>
-          </div>
-          <div className='grid grid-cols-2 gap-3'>
-            <Field label='Fabricante'>
-              <input placeholder='Ej: Atlas Copco' />
-            </Field>
-            <Field label='Modelo'>
-              <input placeholder='Ej: GA55' />
-            </Field>
-          </div>
-          <div className='grid grid-cols-2 gap-3'>
-            <Field label='N de Serie'>
-              <input placeholder='Ej: ATC-2026-001' />
-            </Field>
-            <Field label='Fecha de Instalacion'>
-              <input type='date' />
-            </Field>
-          </div>
-          <ModalFooter
-            onCancel={() => setShowCreate(false)}
-            onConfirm={() => setShowCreate(false)}
-            confirmLabel='Crear Activo'
-          />
+      {showCreate && canWrite && (
+        <Modal title='Registrar Nuevo Activo' onClose={closeCreateModal}>
+          <fieldset
+            disabled={createAssetMutation.isPending}
+            className='min-w-0 disabled:opacity-60'
+          >
+            <AssetFormFields value={assetForm} onChange={updateAssetForm} />
+            <ModalFooter
+              onCancel={closeCreateModal}
+              onConfirm={handleCreateAsset}
+              confirmLabel={
+                createAssetMutation.isPending ? 'Guardando...' : 'Crear Activo'
+              }
+            />
+          </fieldset>
         </Modal>
       )}
     </div>
