@@ -36,7 +36,7 @@ function isAuthEndpoint(endpoint: string): boolean {
 
 async function fetchWithTimeout(
   url: string,
-  options: FetchOptions,
+  options: ApiClientOptions,
 ): Promise<Response> {
   const {
     timeout = DEFAULT_TIMEOUT,
@@ -44,6 +44,10 @@ async function fetchWithTimeout(
     retryDelay = DEFAULT_RETRY_DELAY,
     ...fetchOptions
   } = options;
+
+  // These are client-only controls, not native RequestInit options.
+  delete fetchOptions.authToken;
+  delete fetchOptions.isRequestCurrent;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -76,6 +80,8 @@ async function fetchWithTimeout(
 
 export interface ApiClientOptions extends FetchOptions {
   authToken?: string;
+  /** Opt-in guard for identity-scoped requests, including auth retries. */
+  isRequestCurrent?: () => boolean;
 }
 
 /**
@@ -103,6 +109,17 @@ function buildHeaders(options: ApiClientOptions): Record<string, string> {
   return headers;
 }
 
+function sessionChanged<T>(): ApiResponse<T> {
+  return {
+    ok: false,
+    status: 0,
+    error: {
+      message: 'La sesión cambió. Vuelve a abrir el activo.',
+      code: 'SESSION_CHANGED',
+    },
+  };
+}
+
 /**
  * Retries the original request with the new access token.
  */
@@ -114,6 +131,9 @@ async function retryRequest<T = unknown>(
   const baseUrl =
     process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
+  if (originalOptions.isRequestCurrent && !originalOptions.isRequestCurrent())
+    return sessionChanged<T>();
+
   const headers = buildHeaders({
     ...originalOptions,
     authToken: newToken, // Override with fresh token
@@ -124,7 +144,11 @@ async function retryRequest<T = unknown>(
     headers,
   });
 
+  if (originalOptions.isRequestCurrent && !originalOptions.isRequestCurrent())
+    return sessionChanged<T>();
   const data = await response.json().catch(() => null);
+  if (originalOptions.isRequestCurrent && !originalOptions.isRequestCurrent())
+    return sessionChanged<T>();
 
   if (!response.ok) {
     return {
@@ -152,6 +176,8 @@ export async function apiClient<T = unknown>(
   const baseUrl =
     process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
+  if (options.isRequestCurrent && !options.isRequestCurrent())
+    return sessionChanged<T>();
   const headers = buildHeaders(options);
 
   try {
@@ -159,6 +185,9 @@ export async function apiClient<T = unknown>(
       ...options,
       headers,
     });
+
+    if (options.isRequestCurrent && !options.isRequestCurrent())
+      return sessionChanged<T>();
 
     // 401 interceptor with token refresh
     if (response.status === 401) {
@@ -175,6 +204,9 @@ export async function apiClient<T = unknown>(
       try {
         const newToken = await ensureValidToken();
 
+        if (options.isRequestCurrent && !options.isRequestCurrent())
+          return sessionChanged<T>();
+
         // Retry the original request with the new token
         return await retryRequest<T>(endpoint, options, newToken);
       } catch {
@@ -188,6 +220,8 @@ export async function apiClient<T = unknown>(
     }
 
     const data = await response.json().catch(() => null);
+    if (options.isRequestCurrent && !options.isRequestCurrent())
+      return sessionChanged<T>();
 
     if (!response.ok) {
       return {
@@ -247,6 +281,17 @@ apiClient.put = <T = unknown>(
   apiClient<T>(endpoint, {
     ...options,
     method: 'PUT',
+    body: data ? JSON.stringify(data) : undefined,
+  });
+
+apiClient.patch = <T = unknown>(
+  endpoint: string,
+  data?: unknown,
+  options?: FetchOptions,
+) =>
+  apiClient<T>(endpoint, {
+    ...options,
+    method: 'PATCH',
     body: data ? JSON.stringify(data) : undefined,
   });
 

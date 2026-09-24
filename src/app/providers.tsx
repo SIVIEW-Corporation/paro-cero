@@ -7,6 +7,12 @@ import {
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
+import { useCurrentUserQuery } from '@/hooks/use-current-user-query';
+
+function AuthSessionSync() {
+  useCurrentUserQuery();
+  return null;
+}
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const logout = useAuthStore((state) => state.logout);
@@ -52,6 +58,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthSessionSync />
+      {children}
+    </QueryClientProvider>
   );
 }

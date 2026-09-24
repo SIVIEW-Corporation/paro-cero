@@ -2,7 +2,7 @@
 
 ## Resumen General
 
-El backend usa JWT (JSON Web Tokens) con un patrón de Access Token + Refresh Token con rotación. Los access tokens son de corta duración (15 min) y los refresh tokens son UUIDs almacenados en la base de datos con expiración de 1 día.
+El backend usa JWT (JSON Web Tokens) con un patrón de Access Token + Refresh Token con rotación. Los access tokens tienen una duración de 2 horas y los refresh tokens son UUIDs almacenados en la base de datos con expiración de 1 día.
 
 ---
 
@@ -22,7 +22,7 @@ Response (200 OK):
 "access_token": "eyJhbGciOiJIUzI1NiIs...",
 "refresh_token": "550e8400-e29b-41d4-a716-446655440000",
 "token_type": "bearer",
-"expires_in": 900,
+"expires_in": 7200,
 "user": {
 "id": "uuid-del-usuario",
 "email": "usuario@empresa.com",
@@ -98,7 +98,7 @@ Para requests autenticados: Enviar header Authorization: Bearer <access_token>
 Token
 Access Token
 Refresh Token
-El expires_in en la respuesta está en segundos (900 = 15 min).
+El expires_in en la respuesta está en segundos (7200 = 2 horas).
 
 ---
 

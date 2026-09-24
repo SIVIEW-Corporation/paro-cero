@@ -1,6 +1,8 @@
 'use server';
 import { cookies } from 'next/headers';
 
+const ACCESS_TOKEN_MAX_AGE = 2 * 60 * 60;
+
 export async function setAuthTokenAction(token: string) {
   const cookieStore = await cookies();
   cookieStore.set('access_token', token, {
@@ -8,7 +10,7 @@ export async function setAuthTokenAction(token: string) {
     path: '/',
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 900, // 15 minutes — slightly longer than JWT expiry
+    maxAge: ACCESS_TOKEN_MAX_AGE, // 2 hours — aligned with JWT expiry
   });
   return { success: true };
 }
@@ -40,7 +42,7 @@ export async function setAuthCookiesAction(
     path: '/',
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 900, // 15 minutes — slightly longer than JWT expiry
+    maxAge: ACCESS_TOKEN_MAX_AGE, // 2 hours — aligned with JWT expiry
   });
 
   cookieStore.set('refresh_token', refreshToken, {
@@ -118,7 +120,7 @@ export async function refreshTokenAction(): Promise<{
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 900,
+      maxAge: ACCESS_TOKEN_MAX_AGE,
     });
     cookieStore.set('refresh_token', data.refresh_token, {
       httpOnly: true,

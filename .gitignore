@@ -76,3 +76,7 @@ openspec/
 .codebuddy
 .augment
 .adal
+
+# API-mocked browser acceptance artifacts
+/test-results/
+/playwright-report/
