@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { EChartsArea, EChartsPie } from '@/components/charts';
 
 import {
-  ASSETS,
   PLANS,
   complianceData,
   tipoData,
@@ -367,17 +366,26 @@ export function Dashboard({ wo }: DashboardProps) {
 
 interface AssetsScreenProps {
   wo: OrdenTrabajo[];
+  assets?: Activo[];
+  assetsLoading?: boolean;
+  assetsError?: Error | null;
 }
 
-export function AssetsScreen({ wo }: AssetsScreenProps) {
+export function AssetsScreen({
+  wo,
+  assets,
+  assetsLoading = false,
+  assetsError = null,
+}: AssetsScreenProps) {
   const [search, setSearch] = useState('');
   const [filterArea, setFilterArea] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [selected, setSelected] = useState<Activo | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
-  const areas = [...new Set(ASSETS.map((a) => a.area))];
-  const filtered = ASSETS.filter((a) => {
+  const sourceAssets = assets ?? [];
+  const areas = [...new Set(sourceAssets.map((a) => a.area))];
+  const filtered = sourceAssets.filter((a) => {
     const q = search.toLowerCase();
     return (
       (a.name.toLowerCase().includes(q) || a.code.toLowerCase().includes(q)) &&
@@ -385,6 +393,32 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
       (!filterStatus || a.status === filterStatus)
     );
   });
+
+  if (assetsLoading) {
+    return (
+      <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
+        <PageHeader title='Activos' sub='Cargando activos...' />
+        <Card>
+          <p className='text-app-text-secondary text-sm'>
+            Consultando los activos de tu empresa.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (assetsError) {
+    return (
+      <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
+        <PageHeader title='Activos' sub='No se pudieron cargar los activos' />
+        <Card>
+          <p className='text-app-danger text-sm'>
+            {assetsError.message || 'Error al obtener los activos.'}
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   if (selected) {
     const assetWOs = wo.filter((w) => w.activoId === selected.id);
@@ -580,7 +614,7 @@ export function AssetsScreen({ wo }: AssetsScreenProps) {
     <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
       <PageHeader
         title='Activos'
-        sub={'de ' + ASSETS.length + ' equipos'}
+        sub={'de ' + sourceAssets.length + ' equipos'}
         action={
           <BtnPrimary onClick={() => setShowCreate(true)}>
             + Nuevo Activo
