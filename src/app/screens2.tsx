@@ -24,6 +24,7 @@ import * as echarts from 'echarts';
 import { es } from 'date-fns/locale';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/style.css';
+import { toast } from 'sonner';
 
 import {
   EChartsArea,
@@ -32,16 +33,18 @@ import {
   EChartsChart,
 } from '@/components/charts';
 
-import { ASSETS, PLANS, STC, STL, PRC, PRL, NTL, NTI } from '@/app/data/index';
+import { ASSETS, STC, STL, PRC, PRL, NTL, NTI } from '@/app/data/index';
 import { TECNICOS } from '@/app/data/constants';
-import { generarDatosSeisMeses } from '@/app/data/mock-data';
 import {
   calculateMonthlyMaintenanceFinancials,
   formatMxnCurrency,
   type MonthlyMaintenanceFinancialData,
 } from '@/app/dashboard/reports/_utils/maintenance-financials';
-import { useWorkOrdersStore } from '@/app/stores/useWorkOrdersStore';
 import { cn } from '@/lib/cn';
+import type {
+  PlanCreateInput,
+  PlanExecutionInput,
+} from '@/services/plans-service';
 import type { CsvColumn } from '@/utils/exportCsv';
 
 import {
@@ -235,21 +238,28 @@ function openNativeMonthPicker(input: HTMLInputElement): void {
 }
 
 export function PlansScreen({
+  plans,
+  assets,
   canManagePlans = true,
   canExecutePlans = canManagePlans,
+  isCreating = false,
+  isUpdatingExecution = false,
+  onCreatePlan,
+  onUpdateExecution,
 }: {
+  plans: PlanMantenimiento[];
+  assets: Activo[];
   canManagePlans?: boolean;
   canExecutePlans?: boolean;
+  isCreating?: boolean;
+  isUpdatingExecution?: boolean;
+  onCreatePlan: (input: PlanCreateInput) => Promise<void>;
+  onUpdateExecution: (id: string, input: PlanExecutionInput) => Promise<void>;
 }) {
-  const [plans, setPlans] = useState(PLANS);
-  const [selected, setSelected] = useState<(typeof PLANS)[number] | null>(null);
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
-  const [completedPlans, setCompletedPlans] = useState<Record<string, string>>(
-    {},
-  );
+  const [selected, setSelected] = useState<PlanMantenimiento | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [planName, setPlanName] = useState('');
-  const [planActivoId, setPlanActivoId] = useState(ASSETS[0]?.id || '');
+  const [planActivoId, setPlanActivoId] = useState(assets[0]?.id || '');
   const [planFreq, setPlanFreq] = useState(1);
   const [planUnit, setPlanUnit] = useState<
     'dias' | 'semanas' | 'meses' | 'anios'
@@ -274,14 +284,29 @@ export function PlansScreen({
     fontFamily: 'inherit',
   };
 
-  const toggle = (key: string) => {
-    if (!canExecutePlans) return;
-    setChecked((c) => ({ ...c, [key]: !c[key] }));
+  const toggle = (planId: string, index: number) => {
+    if (!canExecutePlans || isUpdatingExecution) return;
+    const plan = plans.find((item) => item.id === planId);
+    if (!plan || !Number.isInteger(index)) return;
+    const checkedItems = plan.checkedItems ?? plan.items.map(() => false);
+    const nextCheckedItems = checkedItems.map((checked, itemIndex) =>
+      itemIndex === index ? !checked : checked,
+    );
+    void onUpdateExecution(plan.id, {
+      checkedItems: nextCheckedItems,
+      lastCompletedAt: plan.lastCompletedAt?.toISOString() ?? null,
+    }).catch((error: unknown) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo guardar el checklist.',
+      );
+    });
   };
 
   const resetCreateForm = () => {
     setPlanName('');
-    setPlanActivoId(ASSETS[0]?.id || '');
+    setPlanActivoId(assets[0]?.id || '');
     setPlanFreq(1);
     setPlanUnit('semanas');
     setPlanDuracion(2);
@@ -318,16 +343,7 @@ export function PlansScreen({
     setPlanItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const getNextPlanId = () => {
-    const highest = plans.reduce((max, plan) => {
-      const num = Number.parseInt(plan.id.replace(/\D/g, ''), 10);
-      return Number.isNaN(num) ? max : Math.max(max, num);
-    }, 0);
-
-    return `P${String(highest + 1).padStart(3, '0')}`;
-  };
-
-  const createPlan = () => {
+  const createPlan = async () => {
     if (!canManagePlans) return;
     const name = planName.trim();
 
@@ -356,39 +372,34 @@ export function PlansScreen({
       return;
     }
 
-    const now = new Date();
-    const newPlan = {
-      id: getNextPlanId(),
-      empresaId: 'EMP001',
-      activoId: planActivoId,
-      assetId: planActivoId,
-      name,
-      freq: planFreq,
-      unit: planUnit,
-      prioridad: planPrioridad,
-      duracion: planDuracion,
-      activo: planActivo,
-      items: planItems,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    setPlans((prev) => [newPlan, ...prev]);
-    closeCreateModal();
-    resetCreateForm();
+    try {
+      await onCreatePlan({
+        name,
+        assetId: planActivoId,
+        frequency: planFreq,
+        frequencyUnit: planUnit,
+        priority: planPrioridad,
+        durationHours: planDuracion,
+        isActive: planActivo,
+        items: planItems,
+      });
+      closeCreateModal();
+      resetCreateForm();
+    } catch (error) {
+      setCreateError(
+        error instanceof Error ? error.message : 'No se pudo crear el plan.',
+      );
+    }
   };
 
   if (selected) {
-    const currentPlan =
-      plans.find((plan) => plan.id === selected.id) || selected;
-    const currentPlanAssetId =
-      (currentPlan as { activoId?: string }).activoId ||
-      (currentPlan as { assetId?: string }).assetId;
-    const asset = ASSETS.find((a) => a.id === currentPlanAssetId);
-    const done = currentPlan.items.filter(
-      (_, i) => checked[currentPlan.id + '-' + i],
-    ).length;
-    const completedAt = completedPlans[currentPlan.id] ?? null;
+    const currentPlan = plans.find((plan) => plan.id === selected.id);
+    if (!currentPlan) return null;
+    const asset = assets.find((item) => item.id === currentPlan.activoId);
+    const checkedItems =
+      currentPlan.checkedItems ?? currentPlan.items.map(() => false);
+    const done = checkedItems.filter(Boolean).length;
+    const completedAt = currentPlan.lastCompletedAt?.toISOString() ?? null;
     const planCompleted = Boolean(completedAt);
     const nextPlanExecution = getNextPlanExecutionDate(
       completedAt,
@@ -400,12 +411,26 @@ export function PlansScreen({
       currentPlan.items.length > 0
         ? Math.round((done / currentPlan.items.length) * 100)
         : 0;
-    const completePlan = () => {
-      if (!canExecutePlans || planCompleted || !allActivitiesDone) return;
-      setCompletedPlans((current) => ({
-        ...current,
-        [currentPlan.id]: new Date().toISOString(),
-      }));
+    const completePlan = async () => {
+      if (
+        !canExecutePlans ||
+        isUpdatingExecution ||
+        planCompleted ||
+        !allActivitiesDone
+      )
+        return;
+      try {
+        await onUpdateExecution(currentPlan.id, {
+          checkedItems,
+          lastCompletedAt: new Date().toISOString(),
+        });
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : 'No se pudo completar el plan.',
+        );
+      }
     };
 
     return (
@@ -595,7 +620,7 @@ export function PlansScreen({
               ) : canExecutePlans ? (
                 <BtnPrimary
                   onClick={completePlan}
-                  disabled={!allActivitiesDone}
+                  disabled={!allActivitiesDone || isUpdatingExecution}
                 >
                   {allActivitiesDone
                     ? 'Marcar plan completado'
@@ -604,12 +629,17 @@ export function PlansScreen({
               ) : null}
             </div>
             {currentPlan.items.map((item, i) => {
-              const k = currentPlan.id + '-' + i;
+              const isChecked = checkedItems[i] ?? false;
               return (
                 <div
                   key={i}
                   onClick={() => {
-                    if (canExecutePlans && !planCompleted) toggle(k);
+                    if (
+                      canExecutePlans &&
+                      !planCompleted &&
+                      !isUpdatingExecution
+                    )
+                      toggle(currentPlan.id, i);
                   }}
                   style={{
                     display: 'flex',
@@ -618,7 +648,9 @@ export function PlansScreen({
                     padding: '9px 0',
                     borderBottom: '1px solid #0d1f38',
                     cursor:
-                      canExecutePlans && !planCompleted ? 'pointer' : 'default',
+                      canExecutePlans && !planCompleted && !isUpdatingExecution
+                        ? 'pointer'
+                        : 'default',
                     opacity: planCompleted ? 0.75 : 1,
                   }}
                 >
@@ -626,17 +658,17 @@ export function PlansScreen({
                     style={{
                       width: 18,
                       height: 18,
-                      border: `2px solid ${checked[k] ? '#22c55e' : '#1e3a5f'}`,
+                      border: `2px solid ${isChecked ? '#22c55e' : '#1e3a5f'}`,
                       borderRadius: 4,
                       flexShrink: 0,
-                      background: checked[k] ? '#22c55e22' : 'transparent',
+                      background: isChecked ? '#22c55e22' : 'transparent',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.15s',
                     }}
                   >
-                    {checked[k] && (
+                    {isChecked && (
                       <span
                         style={{
                           fontSize: 11,
@@ -651,8 +683,8 @@ export function PlansScreen({
                   <span
                     style={{
                       fontSize: 13,
-                      color: checked[k] ? '#475569' : '#cbd5e1',
-                      textDecoration: checked[k] ? 'line-through' : 'none',
+                      color: isChecked ? '#475569' : '#cbd5e1',
+                      textDecoration: isChecked ? 'line-through' : 'none',
                       transition: 'all 0.15s',
                     }}
                   >
@@ -695,11 +727,8 @@ export function PlansScreen({
           ]}
         >
           {plans.map((p) => {
-            const planAssetId =
-              (p as { activoId?: string }).activoId ||
-              (p as { assetId?: string }).assetId;
-            const asset = ASSETS.find((a) => a.id === planAssetId);
-            const completedAt = completedPlans[p.id] ?? null;
+            const asset = assets.find((item) => item.id === p.activoId);
+            const completedAt = p.lastCompletedAt?.toISOString() ?? null;
             const nextPlanExecution = getNextPlanExecutionDate(completedAt, p);
             return (
               <tr
@@ -767,7 +796,7 @@ export function PlansScreen({
               value={planActivoId}
               onChange={(e) => setPlanActivoId(e.target.value)}
             >
-              {ASSETS.map((a) => (
+              {assets.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.code} — {a.name}
                 </option>
@@ -956,8 +985,8 @@ export function PlansScreen({
           )}
           <ModalFooter
             onCancel={closeCreateModal}
-            onConfirm={createPlan}
-            confirmLabel='Crear Plan'
+            onConfirm={isCreating ? undefined : createPlan}
+            confirmLabel={isCreating ? 'Guardando…' : 'Crear Plan'}
           />
         </Modal>
       )}
@@ -3035,21 +3064,25 @@ function getInitialReportFilters(): ReportFilters {
   };
 }
 
-function getAssetById(assetId: string) {
-  return ASSETS.find((asset) => asset.id === assetId);
+function getAssetById(assetId: string, assets: Activo[]) {
+  return assets.find((asset) => asset.id === assetId);
 }
 
-function getFilteredAssets(filters: ReportFilters) {
-  return ASSETS.filter((asset) => {
+function getFilteredAssets(filters: ReportFilters, assets: Activo[]) {
+  return assets.filter((asset) => {
     if (filters.assetId && asset.id !== filters.assetId) return false;
     if (filters.area && asset.area !== filters.area) return false;
     return true;
   });
 }
 
-function getFilteredWorkOrders(orders: OrdenTrabajo[], filters: ReportFilters) {
+function getFilteredWorkOrders(
+  orders: OrdenTrabajo[],
+  filters: ReportFilters,
+  assets: Activo[],
+) {
   const filteredAssetIds = new Set(
-    getFilteredAssets(filters).map((asset) => asset.id),
+    getFilteredAssets(filters, assets).map((asset) => asset.id),
   );
 
   return orders.filter((workOrder) => {
@@ -3067,22 +3100,14 @@ function getFilteredWorkOrders(orders: OrdenTrabajo[], filters: ReportFilters) {
   });
 }
 
-function getFilteredPlans(filters: ReportFilters) {
-  const filteredAssetIds = new Set(
-    getFilteredAssets(filters).map((asset) => asset.id),
-  );
-
-  return PLANS.filter((plan) => {
-    if (!filteredAssetIds.has(plan.activoId)) return false;
-    return true;
-  });
-}
-
-function filterReportsData(orders: OrdenTrabajo[], filters: ReportFilters) {
+function filterReportsData(
+  orders: OrdenTrabajo[],
+  filters: ReportFilters,
+  assets: Activo[],
+) {
   return {
-    assets: getFilteredAssets(filters),
-    workOrders: getFilteredWorkOrders(orders, filters),
-    plans: getFilteredPlans(filters),
+    assets: getFilteredAssets(filters, assets),
+    workOrders: getFilteredWorkOrders(orders, filters, assets),
   };
 }
 
@@ -3098,11 +3123,15 @@ function sanitizeFilenameSegment(value: string) {
   );
 }
 
-function buildReportFilename(filters: ReportFilters, kind: ReportExportKind) {
+function buildReportFilename(
+  filters: ReportFilters,
+  kind: ReportExportKind,
+  assets: Activo[],
+) {
   const from = format(filters.dateRange.from, 'yyyyMMdd');
   const to = format(filters.dateRange.to, 'yyyyMMdd');
   const asset = filters.assetId
-    ? getAssetById(filters.assetId)?.code || filters.assetId
+    ? getAssetById(filters.assetId, assets)?.code || filters.assetId
     : 'todos-los-activos';
   const period = `${from}-${to}`;
   const prefixByKind: Record<ReportExportKind, string> = {
@@ -3558,12 +3587,11 @@ function downloadCsvContent(filename: string, csvContent: string) {
 
 export function ReportsScreen({
   wo,
-  canManageDemoData = true,
+  assets,
 }: {
   wo: OrdenTrabajo[];
-  canManageDemoData?: boolean;
+  assets: Activo[];
 }) {
-  const setOrdenes = useWorkOrdersStore((state) => state.setOrdenes);
   const [filters, setFilters] = useState<ReportFilters>(
     getInitialReportFilters,
   );
@@ -3576,17 +3604,17 @@ export function ReportsScreen({
     REPORT_VIEW.OPERATIONAL,
   );
 
-  const {
-    assets: filteredAssets,
-    workOrders: filteredWo,
-    plans: filteredPlans,
-  } = filterReportsData(wo, filters);
+  const { assets: filteredAssets, workOrders: filteredWo } = filterReportsData(
+    wo,
+    filters,
+    assets,
+  );
   const selectedAsset = filters.assetId;
   const selectedAssetCode = selectedAsset
-    ? getAssetById(selectedAsset)?.code
+    ? getAssetById(selectedAsset, assets)?.code
     : null;
   const selectedAssetName = selectedAsset
-    ? getAssetById(selectedAsset)?.name || selectedAsset
+    ? getAssetById(selectedAsset, assets)?.name || selectedAsset
     : 'todos los activos';
   const printDateLabel = `${formatDate(filters.dateRange.from)} - ${formatDate(
     filters.dateRange.to,
@@ -3595,7 +3623,7 @@ export function ReportsScreen({
     start: startOfMonth(filters.dateRange.from),
     end: endOfMonth(filters.dateRange.to),
   });
-  const areas = Array.from(new Set(ASSETS.map((asset) => asset.area))).sort();
+  const areas = Array.from(new Set(assets.map((asset) => asset.area))).sort();
   const financialSummary = calculateMonthlyMaintenanceFinancials({
     workOrders: filteredWo,
     respectActiveStatusFilter: Boolean(filters.status),
@@ -3611,10 +3639,14 @@ export function ReportsScreen({
   ).sort((first, second) => first.name.localeCompare(second.name));
 
   const historyData = reportMonths.map((month) => {
-    const monthWO = getFilteredWorkOrders(wo, {
-      ...filters,
-      dateRange: { from: startOfMonth(month), to: endOfMonth(month) },
-    });
+    const monthWO = getFilteredWorkOrders(
+      wo,
+      {
+        ...filters,
+        dateRange: { from: startOfMonth(month), to: endOfMonth(month) },
+      },
+      assets,
+    );
     const monthCompleted = monthWO.filter(
       (workOrder) => workOrder.status === 'completada',
     ).length;
@@ -3689,7 +3721,7 @@ export function ReportsScreen({
     );
   const dynamicTopFallas = Object.values(assetGroups)
     .map((group) => ({
-      asset: getAssetById(group.id)?.name || 'Desconocido',
+      asset: getAssetById(group.id, assets)?.name || 'Desconocido',
       count: group.count,
       down: Math.round(group.down / 60),
     }))
@@ -3830,18 +3862,6 @@ export function ReportsScreen({
     setFilters({ ...filters, assetId });
   };
 
-  const regenerateDemoData = () => {
-    if (
-      !window.confirm(
-        'Se generará un nuevo set de datos demo para órdenes de trabajo. ¿Deseas continuar?',
-      )
-    ) {
-      return;
-    }
-
-    setOrdenes(generarDatosSeisMeses());
-  };
-
   const getWorkOrderRootCause = (workOrder: OrdenTrabajo) => {
     const legacyWorkOrder = workOrder as OrdenTrabajo & {
       causa?: string;
@@ -3871,7 +3891,7 @@ export function ReportsScreen({
         ${selectedAreaLabel ? `<span><strong>Área:</strong> ${escapeHtml(selectedAreaLabel)}</span>` : ''}
         ${selectedTechnicianLabel ? `<span><strong>Técnico / responsable:</strong> ${escapeHtml(selectedTechnicianLabel)}</span>` : ''}
         ${selectedStatusLabel ? `<span><strong>Estado de OT:</strong> ${escapeHtml(selectedStatusLabel)}</span>` : ''}
-        <span><strong>Alcance:</strong> ${escapeHtml(filteredWo.length)} OTs · ${escapeHtml(filteredAssets.length)} activos · ${escapeHtml(filteredPlans.length)} planes PM</span>
+        <span><strong>Alcance:</strong> ${escapeHtml(filteredWo.length)} OTs · ${escapeHtml(filteredAssets.length)} activos · planes PM aún no conectados</span>
       </div>
     </section>
   `;
@@ -3975,7 +3995,7 @@ export function ReportsScreen({
       ? await captureVisibleReportCharts()
       : [];
     const detailPrintRows = detailRows.map((workOrder) => {
-      const asset = getAssetById(workOrder.activoId);
+      const asset = getAssetById(workOrder.activoId, assets);
 
       return {
         Folio: workOrder.folio,
@@ -3995,7 +4015,11 @@ export function ReportsScreen({
 
     openReportPrintWindow({
       title: isFinancialReport ? 'KPIs financieros' : 'Reportes y KPIs',
-      filename: buildReportFilename(filters, REPORT_EXPORT_KIND.FULL_PDF),
+      filename: buildReportFilename(
+        filters,
+        REPORT_EXPORT_KIND.FULL_PDF,
+        assets,
+      ),
       body: isFinancialReport
         ? `
         ${buildPrintHeader('KPIs financieros')}
@@ -4029,7 +4053,11 @@ export function ReportsScreen({
       title: isFinancialReport
         ? 'Reporte financiero PM0 / Paro Cero'
         : 'Reporte ejecutivo PM0 / Paro Cero',
-      filename: buildReportFilename(filters, REPORT_EXPORT_KIND.EXECUTIVE_PDF),
+      filename: buildReportFilename(
+        filters,
+        REPORT_EXPORT_KIND.EXECUTIVE_PDF,
+        assets,
+      ),
       body: isFinancialReport
         ? `
         ${buildPrintHeader('Reporte financiero PM0 / Paro Cero')}
@@ -4107,14 +4135,14 @@ export function ReportsScreen({
       {
         header: 'Activo',
         value: (workOrder: OrdenTrabajo) => {
-          const asset = getAssetById(workOrder.activoId);
+          const asset = getAssetById(workOrder.activoId, assets);
           return asset ? `${asset.code} - ${asset.name}` : workOrder.activoId;
         },
       },
       {
         header: 'Área',
         value: (workOrder: OrdenTrabajo) =>
-          getAssetById(workOrder.activoId)?.area || '',
+          getAssetById(workOrder.activoId, assets)?.area || '',
       },
       {
         header: 'Técnico',
@@ -4187,7 +4215,7 @@ export function ReportsScreen({
         : buildCsvSection({ columns: workOrderColumns, rows: filteredWo });
 
     downloadCsvContent(
-      `${buildReportFilename(filters, REPORT_EXPORT_KIND.DATABASE_CSV)}.csv`,
+      `${buildReportFilename(filters, REPORT_EXPORT_KIND.DATABASE_CSV, assets)}.csv`,
       csvContent,
     );
   };
@@ -4222,7 +4250,7 @@ export function ReportsScreen({
                 className='border-shNeutral-200 bg-shNeutral-50 text-shNeutral-900 focus:border-shAccent-500 focus:ring-shAccent-500/20 h-10 min-w-56 rounded-lg border px-3 text-sm font-semibold shadow-inner outline-none focus:ring-2'
               >
                 <option value=''>Todos los activos</option>
-                {ASSETS.map((asset) => (
+                {assets.map((asset) => (
                   <option key={asset.id} value={asset.id}>
                     {asset.code} — {asset.name}
                   </option>
@@ -4332,11 +4360,6 @@ export function ReportsScreen({
                 {option.label}
               </button>
             ))}
-            {canManageDemoData && (
-              <BtnGhost onClick={regenerateDemoData}>
-                Regenerar datos demo
-              </BtnGhost>
-            )}
           </div>
         </div>
 
@@ -4574,7 +4597,7 @@ export function ReportsScreen({
                 </div>
                 <span className='text-shNeutral-500 text-xs font-semibold'>
                   {filteredWo.length} OTs · {filteredAssets.length} activos ·{' '}
-                  {filteredPlans.length} planes PM
+                  planes PM aún no conectados
                 </span>
               </div>
               <div className='border-shNeutral-200 overflow-x-auto rounded-xl border'>
@@ -4604,7 +4627,7 @@ export function ReportsScreen({
                   <tbody>
                     {detailRows.length > 0 ? (
                       detailRows.map((workOrder) => {
-                        const asset = getAssetById(workOrder.activoId);
+                        const asset = getAssetById(workOrder.activoId, assets);
                         return (
                           <tr
                             key={workOrder.id}

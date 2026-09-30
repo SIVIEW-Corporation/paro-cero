@@ -4,12 +4,7 @@ import { useRef, useState } from 'react';
 import { EChartsArea, EChartsPie } from '@/components/charts';
 import { toast } from 'sonner';
 
-import {
-  PLANS,
-  complianceData,
-  tipoData,
-  topFallas,
-} from '@/app/data/mock-data';
+import { PLANS } from '@/app/data/mock-data';
 import { STC, STL, PRC, PRL, CRC } from '@/app/data/constants';
 
 import {
@@ -157,20 +152,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
 interface DashboardProps {
   wo: OrdenTrabajo[];
-}
-
-interface WorkOrder {
-  id: string;
-  assetId: string;
-  titulo: string;
-  status: string;
-  prioridad: string;
-  downtime?: number;
-  fechaVen: string;
-  fechaCompromiso?: string | Date;
-  asignado: string;
-  tipo: string;
-  folio: string;
+  assets: Activo[];
 }
 
 const chartColors = {
@@ -181,21 +163,104 @@ const chartColors = {
   muted: '#94a3b8',
 };
 
-export function Dashboard({ wo }: DashboardProps) {
+export function Dashboard({ wo, assets }: DashboardProps) {
   const [pendingLimit, setPendingLimit] = useState<'5' | '10' | '15' | 'all'>(
     '5',
   );
-  const workOrders = wo as unknown as WorkOrder[];
-
-  const open = workOrders.filter(
+  const open = wo.filter(
     (w) => !['completada', 'cerrada', 'cancelada'].includes(w.status),
   ).length;
-  const overdue = workOrders.filter((w) => w.status === 'vencido').length;
-  const completed = workOrders.filter((w) => w.status === 'completada').length;
-  const totalDownMin = workOrders.reduce((s, w) => s + (w.downtime || 0), 0);
-  const upcoming = workOrders.filter((w) =>
-    ['pendiente', 'asignada', 'nueva'].includes(w.status),
+  const now = new Date();
+  const overdue = wo.filter(
+    (workOrder) =>
+      !['completada', 'cerrada', 'cancelada'].includes(workOrder.status) &&
+      workOrder.fechaCompromiso < now,
+  ).length;
+  const completed = wo.filter(
+    (workOrder) =>
+      workOrder.status === 'completada' &&
+      workOrder.fechaCierre?.getMonth() === now.getMonth() &&
+      workOrder.fechaCierre?.getFullYear() === now.getFullYear(),
+  ).length;
+  const totalDownMin = wo.reduce(
+    (sum, workOrder) => sum + workOrder.downtimeMinutos,
+    0,
   );
+  const upcoming = wo.filter((workOrder) =>
+    ['asignada', 'nueva', 'en_proceso', 'en_espera'].includes(workOrder.status),
+  );
+  const complianceData = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - 5 + index, 1);
+    const monthOrders = wo.filter(
+      (workOrder) =>
+        ['completada', 'cerrada', 'cancelada'].includes(workOrder.status) &&
+        workOrder.fechaCreacion.getMonth() === date.getMonth() &&
+        workOrder.fechaCreacion.getFullYear() === date.getFullYear(),
+    );
+    const completedOrders = monthOrders.filter(
+      (workOrder) => workOrder.status === 'completada',
+    ).length;
+
+    return {
+      mes: new Intl.DateTimeFormat('es-MX', { month: 'short' }).format(date),
+      val: monthOrders.length
+        ? Math.round((completedOrders / monthOrders.length) * 100)
+        : 0,
+    };
+  });
+  const tipoData = [
+    {
+      name: 'Preventivo',
+      value: wo.filter((workOrder) => workOrder.tipo === 'preventivo').length,
+      color: chartColors.info,
+    },
+    {
+      name: 'Correctivo',
+      value: wo.filter((workOrder) => workOrder.tipo === 'correctivo').length,
+      color: chartColors.danger,
+    },
+    {
+      name: 'Predictivo',
+      value: wo.filter((workOrder) => workOrder.tipo === 'predictivo').length,
+      color: chartColors.warning,
+    },
+  ].filter((item) => item.value > 0);
+  const topFallas = Object.values(
+    wo
+      .filter((workOrder) => workOrder.tipo === 'correctivo')
+      .reduce<Record<string, { assetId: string; count: number; down: number }>>(
+        (groups, workOrder) => {
+          const group = groups[workOrder.activoId] ?? {
+            assetId: workOrder.activoId,
+            count: 0,
+            down: 0,
+          };
+          group.count += 1;
+          group.down += workOrder.downtimeMinutos;
+          groups[workOrder.activoId] = group;
+          return groups;
+        },
+        {},
+      ),
+  )
+    .map((group) => ({
+      asset:
+        assets.find((asset) => asset.id === group.assetId)?.name ?? 'Activo',
+      count: group.count,
+      down: Math.round(group.down / 60),
+    }))
+    .sort((first, second) => second.count - first.count)
+    .slice(0, 5);
+  const closedOrders = wo.filter((workOrder) =>
+    ['completada', 'cerrada', 'cancelada'].includes(workOrder.status),
+  ).length;
+  const compliancePct = closedOrders
+    ? Math.round(
+        (wo.filter((workOrder) => workOrder.status === 'completada').length /
+          closedOrders) *
+          100,
+      )
+    : 0;
 
   const getDueDateTimestamp = (value: string | Date | undefined) => {
     if (!value) return Number.POSITIVE_INFINITY;
@@ -212,8 +277,8 @@ export function Dashboard({ wo }: DashboardProps) {
   };
 
   const upcomingSorted = [...upcoming].sort((a, b) => {
-    const dueA = getDueDateTimestamp(a.fechaVen ?? a.fechaCompromiso);
-    const dueB = getDueDateTimestamp(b.fechaVen ?? b.fechaCompromiso);
+    const dueA = getDueDateTimestamp(a.fechaCompromiso);
+    const dueB = getDueDateTimestamp(b.fechaCompromiso);
     return dueA - dueB;
   });
 
@@ -225,7 +290,7 @@ export function Dashboard({ wo }: DashboardProps) {
     <div className='h-full overflow-y-auto p-4 sm:p-6 lg:p-7'>
       <PageHeader
         title='Panel de Control'
-        sub='Visibilidad operativa en tiempo real · 7 de marzo 2026'
+        sub={`Visibilidad operativa · ${new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(now)}`}
       />
 
       <div className='mb-6 grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5'>
@@ -252,8 +317,8 @@ export function Dashboard({ wo }: DashboardProps) {
         />
         <KpiCard
           label='Cumplimiento PM'
-          value='68%'
-          sub='meta: 90%'
+          value={`${compliancePct}%`}
+          sub='OT completadas de las finalizadas'
           color={chartColors.info}
           icon={<span>📊</span>}
         />
@@ -303,7 +368,8 @@ export function Dashboard({ wo }: DashboardProps) {
                       {w.titulo}
                     </div>
                     <div className='text-app-text-secondary mt-0.5 text-xs'>
-                      {w.asignado} · Vence {w.fechaVen}
+                      {w.tecnicoNombre} · Vence{' '}
+                      {w.fechaCompromiso.toLocaleDateString('es-MX')}
                     </div>
                   </div>
                   <div className='ml-3 flex flex-shrink-0 gap-1.5'>

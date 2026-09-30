@@ -86,6 +86,8 @@ export interface PlanMantenimiento {
   duracion: number;
   activo: boolean;
   items: string[];
+  checkedItems?: boolean[];
+  lastCompletedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -163,6 +165,15 @@ export interface OrdenTrabajo {
 export interface ChecklistItem {
   id: number;
   descripcion: string;
+}
+
+export interface PlantillaChecklist {
+  id: string;
+  nombre: string;
+  activoId: string;
+  activoCode: string;
+  activoName: string;
+  items: ChecklistItem[];
 }
 
 export interface ChecklistItemRespuesta {
