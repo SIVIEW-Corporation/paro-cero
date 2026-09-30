@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
-import { canVisitDashboard } from './access';
+import { canVisitDashboard, isTechnicianRole } from './access';
 
 /** Client-only demo guard; backend authorization remains a production prerequisite. */
 export default function DashboardAccess({ children }: { children: ReactNode }) {
@@ -24,18 +24,18 @@ export default function DashboardAccess({ children }: { children: ReactNode }) {
   return (
     <section className='border-app-border-soft bg-app-surface my-6 space-y-4 rounded-xl border p-6'>
       <h1 className='text-app-text-primary text-xl font-bold'>
-        {user?.role === 'tecnico'
+        {isTechnicianRole(user?.role)
           ? 'Tu espacio de trabajo es Mis tareas'
           : 'Acceso no disponible para este perfil'}
       </h1>
       <p className='text-app-text-secondary text-sm'>
-        {user?.role === 'tecnico'
+        {isTechnicianRole(user?.role)
           ? 'Planeación, horarios y edición de órdenes son funciones del jefe. Consultá tu OT desde el detalle de la tarea.'
           : 'Se requiere una sesión activa con el perfil correspondiente.'}
       </p>
       <Link
         href={
-          user?.role === 'tecnico'
+          isTechnicianRole(user?.role)
             ? '/dashboard/mis-tareas'
             : user
               ? '/dashboard'
@@ -43,7 +43,7 @@ export default function DashboardAccess({ children }: { children: ReactNode }) {
         }
         className='bg-shPrimary-800 inline-block rounded-lg px-4 py-2 text-sm font-semibold text-white'
       >
-        {user?.role === 'tecnico'
+        {isTechnicianRole(user?.role)
           ? 'Ir a Mis tareas'
           : user
             ? 'Volver al inicio'

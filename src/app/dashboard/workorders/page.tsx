@@ -11,6 +11,8 @@ import { useAuthStore } from '@/store/auth-store';
 import { useAssetsQuery } from '@/hooks/use-assets-query';
 import { useWorkOrderSession } from '@/hooks/use-work-order-session';
 import { useWorkOrdersQuery } from '@/hooks/use-work-orders-query';
+import { useTechniciansQuery } from '@/hooks/use-technicians-query';
+import { getRolePermissions } from '@/features/technician/access';
 import {
   useAddWorkOrderEvidenceMutation,
   useChangeWorkOrderStatusMutation,
@@ -28,6 +30,7 @@ export default function WorkOrdersPage() {
   const session = useWorkOrderSession();
   const workOrdersQuery = useWorkOrdersQuery();
   const assetsQuery = useAssetsQuery();
+  const techniciansQuery = useTechniciansQuery();
   const createMutation = useCreateWorkOrderMutation();
   const statusMutation = useChangeWorkOrderStatusMutation();
   const updateMutation = useUpdateWorkOrderMutation();
@@ -61,10 +64,30 @@ export default function WorkOrdersPage() {
     ? (assetsQuery.data?.items ?? [])
     : ASSETS;
   const availableTechnicians = useRemoteWorkOrders
-    ? user
-      ? [{ id: user.id, nombre: user.full_name }]
-      : []
+    ? (techniciansQuery.data ??
+      (user && user.role && ['operator', 'tecnico'].includes(user.role)
+        ? [{ id: user.id, nombre: user.full_name }]
+        : []))
     : TECNICOS;
+  const permissions = getRolePermissions(user?.role);
+  const localOrRemoteSession = accessToken
+    ? session.canRead
+    : !user || Boolean(permissions?.workOrders.read);
+  const canCreate = localOrRemoteSession
+    ? !accessToken || Boolean(permissions?.workOrders.create)
+    : false;
+  const canEdit = localOrRemoteSession
+    ? !accessToken || Boolean(permissions?.workOrders.edit)
+    : false;
+  const canChangeStatus = localOrRemoteSession
+    ? !accessToken || Boolean(permissions?.workOrders.changeStatus)
+    : false;
+  const canManageEvidence = localOrRemoteSession
+    ? !accessToken || Boolean(permissions?.workOrders.manageEvidence)
+    : false;
+  const canDelete = localOrRemoteSession
+    ? !accessToken || Boolean(permissions?.workOrders.delete)
+    : false;
 
   return (
     <WorkOrdersScreen
@@ -73,8 +96,11 @@ export default function WorkOrdersPage() {
       setWo={handleSetWo}
       assets={availableAssets}
       technicians={availableTechnicians}
-      canWrite={!hasRemoteWorkOrderSession || session.canWrite}
-      canDelete={!hasRemoteWorkOrderSession || session.canDelete}
+      canWrite={canEdit}
+      canCreate={canCreate}
+      canChangeStatus={canChangeStatus}
+      canManageEvidence={canManageEvidence}
+      canDelete={canDelete}
       isLoading={useRemoteWorkOrders && workOrdersQuery.isPending}
       error={
         authenticatedWithoutCompany

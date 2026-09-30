@@ -2,22 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { useAuthStore } from '@/store/auth-store';
-
-const READ_ROLES = new Set([
-  'admin',
-  'superadmin',
-  'supervisor',
-  'operator',
-  'viewer',
-  'tecnico',
-]);
-const WRITE_ROLES = new Set([
-  'admin',
-  'superadmin',
-  'supervisor',
-  'operator',
-  'tecnico',
-]);
+import { getRolePermissions } from '@/features/technician/access';
 
 function identity(state: ReturnType<typeof useAuthStore.getState>) {
   return JSON.stringify([
@@ -70,15 +55,23 @@ export function useWorkOrderSession(): WorkOrderSession {
     accessToken && user?.id && user.company_id && user.is_active,
   );
   const role = user?.role ?? '';
+  const permissions = getRolePermissions(role);
 
   return {
     key,
     userId: user?.id ?? '',
     companyId: user?.company_id ?? '',
     role,
-    canRead: activeSession && READ_ROLES.has(role),
-    canWrite: activeSession && WRITE_ROLES.has(role),
-    canDelete: activeSession && (role === 'admin' || role === 'superadmin'),
+    canRead: activeSession && Boolean(permissions?.workOrders.read),
+    canWrite:
+      activeSession &&
+      Boolean(
+        permissions?.workOrders.create ||
+        permissions?.workOrders.edit ||
+        permissions?.workOrders.changeStatus ||
+        permissions?.workOrders.manageEvidence,
+      ),
+    canDelete: activeSession && Boolean(permissions?.workOrders.delete),
   };
 }
 

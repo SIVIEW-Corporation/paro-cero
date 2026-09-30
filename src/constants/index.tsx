@@ -9,6 +9,7 @@ import {
   Search,
   Bell,
   BarChart3,
+  UsersRound,
 } from 'lucide-react';
 
 export const iconSize = 16;
@@ -76,5 +77,12 @@ export const tabs = [
     tooltip: 'Ver KPIs e información útil',
     path: '/dashboard/reports',
     icon: <BarChart3 className='icon-size' />,
+  },
+  {
+    id: 'users',
+    label: 'Usuarios',
+    tooltip: 'Gestionar usuarios',
+    path: '/users',
+    icon: <UsersRound className='icon-size' />,
   },
 ];

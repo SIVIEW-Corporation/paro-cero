@@ -13,7 +13,7 @@ export const newUserSchema = z.object({
     .string()
     .min(1, 'Nombre completo requerido')
     .max(60, 'Nombre muy largo'),
-  role: z.enum(['operator', 'viewer']),
+  role: z.enum(['jefe', 'operator', 'viewer']),
   companyId: z.uuid('ID de empresa inválido'),
   area: z.string().min(1, 'Area requerida').max(40, 'Area muy larga'),
   jobTitle: z

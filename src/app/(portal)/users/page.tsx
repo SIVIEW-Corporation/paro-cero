@@ -12,16 +12,16 @@ import UsersTable from './components/UsersTable';
 
 export default function Users() {
   const user = useAuthStore((s) => s.user);
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const isSuperadmin = user?.role === 'superadmin';
   const [activeTab, setActiveTab] = useState('historico');
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
-    if (isAdmin) {
+    if (isSuperadmin) {
       setActiveTab('all-operators');
     }
-  }, [isAdmin]);
+  }, [isSuperadmin]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -60,8 +60,8 @@ export default function Users() {
     );
   }
 
-  // Admin guard — redirect non-admin users
-  if (!isAdmin) {
+  // User management is intentionally restricted to the platform superuser.
+  if (!isSuperadmin) {
     return (
       <main className='z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
         <div className='flex flex-col items-center justify-center py-16'>
@@ -69,7 +69,7 @@ export default function Users() {
             Acceso restringido
           </h2>
           <p className='text-shNeutral-500 mt-2 text-sm'>
-            Solo los administradores pueden crear usuarios.
+            Solo el superusuario puede gestionar usuarios.
           </p>
         </div>
       </main>

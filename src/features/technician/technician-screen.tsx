@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,6 +11,7 @@ import {
 import { TECNICOS } from '@/app/data/constants';
 import { useAuthStore } from '@/store/auth-store';
 import { cn } from '@/lib/cn';
+import { toast } from 'sonner';
 import {
   ASSIGNMENT_STATUS,
   addDays,
@@ -26,6 +27,7 @@ import {
   tasksForPeriod,
   timeRange,
   today,
+  validateAssignment,
   type PlanningData,
 } from '@/features/planning/domain';
 import { usePlanningStore } from '@/features/planning/store';
@@ -37,7 +39,7 @@ import {
   Field,
   panelClass,
 } from '@/features/planning/planning-ui';
-import { technicianContext } from './access';
+import { getRolePermissions, technicianContext } from './access';
 import TechnicianCalendar from './technician-calendar';
 import TechnicianTaskCard from './technician-task-card';
 
@@ -55,6 +57,134 @@ function moveMonth(date: string, step: number): string {
   return new Date(Date.UTC(year, month - 1 + step, 1))
     .toISOString()
     .slice(0, 10);
+}
+
+function AddOwnTaskDialog({
+  data,
+  technicianId,
+  defaultDate,
+  onClose,
+}: {
+  data: PlanningData;
+  technicianId: string;
+  defaultDate: string;
+  onClose: () => void;
+}) {
+  const commit = usePlanningStore((state) => state.commit);
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState(defaultDate);
+  const [start, setStart] = useState('08:00');
+  const [end, setEnd] = useState('09:00');
+  const [notes, setNotes] = useState('');
+  const [error, setError] = useState('');
+
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const task = {
+      id: crypto.randomUUID(),
+      technicianId,
+      date,
+      start,
+      end,
+      title: title.trim(),
+      notes: notes.trim(),
+      workOrderId: '',
+      workOrderFolio: '',
+      updatedAt: new Date().toISOString(),
+      status: ASSIGNMENT_STATUS.PENDING,
+    };
+    const validationError = validateAssignment(data, task);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    const commitError = commit(
+      { ...data, assignments: [...data.assignments, task] },
+      'Tarea agregada por el técnico',
+      'Técnico · demo',
+    );
+    if (commitError) {
+      setError(commitError);
+      return;
+    }
+    toast.success(
+      'Tarea agregada. El jefe conserva el control de la planeación.',
+    );
+    onClose();
+  };
+
+  return (
+    <div className='border-app-border-soft bg-app-surface fixed inset-0 z-50 flex items-center justify-center p-4'>
+      <div className='border-app-border-soft bg-app-surface w-full max-w-lg rounded-2xl border p-5 shadow-xl'>
+        <div className='mb-4'>
+          <h2 className='text-app-text-primary text-lg font-bold'>
+            Agregar tarea
+          </h2>
+          <p className='text-app-text-secondary mt-1 text-sm'>
+            Podés agregar trabajo propio, pero no borrar ni cancelar tareas
+            asignadas por el jefe.
+          </p>
+        </div>
+        <form onSubmit={submit} className='space-y-4'>
+          <Field label='Tarea'>
+            <input
+              required
+              maxLength={140}
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder='Ej. Revisar fuga en línea de aire'
+            />
+          </Field>
+          <div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
+            <Field label='Fecha'>
+              <input
+                required
+                type='date'
+                value={date}
+                onChange={(event) => setDate(event.target.value)}
+              />
+            </Field>
+            <Field label='Desde'>
+              <input
+                required
+                type='time'
+                value={start}
+                onChange={(event) => setStart(event.target.value)}
+              />
+            </Field>
+            <Field label='Hasta'>
+              <input
+                required
+                type='time'
+                value={end}
+                onChange={(event) => setEnd(event.target.value)}
+              />
+            </Field>
+          </div>
+          <Field label='Indicaciones (opcional)'>
+            <textarea
+              maxLength={2000}
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder='Notas para completar la tarea'
+            />
+          </Field>
+          <ErrorMessage error={error} />
+          <div className='flex justify-end gap-2'>
+            <ActionButton type='button' onClick={onClose}>
+              Cancelar
+            </ActionButton>
+            <ActionButton
+              type='submit'
+              className='border-shPrimary-800 bg-shPrimary-800 hover:bg-shPrimary-900 text-white'
+            >
+              Agregar tarea
+            </ActionButton>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function DayScheduleSummary({
@@ -132,6 +262,7 @@ export default function TechnicianScreen({
   const [month, setMonth] = useState('');
   const [now, setNow] = useState<Date | null>(null);
   const [filter, setFilter] = useState<Filter>(FILTER.PENDING);
+  const [showAddTask, setShowAddTask] = useState(false);
   useEffect(() => {
     const current = today();
     setSelectedDate(current);
@@ -164,6 +295,9 @@ export default function TechnicianScreen({
       </section>
     );
   const technician = context.technician;
+  const canAddOwnTask = Boolean(
+    !context.canSimulate && getRolePermissions(user?.role)?.tasks.add,
+  );
   const dayTasks = tasksForPeriod(
     data,
     technician.id,
@@ -213,11 +347,21 @@ export default function TechnicianScreen({
             Tu jornada, tus pendientes y el avance de cada tarea.
           </p>
         </div>
-        <div className='border-app-border-soft bg-app-surface-subtle rounded-xl border px-4 py-3'>
-          <p className='text-app-text-secondary text-xs'>Técnico</p>
-          <p className='text-app-text-primary font-semibold'>
-            {technician.nombre}
-          </p>
+        <div className='flex flex-wrap items-center gap-3'>
+          {canAddOwnTask && (
+            <ActionButton
+              className='border-shPrimary-800 bg-shPrimary-800 hover:bg-shPrimary-900 text-white'
+              onClick={() => setShowAddTask(true)}
+            >
+              Agregar tarea
+            </ActionButton>
+          )}
+          <div className='border-app-border-soft bg-app-surface-subtle rounded-xl border px-4 py-3'>
+            <p className='text-app-text-secondary text-xs'>Técnico</p>
+            <p className='text-app-text-primary font-semibold'>
+              {technician.nombre}
+            </p>
+          </div>
         </div>
       </header>
       <div className='border-app-border-soft bg-app-surface-subtle text-app-text-secondary space-y-3 rounded-xl border px-4 py-3 text-xs'>
@@ -479,6 +623,14 @@ export default function TechnicianScreen({
         Podés iniciar y completar tus tareas. El jefe administra horarios,
         reasignaciones y cancelaciones. Completar una tarea no cierra la OT.
       </p>
+      {showAddTask && canAddOwnTask && (
+        <AddOwnTaskDialog
+          data={data}
+          technicianId={technician.id}
+          defaultDate={selectedDate}
+          onClose={() => setShowAddTask(false)}
+        />
+      )}
     </div>
   );
 }

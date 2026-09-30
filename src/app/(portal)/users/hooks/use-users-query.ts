@@ -13,7 +13,7 @@ export function useOperatorsQuery(page: number, size: number = 10) {
   const accessToken = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
   const scope = getUsersSessionScope(user);
-  const canListUsers = user?.role === 'admin' || user?.role === 'superadmin';
+  const canListUsers = user?.role === 'superadmin';
 
   return useQuery({
     queryKey: usersQueryKeys.list(scope, page, size),

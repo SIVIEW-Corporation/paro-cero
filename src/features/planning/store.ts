@@ -116,7 +116,7 @@ interface PlanningStore {
   notice: string;
   initialize: () => void;
   sync: () => void;
-  commit: (next: PlanningData, action: string) => string | null;
+  commit: (next: PlanningData, action: string, actor?: string) => string | null;
   changeTaskStatus: (
     taskId: string,
     technicianId: string,
@@ -214,7 +214,7 @@ export const usePlanningStore = create<PlanningStore>((set, get) => {
         });
       }
     },
-    commit: (next, action) => {
+    commit: (next, action, actor = 'Jefe · demo') => {
       const current = get().data;
       if (!current) return 'La agenda todavía no se cargó.';
       // Planning edits cannot revert execution reported by the technician.
@@ -249,7 +249,7 @@ export const usePlanningStore = create<PlanningStore>((set, get) => {
         )
       )
         return 'Cancelá la asignación en lugar de eliminar su historial.';
-      return persistData(next, action, 'Jefe · demo');
+      return persistData(next, action, actor);
     },
     changeTaskStatus: (taskId, technicianId, target, expected) => {
       const current = get().data;

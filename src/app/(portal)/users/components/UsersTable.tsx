@@ -37,6 +37,16 @@ const roleBadgeStyles: Record<
     text: 'text-shPrimary-700',
     border: 'border-shPrimary-200',
   },
+  jefe: {
+    bg: 'bg-shAccent-50',
+    text: 'text-shAccent-800',
+    border: 'border-shAccent-200',
+  },
+  supervisor: {
+    bg: 'bg-shAccent-50',
+    text: 'text-shAccent-800',
+    border: 'border-shAccent-200',
+  },
   viewer: {
     bg: 'bg-shSuccess-50',
     text: 'text-shSuccess-700',

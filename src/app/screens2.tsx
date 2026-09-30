@@ -10,6 +10,10 @@ import {
   type SetStateAction,
 } from 'react';
 import {
+  addDays,
+  addMonths,
+  addWeeks,
+  addYears,
   format,
   subMonths,
   startOfMonth,
@@ -64,6 +68,7 @@ import type {
   Notificacion,
   OrdenTrabajo,
   PrioridadOT,
+  PlanMantenimiento,
 } from '@/app/data/types';
 import type {
   WorkOrderCreateInput,
@@ -185,6 +190,38 @@ function formatWorkOrderDate(
   return format(date, 'dd/MM/yyyy');
 }
 
+function formatPlanDateTime(
+  dateValue: Date | string | null | undefined,
+): string {
+  if (!dateValue) return '—';
+
+  const date = new Date(dateValue);
+  return Number.isNaN(date.getTime()) ? '—' : format(date, 'dd/MM/yyyy HH:mm');
+}
+
+function getNextPlanExecutionDate(
+  completedAt: Date | string | null | undefined,
+  plan: Pick<PlanMantenimiento, 'freq' | 'unit'>,
+): Date | null {
+  if (!completedAt || plan.freq <= 0) return null;
+
+  const date = new Date(completedAt);
+  if (Number.isNaN(date.getTime())) return null;
+
+  switch (plan.unit) {
+    case 'dias':
+      return addDays(date, plan.freq);
+    case 'semanas':
+      return addWeeks(date, plan.freq);
+    case 'meses':
+      return addMonths(date, plan.freq);
+    case 'anios':
+      return addYears(date, plan.freq);
+    default:
+      return null;
+  }
+}
+
 function openNativeMonthPicker(input: HTMLInputElement): void {
   if (typeof input.showPicker !== 'function') {
     return;
@@ -197,10 +234,19 @@ function openNativeMonthPicker(input: HTMLInputElement): void {
   }
 }
 
-export function PlansScreen() {
+export function PlansScreen({
+  canManagePlans = true,
+  canExecutePlans = canManagePlans,
+}: {
+  canManagePlans?: boolean;
+  canExecutePlans?: boolean;
+}) {
   const [plans, setPlans] = useState(PLANS);
   const [selected, setSelected] = useState<(typeof PLANS)[number] | null>(null);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [completedPlans, setCompletedPlans] = useState<Record<string, string>>(
+    {},
+  );
   const [showCreate, setShowCreate] = useState(false);
   const [planName, setPlanName] = useState('');
   const [planActivoId, setPlanActivoId] = useState(ASSETS[0]?.id || '');
@@ -228,7 +274,10 @@ export function PlansScreen() {
     fontFamily: 'inherit',
   };
 
-  const toggle = (key: string) => setChecked((c) => ({ ...c, [key]: !c[key] }));
+  const toggle = (key: string) => {
+    if (!canExecutePlans) return;
+    setChecked((c) => ({ ...c, [key]: !c[key] }));
+  };
 
   const resetCreateForm = () => {
     setPlanName('');
@@ -244,6 +293,7 @@ export function PlansScreen() {
   };
 
   const openCreateModal = () => {
+    if (!canManagePlans) return;
     resetCreateForm();
     setShowCreate(true);
   };
@@ -278,6 +328,7 @@ export function PlansScreen() {
   };
 
   const createPlan = () => {
+    if (!canManagePlans) return;
     const name = planName.trim();
 
     if (!name) {
@@ -337,10 +388,25 @@ export function PlansScreen() {
     const done = currentPlan.items.filter(
       (_, i) => checked[currentPlan.id + '-' + i],
     ).length;
+    const completedAt = completedPlans[currentPlan.id] ?? null;
+    const planCompleted = Boolean(completedAt);
+    const nextPlanExecution = getNextPlanExecutionDate(
+      completedAt,
+      currentPlan,
+    );
+    const allActivitiesDone =
+      currentPlan.items.length > 0 && done === currentPlan.items.length;
     const pct =
       currentPlan.items.length > 0
         ? Math.round((done / currentPlan.items.length) * 100)
         : 0;
+    const completePlan = () => {
+      if (!canExecutePlans || planCompleted || !allActivitiesDone) return;
+      setCompletedPlans((current) => ({
+        ...current,
+        [currentPlan.id]: new Date().toISOString(),
+      }));
+    };
 
     return (
       <div style={{ padding: '28px', overflowY: 'auto', height: '100%' }}>
@@ -457,6 +523,23 @@ export function PlansScreen() {
                 />
               }
             />
+            <RowData
+              label='Checklist completado'
+              value={
+                <Badge
+                  label={planCompleted ? 'Sí' : 'No'}
+                  color={planCompleted ? '#22c55e' : '#f59e0b'}
+                />
+              }
+            />
+            <RowData
+              label='Completado el'
+              value={formatPlanDateTime(completedAt)}
+            />
+            <RowData
+              label='Próxima ejecución estimada'
+              value={formatPlanDateTime(nextPlanExecution)}
+            />
           </Card>
           <Card>
             <div
@@ -500,19 +583,43 @@ export function PlansScreen() {
                 </span>
               </div>
             </div>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                marginBottom: 10,
+              }}
+            >
+              {planCompleted ? (
+                <Badge label='Plan completado' color='#22c55e' />
+              ) : canExecutePlans ? (
+                <BtnPrimary
+                  onClick={completePlan}
+                  disabled={!allActivitiesDone}
+                >
+                  {allActivitiesDone
+                    ? 'Marcar plan completado'
+                    : 'Completa todas las actividades'}
+                </BtnPrimary>
+              ) : null}
+            </div>
             {currentPlan.items.map((item, i) => {
               const k = currentPlan.id + '-' + i;
               return (
                 <div
                   key={i}
-                  onClick={() => toggle(k)}
+                  onClick={() => {
+                    if (canExecutePlans && !planCompleted) toggle(k);
+                  }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: 12,
                     padding: '9px 0',
                     borderBottom: '1px solid #0d1f38',
-                    cursor: 'pointer',
+                    cursor:
+                      canExecutePlans && !planCompleted ? 'pointer' : 'default',
+                    opacity: planCompleted ? 0.75 : 1,
                   }}
                 >
                   <div
@@ -565,7 +672,11 @@ export function PlansScreen() {
       <PageHeader
         title='Planes de Mantenimiento'
         sub={plans.length + ' planes configurados'}
-        action={<BtnPrimary onClick={openCreateModal}>+ Nuevo Plan</BtnPrimary>}
+        action={
+          canManagePlans ? (
+            <BtnPrimary onClick={openCreateModal}>+ Nuevo Plan</BtnPrimary>
+          ) : undefined
+        }
       />
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         <DataTable
@@ -577,6 +688,9 @@ export function PlansScreen() {
             'Duracion',
             'Prioridad',
             'Estado',
+            'Completado',
+            'Fecha de completado',
+            'Próxima ejecución',
             '',
           ]}
         >
@@ -585,6 +699,8 @@ export function PlansScreen() {
               (p as { activoId?: string }).activoId ||
               (p as { assetId?: string }).assetId;
             const asset = ASSETS.find((a) => a.id === planAssetId);
+            const completedAt = completedPlans[p.id] ?? null;
+            const nextPlanExecution = getNextPlanExecutionDate(completedAt, p);
             return (
               <tr
                 key={p.id}
@@ -611,6 +727,14 @@ export function PlansScreen() {
                   />
                 </Td>
                 <Td>
+                  <Badge
+                    label={completedAt ? 'Sí' : 'No'}
+                    color={completedAt ? '#22c55e' : '#f59e0b'}
+                  />
+                </Td>
+                <Td mono>{formatPlanDateTime(completedAt)}</Td>
+                <Td mono>{formatPlanDateTime(nextPlanExecution)}</Td>
+                <Td>
                   <BtnGhost onClick={() => setSelected(p)}>
                     Ver detalle
                   </BtnGhost>
@@ -621,7 +745,7 @@ export function PlansScreen() {
         </DataTable>
       </Card>
 
-      {showCreate && (
+      {showCreate && canManagePlans && (
         <Modal
           title='Crear Nuevo Plan de Mantenimiento'
           onClose={closeCreateModal}
@@ -900,6 +1024,9 @@ export function WorkOrdersScreen({
   onAddEvidence,
   onDeleteEvidence,
   canWrite = true,
+  canCreate = canWrite,
+  canChangeStatus = canWrite,
+  canManageEvidence = canWrite,
   canDelete = true,
   isLoading = false,
   error = null,
@@ -922,6 +1049,9 @@ export function WorkOrdersScreen({
   ) => Promise<void>;
   onDeleteEvidence?: (workOrderId: string, evidenceId: string) => Promise<void>;
   canWrite?: boolean;
+  canCreate?: boolean;
+  canChangeStatus?: boolean;
+  canManageEvidence?: boolean;
   canDelete?: boolean;
   isLoading?: boolean;
   error?: Error | null;
@@ -1025,12 +1155,13 @@ export function WorkOrdersScreen({
   };
 
   const openEditModal = (order: OrdenTrabajo) => {
+    if (!canWrite) return;
     setEditData(getWorkOrderEditDraft(order));
     setShowEdit(true);
   };
 
   const submitEdit = () => {
-    if (!selected || !editData) return;
+    if (!canWrite || !selected || !editData) return;
 
     const title = editData.titulo.trim();
     if (!title || !editData.activoId || !editData.tecnicoId) {
@@ -1066,7 +1197,8 @@ export function WorkOrdersScreen({
     const input: WorkOrderUpdateInput = {
       assetId: editData.activoId,
       title,
-      description: editData.descripcion.trim() || problemDescription || serviceDescription,
+      description:
+        editData.descripcion.trim() || problemDescription || serviceDescription,
       type: editData.tipo,
       priority: editData.prioridad,
       technicianId: editData.tecnicoId || null,
@@ -1128,7 +1260,11 @@ export function WorkOrdersScreen({
   };
 
   const deleteSelectedWorkOrder = () => {
-    if (!selected || !window.confirm('¿Eliminar esta orden de trabajo?')) {
+    if (
+      !canDelete ||
+      !selected ||
+      !window.confirm('¿Eliminar esta orden de trabajo?')
+    ) {
       return;
     }
 
@@ -1149,7 +1285,7 @@ export function WorkOrdersScreen({
   };
 
   const submitEvidence = () => {
-    if (!selected) return;
+    if (!canManageEvidence || !selected) return;
     const name = evidenceData.name.trim();
     const url = evidenceData.url.trim();
     if (!name || !url) {
@@ -1182,7 +1318,12 @@ export function WorkOrdersScreen({
   };
 
   const removeEvidence = (evidenceId: string) => {
-    if (!selected || !window.confirm('¿Eliminar esta evidencia?')) return;
+    if (
+      !canManageEvidence ||
+      !selected ||
+      !window.confirm('¿Eliminar esta evidencia?')
+    )
+      return;
 
     if (onDeleteEvidence) {
       void onDeleteEvidence(selected.id, evidenceId).catch(() => undefined);
@@ -1204,6 +1345,7 @@ export function WorkOrdersScreen({
   };
 
   const createWorkOrder = () => {
+    if (!canCreate) return;
     const titulo = newOtData.titulo.trim();
     if (!titulo || !newOtData.activoId || !newOtData.tecnicoId) {
       alert('Completa título, activo y técnico.');
@@ -1301,10 +1443,12 @@ export function WorkOrdersScreen({
         problemDescription: nuevaOt.descripcionProblema ?? null,
         serviceDescription: nuevaOt.descripcionServicio ?? null,
         spending: nuevaOt.gastoDinero ?? false,
-        spentAmount: nuevaOt.gastoDinero ? nuevaOt.montoGastado ?? null : null,
+        spentAmount: nuevaOt.gastoDinero
+          ? (nuevaOt.montoGastado ?? null)
+          : null,
         usesConsumable: nuevaOt.usoRefaccionConsumible ?? false,
         consumableDetail: nuevaOt.usoRefaccionConsumible
-          ? nuevaOt.refaccionConsumibleDetalle ?? null
+          ? (nuevaOt.refaccionConsumibleDetalle ?? null)
           : null,
         downtimeMinutes: nuevaOt.downtimeMinutos,
       })
@@ -1381,22 +1525,25 @@ export function WorkOrdersScreen({
   };
 
   const changeStatus = (id: string, s: string) => {
+    if (!canChangeStatus) return;
     const status = s as OrdenTrabajo['status'];
     if (onChangeStatus) {
       void onChangeStatus(id, status);
       return;
     }
-    setWo((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, status } : w)),
-    );
+    setWo((prev) => prev.map((w) => (w.id === id ? { ...w, status } : w)));
   };
 
   if (error) {
     return (
       <div className='text-app-text-primary flex h-full items-center justify-center p-8'>
         <div className='border-app-border-soft bg-app-surface max-w-lg rounded-xl border p-6 text-center shadow-sm'>
-          <h2 className='text-lg font-semibold'>No se pudieron cargar las órdenes</h2>
-          <p className='text-app-text-secondary mt-2 text-sm'>{error.message}</p>
+          <h2 className='text-lg font-semibold'>
+            No se pudieron cargar las órdenes
+          </h2>
+          <p className='text-app-text-secondary mt-2 text-sm'>
+            {error.message}
+          </p>
         </div>
       </div>
     );
@@ -1504,9 +1651,7 @@ export function WorkOrdersScreen({
             />
             {canWrite && (
               <>
-                <BtnGhost onClick={() => openEditModal(curWo)}>
-                  Editar
-                </BtnGhost>
+                <BtnGhost onClick={() => openEditModal(curWo)}>Editar</BtnGhost>
                 {canDelete && (
                   <BtnGhost onClick={deleteSelectedWorkOrder}>
                     Eliminar
@@ -1701,7 +1846,7 @@ export function WorkOrdersScreen({
         <Card style={{ marginBottom: 16 }}>
           <div className='flex items-center justify-between gap-3'>
             <CardTitle>Evidencias ({curWo.evidencias.length})</CardTitle>
-            {canWrite && (
+            {canManageEvidence && (
               <BtnGhost onClick={() => setShowEvidence(true)}>
                 Registrar evidencia
               </BtnGhost>
@@ -1722,7 +1867,7 @@ export function WorkOrdersScreen({
                   >
                     {evidence.nombre}
                   </a>
-                  {canWrite && (
+                  {canManageEvidence && (
                     <BtnGhost onClick={() => removeEvidence(evidence.id)}>
                       Quitar
                     </BtnGhost>
@@ -1737,7 +1882,7 @@ export function WorkOrdersScreen({
           )}
         </Card>
 
-        {canWrite && (
+        {canChangeStatus && (
           <Card>
             <CardTitle>Cambiar Estado de la OT</CardTitle>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -1791,7 +1936,11 @@ export function WorkOrdersScreen({
               </select>
             </Field>
             <div
-              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 12,
+              }}
             >
               <Field label='Tipo'>
                 <select
@@ -1826,7 +1975,11 @@ export function WorkOrdersScreen({
               </Field>
             </div>
             <div
-              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 12,
+              }}
             >
               <Field label='Asignado a'>
                 <select
@@ -1877,7 +2030,11 @@ export function WorkOrdersScreen({
               />
             </Field>
             <div
-              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 12,
+              }}
             >
               <Field label='Tiempo de paro (min)'>
                 <input
@@ -1899,7 +2056,8 @@ export function WorkOrdersScreen({
                     checked={editData.gastoDinero}
                     onChange={(event) => {
                       updateEditData('gastoDinero', event.target.checked);
-                      if (!event.target.checked) updateEditData('montoGastado', '');
+                      if (!event.target.checked)
+                        updateEditData('montoGastado', '');
                     }}
                     className='accent-shPrimary-700 h-4 w-4'
                   />
@@ -2024,7 +2182,7 @@ export function WorkOrdersScreen({
         title='Ordenes de Trabajo'
         sub={wo.length + ' ordenes registradas'}
         action={
-          canWrite ? (
+          canCreate ? (
             <BtnPrimary onClick={() => setShowCreate(true)}>
               + Nueva OT
             </BtnPrimary>
@@ -2250,7 +2408,7 @@ export function WorkOrdersScreen({
         </DataTable>
       </Card>
 
-      {showCreate && canWrite && (
+      {showCreate && canCreate && (
         <Modal title='Nueva Orden de Trabajo' onClose={closeCreateModal}>
           <Field label='Titulo de la Orden'>
             <input
@@ -2530,9 +2688,11 @@ const notificationTone: Record<Notificacion['tipo'], NotificationTone> = {
 export function NotificationsScreen({
   notifs,
   setNotifs,
+  canMarkRead = true,
 }: {
   notifs: Notificacion[];
   setNotifs: (notificaciones: Notificacion[]) => void;
+  canMarkRead?: boolean;
 }) {
   const unread = notifs.filter((n) => !n.leida).length;
   const markRead = (id: string) =>
@@ -2552,7 +2712,7 @@ export function NotificationsScreen({
         title='Notificaciones'
         sub={unread > 0 ? unread + ' sin leer' : 'Todo al dia'}
         action={
-          unread > 0 ? (
+          unread > 0 && canMarkRead ? (
             <button
               onClick={markAll}
               style={{
@@ -2601,7 +2761,9 @@ export function NotificationsScreen({
           return (
             <div
               key={n.id}
-              onClick={() => markRead(n.id)}
+              onClick={() => {
+                if (canMarkRead) markRead(n.id);
+              }}
               style={{
                 background: cardBackground,
                 border: `1px solid ${
@@ -2612,7 +2774,7 @@ export function NotificationsScreen({
                 borderLeft: `3px solid ${tone.accent}`,
                 borderRadius: 14,
                 padding: '16px 18px',
-                cursor: 'pointer',
+                cursor: canMarkRead ? 'pointer' : 'default',
                 boxShadow: n.leida
                   ? '0 1px 2px rgb(15 23 42 / 0.03)'
                   : '0 0 0 1px rgb(15 23 42 / 0.02), 0 2px 6px rgb(15 23 42 / 0.06)',
@@ -3394,7 +3556,13 @@ function downloadCsvContent(filename: string, csvContent: string) {
   URL.revokeObjectURL(url);
 }
 
-export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
+export function ReportsScreen({
+  wo,
+  canManageDemoData = true,
+}: {
+  wo: OrdenTrabajo[];
+  canManageDemoData?: boolean;
+}) {
   const setOrdenes = useWorkOrdersStore((state) => state.setOrdenes);
   const [filters, setFilters] = useState<ReportFilters>(
     getInitialReportFilters,
@@ -4164,9 +4332,11 @@ export function ReportsScreen({ wo }: { wo: OrdenTrabajo[] }) {
                 {option.label}
               </button>
             ))}
-            <BtnGhost onClick={regenerateDemoData}>
-              Regenerar datos demo
-            </BtnGhost>
+            {canManageDemoData && (
+              <BtnGhost onClick={regenerateDemoData}>
+                Regenerar datos demo
+              </BtnGhost>
+            )}
           </div>
         </div>
 

@@ -67,6 +67,10 @@ export function InspeccionesScreen({
   setHallazgos,
   plantillas,
   setPlantillas,
+  canManage = true,
+  canExecute = true,
+  canRegisterFinding = true,
+  canCreateWorkOrder = true,
 }: {
   checklists: Checklist[];
   setChecklists: SetListState<Checklist>;
@@ -74,11 +78,16 @@ export function InspeccionesScreen({
   setHallazgos: SetListState<Hallazgo>;
   plantillas: PlantillaChecklist[];
   setPlantillas: SetListState<PlantillaChecklist>;
+  canManage?: boolean;
+  canExecute?: boolean;
+  canRegisterFinding?: boolean;
+  canCreateWorkOrder?: boolean;
 }) {
   const [view, setView] = useState<'list' | 'execute'>('list');
   const [selectedChecklist, setSelectedChecklist] = useState<Checklist | null>(
     null,
   );
+  const [readOnlyChecklist, setReadOnlyChecklist] = useState(false);
   const [showCreateChecklist, setShowCreateChecklist] = useState(false);
   const [showCreatePlantilla, setShowCreatePlantilla] = useState(false);
   const [showCreateHallazgo, setShowCreateHallazgo] = useState(false);
@@ -141,7 +150,7 @@ export function InspeccionesScreen({
   };
 
   const createOtFromHallazgo = (hallazgo: Hallazgo) => {
-    if (hallazgo.otId) {
+    if (!canCreateWorkOrder || hallazgo.otId) {
       return;
     }
 
@@ -206,8 +215,9 @@ export function InspeccionesScreen({
     );
   };
 
-  const handleExecuteChecklist = (checklist: Checklist) => {
+  const handleExecuteChecklist = (checklist: Checklist, readOnly = false) => {
     setSelectedChecklist(checklist);
+    setReadOnlyChecklist(readOnly);
     setView('execute');
   };
 
@@ -217,9 +227,11 @@ export function InspeccionesScreen({
         checklist={selectedChecklist}
         setChecklist={setSelectedChecklist}
         plantillas={plantillas}
+        readOnly={readOnlyChecklist}
         onBack={() => {
           setView('list');
           setSelectedChecklist(null);
+          setReadOnlyChecklist(false);
         }}
         onSave={(updatedChecklist) => {
           setChecklists((prev: Checklist[]) =>
@@ -260,6 +272,7 @@ export function InspeccionesScreen({
           }
           setView('list');
           setSelectedChecklist(null);
+          setReadOnlyChecklist(false);
         }}
       />
     );
@@ -304,15 +317,21 @@ export function InspeccionesScreen({
       </div>
 
       <div className='mb-6 flex gap-3'>
-        <BtnPrimary onClick={() => setShowCreateChecklist(true)}>
-          + Nuevo Checklist
-        </BtnPrimary>
-        <BtnGhost onClick={() => setShowCreatePlantilla(true)}>
-          Crear Plantilla
-        </BtnGhost>
-        <BtnGhost onClick={() => setShowCreateHallazgo(true)}>
-          Registrar Hallazgo
-        </BtnGhost>
+        {canManage && (
+          <>
+            <BtnPrimary onClick={() => setShowCreateChecklist(true)}>
+              + Nuevo Checklist
+            </BtnPrimary>
+            <BtnGhost onClick={() => setShowCreatePlantilla(true)}>
+              Crear Plantilla
+            </BtnGhost>
+          </>
+        )}
+        {canRegisterFinding && (
+          <BtnGhost onClick={() => setShowCreateHallazgo(true)}>
+            Registrar Hallazgo
+          </BtnGhost>
+        )}
         <BtnGhost onClick={() => setShowVerPlantillas(true)}>
           Ver Plantillas
         </BtnGhost>
@@ -412,13 +431,20 @@ export function InspeccionesScreen({
                 />
               </Td>
               <Td>
-                {c.estado === 'pendiente' && (
+                {c.estado === 'pendiente' && canExecute && (
                   <BtnPrimary onClick={() => handleExecuteChecklist(c)}>
                     Ejecutar
                   </BtnPrimary>
                 )}
+                {c.estado === 'pendiente' && !canExecute && (
+                  <BtnGhost onClick={() => handleExecuteChecklist(c, true)}>
+                    Ver
+                  </BtnGhost>
+                )}
                 {c.estado === 'completado' && (
-                  <BtnGhost onClick={() => handleExecuteChecklist(c)}>
+                  <BtnGhost
+                    onClick={() => handleExecuteChecklist(c, !canExecute)}
+                  >
                     Ver
                   </BtnGhost>
                 )}
@@ -505,7 +531,9 @@ export function InspeccionesScreen({
               </Td>
               <Td mono>{resolveOtTracking(hallazgo)}</Td>
               <Td>
-                {!hallazgo.otId && hallazgo.status !== 'resuelto' ? (
+                {canCreateWorkOrder &&
+                !hallazgo.otId &&
+                hallazgo.status !== 'resuelto' ? (
                   <BtnPrimary onClick={() => createOtFromHallazgo(hallazgo)}>
                     Crear OT
                   </BtnPrimary>
@@ -607,12 +635,14 @@ function ExecuteChecklistScreen({
   plantillas,
   onBack,
   onSave,
+  readOnly = false,
 }: {
   checklist: Checklist;
   setChecklist: React.Dispatch<React.SetStateAction<Checklist | null>>;
   plantillas: PlantillaChecklist[];
   onBack: () => void;
   onSave: (updatedChecklist: Checklist) => void;
+  readOnly?: boolean;
 }) {
   const [items, setItems] = useState<ChecklistFormItem[]>(
     checklist.items.length > 0
@@ -763,6 +793,7 @@ function ExecuteChecklistScreen({
                   <div className='flex gap-2'>
                     <button
                       onClick={() => handleValorChange(item.id, 'ok')}
+                      disabled={readOnly}
                       className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
                         valor === 'ok'
                           ? 'border border-green-500 bg-green-500/20 text-green-500'
@@ -773,6 +804,7 @@ function ExecuteChecklistScreen({
                     </button>
                     <button
                       onClick={() => handleValorChange(item.id, 'nok')}
+                      disabled={readOnly}
                       className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
                         valor === 'nok'
                           ? 'border border-red-500 bg-red-500/20 text-red-500'
@@ -783,6 +815,7 @@ function ExecuteChecklistScreen({
                     </button>
                     <button
                       onClick={() => handleValorChange(item.id, 'na')}
+                      disabled={readOnly}
                       className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
                         valor === 'na'
                           ? 'border border-slate-500 bg-slate-500/20 text-slate-400'
@@ -797,6 +830,7 @@ function ExecuteChecklistScreen({
                   <div className='ml-2'>
                     <textarea
                       value={nota}
+                      readOnly={readOnly}
                       onChange={(e) =>
                         handleNotaChange(item.id, e.target.value)
                       }
@@ -812,10 +846,12 @@ function ExecuteChecklistScreen({
       </Card>
 
       <div className='mt-4 flex justify-end gap-3'>
-        <BtnGhost onClick={onBack}>Cancelar</BtnGhost>
-        <BtnPrimary onClick={handleSave} disabled={!canSave}>
-          {canSave ? 'Guardar Checklist' : 'Complete todos los items'}
-        </BtnPrimary>
+        <BtnGhost onClick={onBack}>{readOnly ? 'Cerrar' : 'Cancelar'}</BtnGhost>
+        {!readOnly && (
+          <BtnPrimary onClick={handleSave} disabled={!canSave}>
+            {canSave ? 'Guardar Checklist' : 'Complete todos los items'}
+          </BtnPrimary>
+        )}
       </div>
     </div>
   );

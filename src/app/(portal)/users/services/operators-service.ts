@@ -15,7 +15,7 @@ export interface PaginatedUsersResponse {
 
 export const operatorsService = {
   /**
-   * Create operator/viewer user sending data to the backend.
+   * Create a jefe, operator or viewer user through the legacy API endpoint.
    * Transforms camelCase fields to snake_case for API compatibility.
    */
   createOperator: async (
@@ -27,7 +27,9 @@ export const operatorsService = {
       email: values.email,
       password: values.password,
       full_name: values.fullName,
-      role: values.role,
+      // The API currently names the manager role `supervisor`; the UI exposes
+      // the business-facing name `jefe`.
+      role: values.role === 'jefe' ? 'supervisor' : values.role,
       company_id: values.companyId,
       area: values.area,
       job_title: values.jobTitle,

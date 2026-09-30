@@ -44,7 +44,7 @@ export default function NewUserForm({
       email: '',
       password: '',
       fullName: '',
-      role: 'operator' as 'operator' | 'viewer',
+      role: 'operator' as 'jefe' | 'operator' | 'viewer',
       companyId: company_id || '',
       area: '',
       jobTitle: '',
@@ -293,11 +293,13 @@ export default function NewUserForm({
                         onBlur={field.handleBlur}
                         onChange={(e) =>
                           field.handleChange(
-                            () => e.target.value as 'operator' | 'viewer',
+                            () =>
+                              e.target.value as 'jefe' | 'operator' | 'viewer',
                           )
                         }
                         className='text-shNeutral-900 placeholder:text-shNeutral-500 flex-1 appearance-none border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!'
                       >
+                        <option value='jefe'>Jefe de mantenimiento</option>
                         <option value='operator'>Operador</option>
                         <option value='viewer'>Visor</option>
                       </select>

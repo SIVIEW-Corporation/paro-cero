@@ -9,9 +9,10 @@ const js = ts.transpileModule(source, {
     module: ts.ModuleKind.ES2022,
   },
 }).outputText;
-const { technicianContext, canVisitDashboard } = await import(
-  `data:text/javascript;base64,${Buffer.from(js).toString('base64')}`
-);
+const { technicianContext, canVisitDashboard, getRolePermissions } =
+  await import(
+    `data:text/javascript;base64,${Buffer.from(js).toString('base64')}`
+  );
 const technicians = [
   { id: 'T001', nombre: 'Carlos' },
   { id: 'T003', nombre: 'María' },
@@ -63,7 +64,10 @@ test('perfil inactivo, visor y sesión ausente no acceden a agenda interna', () 
 test('guard de interfaz restringe técnico a Mis tareas y jefe accede a Planeación', () => {
   assert.equal(canVisitDashboard(user(), '/dashboard/mis-tareas'), true);
   assert.equal(canVisitDashboard(user(), '/dashboard/planeacion'), false);
-  assert.equal(canVisitDashboard(user(), '/dashboard/workorders'), false);
+  assert.equal(canVisitDashboard(user(), '/dashboard/workorders'), true);
+  assert.equal(canVisitDashboard(user(), '/dashboard/assets'), true);
+  assert.equal(canVisitDashboard(user(), '/dashboard/plans'), true);
+  assert.equal(canVisitDashboard(user(), '/dashboard/reports'), true);
   assert.equal(canVisitDashboard(user(), '/dashboard/mis-tareas-otro'), false);
   assert.equal(
     canVisitDashboard(user({ role: 'supervisor' }), '/dashboard/planeacion'),
@@ -73,4 +77,43 @@ test('guard de interfaz restringe técnico a Mis tareas y jefe accede a Planeaci
     canVisitDashboard(user({ role: 'operator' }), '/dashboard/planeacion'),
     false,
   );
+  for (const role of [
+    'superadmin',
+    'admin',
+    'jefe',
+    'supervisor',
+    'operator',
+    'tecnico',
+    'viewer',
+  ]) {
+    assert.equal(canVisitDashboard(user({ role }), '/dashboard/reports'), true);
+  }
+});
+
+test('la matriz separa jefe, técnico, visor y superusuario', () => {
+  const jefe = getRolePermissions('jefe');
+  assert.equal(jefe.assets.manage, true);
+  assert.equal(jefe.plans.manage, true);
+  assert.equal(jefe.planning.manage, true);
+  assert.equal(jefe.users, false);
+
+  const tecnico = getRolePermissions('operator');
+  assert.equal(tecnico.assets.manage, false);
+  assert.equal(tecnico.plans.read, true);
+  assert.equal(tecnico.plans.manage, false);
+  assert.equal(tecnico.plans.execute, true);
+  assert.equal(tecnico.workOrders.create, true);
+  assert.equal(tecnico.workOrders.changeStatus, true);
+  assert.equal(tecnico.workOrders.edit, false);
+  assert.equal(tecnico.tasks.add, true);
+
+  const visor = getRolePermissions('viewer');
+  assert.equal(visor.planning.read, true);
+  assert.equal(visor.plans.execute, false);
+  assert.equal(visor.tasks.read, false);
+  assert.equal(visor.workOrders.changeStatus, false);
+  assert.equal(visor.notifications.markRead, false);
+
+  assert.equal(getRolePermissions('superadmin').users, true);
+  assert.equal(getRolePermissions('admin').users, false);
 });

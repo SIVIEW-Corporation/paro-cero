@@ -35,6 +35,7 @@ interface CalendarProps {
   onEdit: (task: Assignment) => void;
   onDayOff: (date: string) => void;
   onDay: (date: string) => void;
+  readOnly?: boolean;
 }
 const HOUR_HEIGHT = 44;
 
@@ -45,6 +46,7 @@ export function WeekCalendar({
   onTask,
   onEdit,
   onDayOff,
+  readOnly = false,
 }: CalendarProps) {
   const monday = weekStart(date);
   const days = Array.from({ length: 7 }, (_, n) => addDays(monday, n));
@@ -96,6 +98,7 @@ export function WeekCalendar({
                       title='Marcar o quitar día no laboral'
                       className='text-app-text-secondary hover:bg-app-surface-muted rounded p-1 focus-visible:outline-2'
                       onClick={() => onDayOff(day)}
+                      disabled={readOnly}
                     >
                       <CalendarOff size={14} />
                     </button>
@@ -159,6 +162,7 @@ export function WeekCalendar({
                             clockLabel(slot.end % 1440),
                           )
                         }
+                        disabled={readOnly}
                         aria-label={`Asignar tarea el ${dateLabel(day)} de ${clockLabel(slot.start)} a ${clockLabel(slot.end)}`}
                         title={`${clockLabel(slot.start)}–${clockLabel(slot.end)} · Disponible`}
                         className='border-shSuccess-100 bg-shSuccess-50/60 text-shSuccess-800 hover:bg-shSuccess-100 focus-visible:outline-shPrimary-500 absolute inset-x-0 flex items-center justify-center border-b focus-visible:z-10 focus-visible:outline-2'
@@ -179,6 +183,7 @@ export function WeekCalendar({
                         type='button'
                         key={`task-${segment.start}`}
                         onClick={() => onEdit(task)}
+                        disabled={readOnly}
                         title={`${clockLabel(segment.start)}–${clockLabel(segment.end)} · ${ASSIGNMENT_STATUS_LABEL[task.status]} · ${task.title}${task.workOrderFolio ? ` · ${task.workOrderFolio}` : ''}`}
                         className={cn(
                           'focus-visible:outline-shPrimary-500 absolute inset-x-1 z-10 overflow-hidden rounded-lg border-l-4 p-1.5 text-left shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2',
@@ -258,6 +263,7 @@ export function WeekCalendar({
                 <ActionButton
                   aria-label={`No laborales ${day}`}
                   onClick={() => onDayOff(day)}
+                  disabled={readOnly}
                 >
                   <CalendarOff size={16} />
                 </ActionButton>
@@ -283,6 +289,7 @@ export function WeekCalendar({
                         type='button'
                         className='w-full text-left'
                         onClick={() => onEdit(s.assignment!)}
+                        disabled={readOnly}
                       >
                         <strong>
                           {clockLabel(s.start)}–{clockLabel(s.end)} ·{' '}
@@ -304,6 +311,7 @@ export function WeekCalendar({
                             clockLabel(Math.min(s.end, s.start + 60) % 1440),
                           )
                         }
+                        disabled={readOnly}
                       >
                         {clockLabel(s.start)}–{clockLabel(s.end)} · Disponible ·
                         Asignar +
@@ -333,6 +341,7 @@ export function MonthCalendar({
   date,
   onDay,
   onDayOff,
+  readOnly = false,
 }: CalendarProps) {
   const first = `${date.slice(0, 7)}-01`,
     firstCell = weekStart(first);
@@ -400,6 +409,7 @@ export function MonthCalendar({
               <button
                 type='button'
                 onClick={() => onDayOff(day)}
+                disabled={readOnly}
                 className={cn(
                   'mt-1 w-full truncate rounded text-left text-[9px] underline sm:text-[11px]',
                   off.length ? 'text-shDanger-700' : 'text-app-text-secondary',

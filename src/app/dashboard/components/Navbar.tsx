@@ -7,7 +7,10 @@ import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { canVisitDashboard } from '@/features/technician/access';
+import {
+  canVisitDashboard,
+  isTechnicianRole,
+} from '@/features/technician/access';
 // Store & Hooks
 import { useAuthStore } from '@/store/auth-store';
 import { useLogoutMutation } from '@/hooks/use-logout-mutation';
@@ -33,9 +36,10 @@ function getUserInitials(user: { full_name: string }): string {
 function getRoleLabel(role: string): string {
   const labels: Record<string, string> = {
     admin: 'Administrador',
-    supervisor: 'Supervisor',
+    jefe: 'Jefe de mantenimiento',
+    supervisor: 'Jefe de mantenimiento',
     tecnico: 'Técnico',
-    operator: 'Operador',
+    operator: 'Técnico',
     viewer: 'Visor',
     superadmin: 'Super Administrador',
   };
@@ -83,7 +87,9 @@ export default function Navbar() {
       <nav className='flex w-full max-w-[1540px] items-center justify-between'>
         <Link
           href={
-            user?.role === 'tecnico' ? '/dashboard/mis-tareas' : '/dashboard'
+            isTechnicianRole(user?.role)
+              ? '/dashboard/mis-tareas'
+              : '/dashboard'
           }
           scroll={false}
         >

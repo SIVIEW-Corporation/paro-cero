@@ -47,7 +47,11 @@ const MODAL = {
 } as const;
 type Modal = (typeof MODAL)[keyof typeof MODAL];
 
-export default function PlanningScreen() {
+export default function PlanningScreen({
+  readOnly = false,
+}: {
+  readOnly?: boolean;
+}) {
   const data = usePlanningStore((s) => s.data);
   const notice = usePlanningStore((s) => s.notice);
   usePlanningSync();
@@ -113,6 +117,7 @@ export default function PlanningScreen() {
     data,
     technicianId,
     date,
+    readOnly,
     onTask: createTask,
     onEdit: setTask,
     onDayOff: setDayOff,
@@ -136,12 +141,14 @@ export default function PlanningScreen() {
             disponible.
           </p>
         </div>
-        <ActionButton
-          onClick={() => createTask()}
-          className='border-app-brand bg-app-brand text-shForeground hover:bg-app-brand-soft px-4 py-3'
-        >
-          <Plus size={17} /> Asignar tarea
-        </ActionButton>
+        {!readOnly && (
+          <ActionButton
+            onClick={() => createTask()}
+            className='border-app-brand bg-app-brand text-shForeground hover:bg-app-brand-soft px-4 py-3'
+          >
+            <Plus size={17} /> Asignar tarea
+          </ActionButton>
+        )}
       </header>
       <div className='border-app-border-soft bg-app-surface-subtle text-app-text-secondary flex flex-wrap items-center justify-between gap-2 rounded-xl border px-4 py-3 text-xs'>
         <p>
@@ -181,15 +188,19 @@ export default function PlanningScreen() {
             </Field>
           </div>
           <div className='flex flex-wrap items-center gap-2'>
-            <ActionButton onClick={() => setModal(MODAL.SCHEDULE)}>
-              <Clock3 size={16} /> Horario semanal
-            </ActionButton>
-            <ActionButton onClick={() => setModal(MODAL.COPY)}>
-              <Copy size={16} /> Copiar semana anterior
-            </ActionButton>
-            <ActionButton onClick={() => setModal(MODAL.TEMPLATES)}>
-              <Settings2 size={16} /> Turnos guía
-            </ActionButton>
+            {!readOnly && (
+              <>
+                <ActionButton onClick={() => setModal(MODAL.SCHEDULE)}>
+                  <Clock3 size={16} /> Horario semanal
+                </ActionButton>
+                <ActionButton onClick={() => setModal(MODAL.COPY)}>
+                  <Copy size={16} /> Copiar semana anterior
+                </ActionButton>
+                <ActionButton onClick={() => setModal(MODAL.TEMPLATES)}>
+                  <Settings2 size={16} /> Turnos guía
+                </ActionButton>
+              </>
+            )}
             <ActionButton
               aria-label='Ver historial de cambios'
               title='Historial de cambios'
@@ -315,7 +326,9 @@ export default function PlanningScreen() {
       <div className='text-app-text-secondary flex flex-wrap items-center justify-between gap-3 text-xs'>
         <p>
           {view === VIEW.WEEK
-            ? 'Seleccioná un espacio libre para asignar trabajo o una tarea para editarla.'
+            ? readOnly
+              ? 'Vista de consulta: la agenda no se puede editar.'
+              : 'Seleccioná un espacio libre para asignar trabajo o una tarea para editarla.'
             : 'Seleccioná un día para abrir su semana. Marcá ausencias y cierres desde “No laboral…”.'}
         </p>
         <div className='flex flex-wrap gap-3'>
@@ -345,10 +358,10 @@ export default function PlanningScreen() {
         configurado no tienen disponibilidad. Un día no laboral bloquea su fecha
         completa, también en turnos nocturnos.
       </p>
-      {task && (
+      {task && !readOnly && (
         <TaskDialog key={task.id} data={data} task={task} onClose={close} />
       )}
-      {modal === MODAL.SCHEDULE && (
+      {!readOnly && modal === MODAL.SCHEDULE && (
         <ScheduleDialog
           data={data}
           technicianId={technicianId}
@@ -356,10 +369,10 @@ export default function PlanningScreen() {
           onClose={close}
         />
       )}
-      {modal === MODAL.TEMPLATES && (
+      {!readOnly && modal === MODAL.TEMPLATES && (
         <TemplatesDialog data={data} onClose={close} />
       )}
-      {modal === MODAL.COPY && (
+      {!readOnly && modal === MODAL.COPY && (
         <CopyDialog
           data={data}
           technicianId={technicianId}
@@ -367,7 +380,7 @@ export default function PlanningScreen() {
           onClose={close}
         />
       )}
-      {dayOff && (
+      {!readOnly && dayOff && (
         <DayOffDialog
           data={data}
           technicianId={technicianId}

@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { useAuthStore } from '@/store/auth-store';
+import { getRolePermissions } from '@/features/technician/access';
 
 function identity(state: ReturnType<typeof useAuthStore.getState>) {
   return JSON.stringify([
@@ -40,6 +41,7 @@ export function useAssetSession(): AssetSession {
   if (key === serverSnapshot())
     return { key, companyId: '', canRead: false, canManage: false };
   const { user, accessToken } = useAuthStore.getState();
+  const permissions = getRolePermissions(user?.role);
   const canRead = Boolean(
     accessToken &&
     user?.id?.trim() &&
@@ -51,8 +53,7 @@ export function useAssetSession(): AssetSession {
     key,
     companyId: user?.company_id ?? '',
     canRead,
-    canManage:
-      canRead && (user?.role === 'admin' || user?.role === 'superadmin'),
+    canManage: canRead && Boolean(permissions?.assets.manage),
   };
 }
 
