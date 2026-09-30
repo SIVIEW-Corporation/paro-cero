@@ -66,6 +66,9 @@ async function doRefresh(): Promise<string> {
 
     // Update the Zustand store with the new access token
     useAuthStore.getState().setAccessToken(result.accessToken);
+    if (result.refreshToken) {
+      useAuthStore.getState().setRefreshToken(result.refreshToken);
+    }
 
     return result.accessToken;
   } catch (error) {

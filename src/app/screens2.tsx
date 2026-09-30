@@ -58,11 +58,18 @@ import {
 } from '@/components/ui';
 
 import type {
+  Activo,
   EstadoOT,
+  Evidencia,
   Notificacion,
   OrdenTrabajo,
   PrioridadOT,
 } from '@/app/data/types';
+import type {
+  WorkOrderCreateInput,
+  WorkOrderEvidenceCreateInput,
+  WorkOrderUpdateInput,
+} from '@/services/work-orders-service';
 
 const workOrderFilterPillBase =
   'inline-flex h-8 items-center justify-center whitespace-nowrap rounded-full border px-2.5 text-[11px] font-bold transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-app-brand focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg focus-visible:outline-none';
@@ -834,13 +841,94 @@ export function PlansScreen() {
   );
 }
 
+interface WorkOrderEditDraft {
+  titulo: string;
+  descripcion: string;
+  activoId: string;
+  tipo: OrdenTrabajo['tipo'];
+  prioridad: OrdenTrabajo['prioridad'];
+  tecnicoId: string;
+  fechaCompromiso: string;
+  downtimeMinutos: string;
+  descripcionProblema: string;
+  descripcionServicio: string;
+  gastoDinero: boolean;
+  montoGastado: string;
+  usoRefaccionConsumible: boolean;
+  refaccionConsumibleDetalle: string;
+}
+
+interface WorkOrderEvidenceDraft {
+  evidenceType: Evidencia['tipo'];
+  name: string;
+  url: string;
+}
+
+function getWorkOrderEditDraft(order: OrdenTrabajo): WorkOrderEditDraft {
+  return {
+    titulo: order.titulo,
+    descripcion: order.descripcion,
+    activoId: order.activoId,
+    tipo: order.tipo,
+    prioridad: order.prioridad,
+    tecnicoId: order.tecnicoId,
+    fechaCompromiso: order.fechaCompromiso
+      ? format(new Date(order.fechaCompromiso), 'yyyy-MM-dd')
+      : '',
+    downtimeMinutos: String(order.downtimeMinutos ?? 0),
+    descripcionProblema: order.descripcionProblema ?? '',
+    descripcionServicio: order.descripcionServicio ?? '',
+    gastoDinero: order.gastoDinero ?? false,
+    montoGastado:
+      order.montoGastado && order.montoGastado > 0
+        ? String(order.montoGastado)
+        : '',
+    usoRefaccionConsumible: order.usoRefaccionConsumible ?? false,
+    refaccionConsumibleDetalle: order.refaccionConsumibleDetalle ?? '',
+  };
+}
+
 export function WorkOrdersScreen({
   wo,
   setWo,
+  assets = ASSETS,
+  technicians = TECNICOS,
+  onCreateWorkOrder,
+  onChangeStatus,
+  onUpdateWorkOrder,
+  onDeleteWorkOrder,
+  onAddEvidence,
+  onDeleteEvidence,
+  canWrite = true,
+  canDelete = true,
+  isLoading = false,
+  error = null,
+  fallbackNotice = null,
 }: {
   wo: OrdenTrabajo[];
   setWo: Dispatch<SetStateAction<OrdenTrabajo[]>>;
+  assets?: Activo[];
+  technicians?: { id: string; nombre: string }[];
+  onCreateWorkOrder?: (input: WorkOrderCreateInput) => Promise<void>;
+  onChangeStatus?: (id: string, status: EstadoOT) => Promise<void>;
+  onUpdateWorkOrder?: (
+    id: string,
+    input: WorkOrderUpdateInput,
+  ) => Promise<void>;
+  onDeleteWorkOrder?: (id: string) => Promise<void>;
+  onAddEvidence?: (
+    id: string,
+    input: WorkOrderEvidenceCreateInput,
+  ) => Promise<void>;
+  onDeleteEvidence?: (workOrderId: string, evidenceId: string) => Promise<void>;
+  canWrite?: boolean;
+  canDelete?: boolean;
+  isLoading?: boolean;
+  error?: Error | null;
+  fallbackNotice?: string | null;
 }) {
+  const availableAssets = assets;
+  const availableTechnicians = technicians;
   const [selected, setSelected] = useState<OrdenTrabajo | null>(null);
   const openedPlanningOrder = useRef<string | null>(null);
   useEffect(() => {
@@ -863,12 +951,20 @@ export function WorkOrdersScreen({
     getCurrentMonthValue(new Date()),
   );
   const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showEvidence, setShowEvidence] = useState(false);
+  const [editData, setEditData] = useState<WorkOrderEditDraft | null>(null);
+  const [evidenceData, setEvidenceData] = useState<WorkOrderEvidenceDraft>({
+    evidenceType: 'foto',
+    name: '',
+    url: '',
+  });
   const [newOtData, setNewOtData] = useState({
     titulo: '',
-    activoId: ASSETS[0]?.id || '',
+    activoId: availableAssets[0]?.id || '',
     tipo: 'preventivo' as OrdenTrabajo['tipo'],
     prioridad: 'media' as OrdenTrabajo['prioridad'],
-    tecnicoId: TECNICOS[0]?.id || '',
+    tecnicoId: availableTechnicians[0]?.id || '',
     fechaCompromiso: format(new Date(), 'yyyy-MM-dd'),
     fechaCierre: '',
     downtimeMinutos: '',
@@ -880,14 +976,28 @@ export function WorkOrdersScreen({
     refaccionConsumibleDetalle: '',
   });
 
+  useEffect(() => {
+    setNewOtData((previous) => ({
+      ...previous,
+      activoId: availableAssets.some((asset) => asset.id === previous.activoId)
+        ? previous.activoId
+        : availableAssets[0]?.id || '',
+      tecnicoId: availableTechnicians.some(
+        (technician) => technician.id === previous.tecnicoId,
+      )
+        ? previous.tecnicoId
+        : availableTechnicians[0]?.id || '',
+    }));
+  }, [availableAssets, availableTechnicians]);
+
   const closeCreateModal = () => {
     setShowCreate(false);
     setNewOtData({
       titulo: '',
-      activoId: ASSETS[0]?.id || '',
+      activoId: availableAssets[0]?.id || '',
       tipo: 'preventivo',
       prioridad: 'media',
-      tecnicoId: TECNICOS[0]?.id || '',
+      tecnicoId: availableTechnicians[0]?.id || '',
       fechaCompromiso: format(new Date(), 'yyyy-MM-dd'),
       fechaCierre: '',
       downtimeMinutos: '',
@@ -898,6 +1008,199 @@ export function WorkOrdersScreen({
       usoRefaccionConsumible: false,
       refaccionConsumibleDetalle: '',
     });
+  };
+
+  const closeEditModal = () => {
+    setShowEdit(false);
+    setEditData(null);
+  };
+
+  const updateEditData = <TKey extends keyof WorkOrderEditDraft>(
+    key: TKey,
+    value: WorkOrderEditDraft[TKey],
+  ) => {
+    setEditData((previous) =>
+      previous ? { ...previous, [key]: value } : previous,
+    );
+  };
+
+  const openEditModal = (order: OrdenTrabajo) => {
+    setEditData(getWorkOrderEditDraft(order));
+    setShowEdit(true);
+  };
+
+  const submitEdit = () => {
+    if (!selected || !editData) return;
+
+    const title = editData.titulo.trim();
+    if (!title || !editData.activoId || !editData.tecnicoId) {
+      alert('Completa título, activo y técnico.');
+      return;
+    }
+
+    const downtimeMinutes = Number(editData.downtimeMinutos || '0');
+    if (Number.isNaN(downtimeMinutes) || downtimeMinutes < 0) {
+      alert('El tiempo de paro debe ser 0 o mayor.');
+      return;
+    }
+
+    const spentAmount = editData.gastoDinero
+      ? Number(editData.montoGastado)
+      : null;
+    if (
+      editData.gastoDinero &&
+      (spentAmount === null || Number.isNaN(spentAmount) || spentAmount <= 0)
+    ) {
+      alert('Si se gastó dinero, captura un monto mayor a 0.');
+      return;
+    }
+
+    const consumableDetail = editData.refaccionConsumibleDetalle.trim();
+    if (editData.usoRefaccionConsumible && !consumableDetail) {
+      alert('Si se usó refacción o consumible, captura el detalle.');
+      return;
+    }
+
+    const problemDescription = editData.descripcionProblema.trim();
+    const serviceDescription = editData.descripcionServicio.trim();
+    const input: WorkOrderUpdateInput = {
+      assetId: editData.activoId,
+      title,
+      description: editData.descripcion.trim() || problemDescription || serviceDescription,
+      type: editData.tipo,
+      priority: editData.prioridad,
+      technicianId: editData.tecnicoId || null,
+      dueAt: editData.fechaCompromiso
+        ? new Date(`${editData.fechaCompromiso}T00:00:00`).toISOString()
+        : null,
+      problemDescription: problemDescription || null,
+      serviceDescription: serviceDescription || null,
+      spending: editData.gastoDinero,
+      spentAmount,
+      usesConsumable: editData.usoRefaccionConsumible,
+      consumableDetail: editData.usoRefaccionConsumible
+        ? consumableDetail
+        : null,
+      downtimeMinutes,
+    };
+
+    if (onUpdateWorkOrder) {
+      void onUpdateWorkOrder(selected.id, input)
+        .then(closeEditModal)
+        .catch(() => undefined);
+      return;
+    }
+
+    setWo((previous) =>
+      previous.map((order) =>
+        order.id === selected.id
+          ? {
+              ...order,
+              activoId: editData.activoId,
+              titulo: title,
+              descripcion: input.description || '',
+              tipo: editData.tipo,
+              prioridad: editData.prioridad,
+              tecnicoId: editData.tecnicoId,
+              tecnicoNombre:
+                availableTechnicians.find(
+                  (technician) => technician.id === editData.tecnicoId,
+                )?.nombre || order.tecnicoNombre,
+              fechaCompromiso: editData.fechaCompromiso
+                ? new Date(`${editData.fechaCompromiso}T00:00:00`)
+                : order.fechaCompromiso,
+              descripcionProblema: problemDescription,
+              descripcionServicio: serviceDescription,
+              observaciones: problemDescription,
+              gastoDinero: editData.gastoDinero,
+              montoGastado: spentAmount ?? 0,
+              usoRefaccionConsumible: editData.usoRefaccionConsumible,
+              refaccionConsumibleDetalle: editData.usoRefaccionConsumible
+                ? consumableDetail
+                : '',
+              downtimeMinutos: downtimeMinutes,
+              updatedAt: new Date(),
+            }
+          : order,
+      ),
+    );
+    closeEditModal();
+  };
+
+  const deleteSelectedWorkOrder = () => {
+    if (!selected || !window.confirm('¿Eliminar esta orden de trabajo?')) {
+      return;
+    }
+
+    if (onDeleteWorkOrder) {
+      void onDeleteWorkOrder(selected.id)
+        .then(() => setSelected(null))
+        .catch(() => undefined);
+      return;
+    }
+
+    setWo((previous) => previous.filter((order) => order.id !== selected.id));
+    setSelected(null);
+  };
+
+  const closeEvidenceModal = () => {
+    setShowEvidence(false);
+    setEvidenceData({ evidenceType: 'foto', name: '', url: '' });
+  };
+
+  const submitEvidence = () => {
+    if (!selected) return;
+    const name = evidenceData.name.trim();
+    const url = evidenceData.url.trim();
+    if (!name || !url) {
+      alert('Captura el nombre y la URL de la evidencia.');
+      return;
+    }
+
+    if (onAddEvidence) {
+      void onAddEvidence(selected.id, { ...evidenceData, name, url })
+        .then(closeEvidenceModal)
+        .catch(() => undefined);
+      return;
+    }
+
+    const localEvidence: Evidencia = {
+      id: `evidence-${Date.now()}`,
+      tipo: evidenceData.evidenceType,
+      nombre: name,
+      url,
+      fechaSubida: new Date(),
+    };
+    setWo((previous) =>
+      previous.map((order) =>
+        order.id === selected.id
+          ? { ...order, evidencias: [...order.evidencias, localEvidence] }
+          : order,
+      ),
+    );
+    closeEvidenceModal();
+  };
+
+  const removeEvidence = (evidenceId: string) => {
+    if (!selected || !window.confirm('¿Eliminar esta evidencia?')) return;
+
+    if (onDeleteEvidence) {
+      void onDeleteEvidence(selected.id, evidenceId).catch(() => undefined);
+      return;
+    }
+
+    setWo((previous) =>
+      previous.map((order) =>
+        order.id === selected.id
+          ? {
+              ...order,
+              evidencias: order.evidencias.filter(
+                (evidence) => evidence.id !== evidenceId,
+              ),
+            }
+          : order,
+      ),
+    );
   };
 
   const createWorkOrder = () => {
@@ -914,7 +1217,9 @@ export function WorkOrdersScreen({
     }, 0);
     const nextId = maxId + 1;
 
-    const tecnico = TECNICOS.find((t) => t.id === newOtData.tecnicoId);
+    const tecnico = availableTechnicians.find(
+      (t) => t.id === newOtData.tecnicoId,
+    );
     const fechaCompromiso = newOtData.fechaCompromiso
       ? new Date(`${newOtData.fechaCompromiso}T00:00:00`)
       : now;
@@ -984,8 +1289,31 @@ export function WorkOrdersScreen({
       updatedAt: now,
     };
 
-    setWo((prev) => [nuevaOt, ...prev]);
-    closeCreateModal();
+    if (onCreateWorkOrder) {
+      void onCreateWorkOrder({
+        assetId: nuevaOt.activoId,
+        title: nuevaOt.titulo,
+        description: nuevaOt.descripcion,
+        type: nuevaOt.tipo,
+        priority: nuevaOt.prioridad,
+        technicianId: nuevaOt.tecnicoId || null,
+        dueAt: nuevaOt.fechaCompromiso.toISOString(),
+        problemDescription: nuevaOt.descripcionProblema ?? null,
+        serviceDescription: nuevaOt.descripcionServicio ?? null,
+        spending: nuevaOt.gastoDinero ?? false,
+        spentAmount: nuevaOt.gastoDinero ? nuevaOt.montoGastado ?? null : null,
+        usesConsumable: nuevaOt.usoRefaccionConsumible ?? false,
+        consumableDetail: nuevaOt.usoRefaccionConsumible
+          ? nuevaOt.refaccionConsumibleDetalle ?? null
+          : null,
+        downtimeMinutes: nuevaOt.downtimeMinutos,
+      })
+        .then(closeCreateModal)
+        .catch(() => undefined);
+    } else {
+      setWo((prev) => [nuevaOt, ...prev]);
+      closeCreateModal();
+    }
   };
 
   const statusCounts: Record<string, number> = {};
@@ -1011,7 +1339,7 @@ export function WorkOrdersScreen({
     const matchesTecnico = !filterTecnicoId || w.tecnicoId === filterTecnicoId;
     // Los filtros de periodo se aplican sobre la fecha de creación de la OT.
     const matchesPeriod = isDateInRange(w.fechaCreacion, periodRange);
-    const asset = ASSETS.find((item) => item.id === w.activoId);
+    const asset = availableAssets.find((item) => item.id === w.activoId);
     const searchableText = [
       w.folio,
       w.titulo,
@@ -1053,16 +1381,38 @@ export function WorkOrdersScreen({
   };
 
   const changeStatus = (id: string, s: string) => {
+    const status = s as OrdenTrabajo['status'];
+    if (onChangeStatus) {
+      void onChangeStatus(id, status);
+      return;
+    }
     setWo((prev) =>
-      prev.map((w) =>
-        w.id === id ? { ...w, status: s as OrdenTrabajo['status'] } : w,
-      ),
+      prev.map((w) => (w.id === id ? { ...w, status } : w)),
     );
   };
 
+  if (error) {
+    return (
+      <div className='text-app-text-primary flex h-full items-center justify-center p-8'>
+        <div className='border-app-border-soft bg-app-surface max-w-lg rounded-xl border p-6 text-center shadow-sm'>
+          <h2 className='text-lg font-semibold'>No se pudieron cargar las órdenes</h2>
+          <p className='text-app-text-secondary mt-2 text-sm'>{error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className='text-app-text-secondary flex h-full items-center justify-center p-8 text-sm'>
+        Cargando órdenes de trabajo...
+      </div>
+    );
+  }
+
   if (selected) {
-    const asset = ASSETS.find((a) => a.id === selected.activoId);
     const curWo = wo.find((w) => w.id === selected.id) || selected;
+    const asset = availableAssets.find((a) => a.id === curWo.activoId);
     const descripcionProblema =
       curWo.descripcionProblema || curWo.observaciones || '';
     const descripcionServicio = curWo.descripcionServicio || '';
@@ -1152,6 +1502,18 @@ export function WorkOrdersScreen({
               label={curWo.tipo === 'preventivo' ? 'Preventivo' : 'Correctivo'}
               color={curWo.tipo === 'preventivo' ? '#3b82f6' : '#ef4444'}
             />
+            {canWrite && (
+              <>
+                <BtnGhost onClick={() => openEditModal(curWo)}>
+                  Editar
+                </BtnGhost>
+                {canDelete && (
+                  <BtnGhost onClick={deleteSelectedWorkOrder}>
+                    Eliminar
+                  </BtnGhost>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -1336,31 +1698,322 @@ export function WorkOrdersScreen({
           </Card>
         </div>
 
-        <Card>
-          <CardTitle>Cambiar Estado de la OT</CardTitle>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {[
-              'pendiente',
-              'asignada',
-              'en_proceso',
-              'en_espera',
-              'completada',
-              'cancelada',
-            ].map((s) => (
-              <button
-                key={s}
-                onClick={() => changeStatus(curWo.id, s)}
-                className={`${workOrderFilterPillBase} ${
-                  curWo.status === s
-                    ? workOrderFilterPillActive
-                    : workOrderFilterPillInactive
-                }`}
-              >
-                {STL[s as keyof typeof STL] || s}
-              </button>
-            ))}
+        <Card style={{ marginBottom: 16 }}>
+          <div className='flex items-center justify-between gap-3'>
+            <CardTitle>Evidencias ({curWo.evidencias.length})</CardTitle>
+            {canWrite && (
+              <BtnGhost onClick={() => setShowEvidence(true)}>
+                Registrar evidencia
+              </BtnGhost>
+            )}
           </div>
+          {curWo.evidencias.length > 0 ? (
+            <div className='flex flex-col gap-2'>
+              {curWo.evidencias.map((evidence) => (
+                <div
+                  key={evidence.id}
+                  className='border-app-border-soft bg-app-surface-subtle flex items-center justify-between gap-3 rounded-lg border p-3 text-sm'
+                >
+                  <a
+                    href={evidence.url}
+                    target='_blank'
+                    rel='noreferrer'
+                    className='text-app-brand min-w-0 truncate font-semibold hover:underline'
+                  >
+                    {evidence.nombre}
+                  </a>
+                  {canWrite && (
+                    <BtnGhost onClick={() => removeEvidence(evidence.id)}>
+                      Quitar
+                    </BtnGhost>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className='text-app-text-secondary text-sm'>
+              No hay evidencias registradas.
+            </p>
+          )}
         </Card>
+
+        {canWrite && (
+          <Card>
+            <CardTitle>Cambiar Estado de la OT</CardTitle>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {[
+                'nueva',
+                'asignada',
+                'en_proceso',
+                'en_espera',
+                'completada',
+                'cerrada',
+                'cancelada',
+              ].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => changeStatus(curWo.id, s)}
+                  className={`${workOrderFilterPillBase} ${
+                    curWo.status === s
+                      ? workOrderFilterPillActive
+                      : workOrderFilterPillInactive
+                  }`}
+                >
+                  {STL[s as keyof typeof STL] || s}
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {showEdit && editData && (
+          <Modal title='Editar Orden de Trabajo' onClose={closeEditModal}>
+            <Field label='Título de la orden'>
+              <input
+                value={editData.titulo}
+                onChange={(event) =>
+                  updateEditData('titulo', event.target.value)
+                }
+              />
+            </Field>
+            <Field label='Activo'>
+              <select
+                value={editData.activoId}
+                onChange={(event) =>
+                  updateEditData('activoId', event.target.value)
+                }
+              >
+                {availableAssets.map((assetOption) => (
+                  <option key={assetOption.id} value={assetOption.id}>
+                    {assetOption.code} — {assetOption.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <div
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+            >
+              <Field label='Tipo'>
+                <select
+                  value={editData.tipo}
+                  onChange={(event) =>
+                    updateEditData(
+                      'tipo',
+                      event.target.value as WorkOrderEditDraft['tipo'],
+                    )
+                  }
+                >
+                  <option value='preventivo'>Preventivo</option>
+                  <option value='correctivo'>Correctivo</option>
+                  <option value='predictivo'>Predictivo</option>
+                </select>
+              </Field>
+              <Field label='Prioridad'>
+                <select
+                  value={editData.prioridad}
+                  onChange={(event) =>
+                    updateEditData(
+                      'prioridad',
+                      event.target.value as WorkOrderEditDraft['prioridad'],
+                    )
+                  }
+                >
+                  <option value='baja'>Baja</option>
+                  <option value='media'>Media</option>
+                  <option value='alta'>Alta</option>
+                  <option value='critico'>Crítico</option>
+                </select>
+              </Field>
+            </div>
+            <div
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+            >
+              <Field label='Asignado a'>
+                <select
+                  value={editData.tecnicoId}
+                  onChange={(event) =>
+                    updateEditData('tecnicoId', event.target.value)
+                  }
+                >
+                  {availableTechnicians.map((technician) => (
+                    <option key={technician.id} value={technician.id}>
+                      {technician.nombre}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label='Fecha de vencimiento'>
+                <input
+                  type='date'
+                  value={editData.fechaCompromiso}
+                  onChange={(event) =>
+                    updateEditData('fechaCompromiso', event.target.value)
+                  }
+                />
+              </Field>
+            </div>
+            <Field label='Descripción general'>
+              <textarea
+                value={editData.descripcion}
+                onChange={(event) =>
+                  updateEditData('descripcion', event.target.value)
+                }
+              />
+            </Field>
+            <Field label='Descripción del problema'>
+              <textarea
+                value={editData.descripcionProblema}
+                onChange={(event) =>
+                  updateEditData('descripcionProblema', event.target.value)
+                }
+              />
+            </Field>
+            <Field label='Descripción del servicio'>
+              <textarea
+                value={editData.descripcionServicio}
+                onChange={(event) =>
+                  updateEditData('descripcionServicio', event.target.value)
+                }
+              />
+            </Field>
+            <div
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
+            >
+              <Field label='Tiempo de paro (min)'>
+                <input
+                  type='number'
+                  min={0}
+                  value={editData.downtimeMinutos}
+                  onChange={(event) =>
+                    updateEditData('downtimeMinutos', event.target.value)
+                  }
+                />
+              </Field>
+              <div />
+            </div>
+            <section className='border-shNeutral-200 bg-shNeutral-50 mb-4 rounded-xl border p-4'>
+              <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8'>
+                <label className='text-shNeutral-800 flex items-center gap-2 text-sm font-semibold'>
+                  <input
+                    type='checkbox'
+                    checked={editData.gastoDinero}
+                    onChange={(event) => {
+                      updateEditData('gastoDinero', event.target.checked);
+                      if (!event.target.checked) updateEditData('montoGastado', '');
+                    }}
+                    className='accent-shPrimary-700 h-4 w-4'
+                  />
+                  ¿Se gastó dinero?
+                </label>
+                <label className='text-shNeutral-800 flex items-center gap-2 text-sm font-semibold'>
+                  <input
+                    type='checkbox'
+                    checked={editData.usoRefaccionConsumible}
+                    onChange={(event) => {
+                      updateEditData(
+                        'usoRefaccionConsumible',
+                        event.target.checked,
+                      );
+                      if (!event.target.checked) {
+                        updateEditData('refaccionConsumibleDetalle', '');
+                      }
+                    }}
+                    className='accent-shPrimary-700 h-4 w-4'
+                  />
+                  ¿Se usó refacción o consumible?
+                </label>
+              </div>
+              {(editData.gastoDinero || editData.usoRefaccionConsumible) && (
+                <div className='mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2'>
+                  {editData.gastoDinero && (
+                    <Field label='Monto gastado'>
+                      <input
+                        type='number'
+                        min={0}
+                        step='0.01'
+                        value={editData.montoGastado}
+                        onChange={(event) =>
+                          updateEditData('montoGastado', event.target.value)
+                        }
+                      />
+                    </Field>
+                  )}
+                  {editData.usoRefaccionConsumible && (
+                    <Field label='Detalle de refacción o consumible'>
+                      <input
+                        value={editData.refaccionConsumibleDetalle}
+                        onChange={(event) =>
+                          updateEditData(
+                            'refaccionConsumibleDetalle',
+                            event.target.value,
+                          )
+                        }
+                      />
+                    </Field>
+                  )}
+                </div>
+              )}
+            </section>
+            <ModalFooter
+              onCancel={closeEditModal}
+              onConfirm={submitEdit}
+              confirmLabel='Guardar cambios'
+            />
+          </Modal>
+        )}
+
+        {showEvidence && (
+          <Modal title='Registrar evidencia' onClose={closeEvidenceModal}>
+            <p className='text-app-text-secondary mb-4 text-sm'>
+              Primero subí el archivo al proveedor de almacenamiento y después
+              registrá aquí su URL. No se guarda el archivo en el navegador.
+            </p>
+            <Field label='Tipo de evidencia'>
+              <select
+                value={evidenceData.evidenceType}
+                onChange={(event) =>
+                  setEvidenceData((previous) => ({
+                    ...previous,
+                    evidenceType: event.target.value as Evidencia['tipo'],
+                  }))
+                }
+              >
+                <option value='foto'>Foto</option>
+                <option value='documento'>Documento</option>
+              </select>
+            </Field>
+            <Field label='Nombre'>
+              <input
+                placeholder='Ej: placa después de la reparación'
+                value={evidenceData.name}
+                onChange={(event) =>
+                  setEvidenceData((previous) => ({
+                    ...previous,
+                    name: event.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <Field label='URL del archivo'>
+              <input
+                type='url'
+                placeholder='https://...'
+                value={evidenceData.url}
+                onChange={(event) =>
+                  setEvidenceData((previous) => ({
+                    ...previous,
+                    url: event.target.value,
+                  }))
+                }
+              />
+            </Field>
+            <ModalFooter
+              onCancel={closeEvidenceModal}
+              onConfirm={submitEvidence}
+              confirmLabel='Registrar evidencia'
+            />
+          </Modal>
+        )}
       </div>
     );
   }
@@ -1371,11 +2024,23 @@ export function WorkOrdersScreen({
         title='Ordenes de Trabajo'
         sub={wo.length + ' ordenes registradas'}
         action={
-          <BtnPrimary onClick={() => setShowCreate(true)}>
-            + Nueva OT
-          </BtnPrimary>
+          canWrite ? (
+            <BtnPrimary onClick={() => setShowCreate(true)}>
+              + Nueva OT
+            </BtnPrimary>
+          ) : undefined
         }
       />
+
+      {fallbackNotice && (
+        <div
+          role='status'
+          className='border-app-border-soft bg-app-surface text-app-text-secondary mb-4 rounded-xl border px-4 py-3 text-sm shadow-sm'
+        >
+          <strong className='text-app-text-primary'>Modo de respaldo:</strong>{' '}
+          {fallbackNotice}
+        </div>
+      )}
 
       <div className='border-app-border-soft bg-app-surface mb-4 rounded-xl border p-3 shadow-sm'>
         <div className='-mx-1 overflow-x-auto px-1 pb-1'>
@@ -1449,7 +2114,7 @@ export function WorkOrdersScreen({
               className={workOrderSelectClassName}
             >
               <option value=''>Todos</option>
-              {ASSETS.map((asset) => (
+              {availableAssets.map((asset) => (
                 <option key={asset.id} value={asset.id}>
                   {asset.code} - {asset.name}
                 </option>
@@ -1481,7 +2146,7 @@ export function WorkOrdersScreen({
               aria-label='Técnico'
             >
               <option value=''>Todos</option>
-              {TECNICOS.map((tecnico) => (
+              {availableTechnicians.map((tecnico) => (
                 <option key={tecnico.id} value={tecnico.id}>
                   {tecnico.nombre}
                 </option>
@@ -1585,7 +2250,7 @@ export function WorkOrdersScreen({
         </DataTable>
       </Card>
 
-      {showCreate && (
+      {showCreate && canWrite && (
         <Modal title='Nueva Orden de Trabajo' onClose={closeCreateModal}>
           <Field label='Titulo de la Orden'>
             <input
@@ -1603,7 +2268,7 @@ export function WorkOrdersScreen({
                 setNewOtData((prev) => ({ ...prev, activoId: e.target.value }))
               }
             >
-              {ASSETS.map((a) => (
+              {availableAssets.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.code} — {a.name}
                 </option>
@@ -1657,7 +2322,7 @@ export function WorkOrdersScreen({
                   }))
                 }
               >
-                {TECNICOS.map((tecnico) => (
+                {availableTechnicians.map((tecnico) => (
                   <option key={tecnico.id} value={tecnico.id}>
                     {tecnico.nombre}
                   </option>

@@ -18,7 +18,7 @@ export interface User {
   id: string;
   email: string;
   full_name: string;
-  company_id: string;
+  company_id: string | null;
   role: UserType | string;
   area?: string | null;
   job_title?: string | null;

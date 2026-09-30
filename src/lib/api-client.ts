@@ -34,6 +34,31 @@ function isAuthEndpoint(endpoint: string): boolean {
   return AUTH_ENDPOINTS.some((authEndpoint) => endpoint.includes(authEndpoint));
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function responseErrorMessage(data: unknown, status: number): string {
+  if (!isRecord(data)) return `Error ${status}`;
+
+  const detail = data.detail;
+  if (typeof detail === 'string' && detail.length > 0) return detail;
+
+  if (Array.isArray(detail)) {
+    const messages = detail
+      .filter(isRecord)
+      .map((item) => item.msg)
+      .filter((message): message is string => typeof message === 'string');
+    if (messages.length > 0) return messages.join('; ');
+  }
+
+  if (typeof data.message === 'string' && data.message.length > 0) {
+    return data.message;
+  }
+
+  return `Error ${status}`;
+}
+
 async function fetchWithTimeout(
   url: string,
   options: ApiClientOptions,
@@ -129,7 +154,7 @@ async function retryRequest<T = unknown>(
   newToken: string,
 ): Promise<ApiResponse<T>> {
   const baseUrl =
-    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+    process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
   if (originalOptions.isRequestCurrent && !originalOptions.isRequestCurrent())
     return sessionChanged<T>();
@@ -155,8 +180,11 @@ async function retryRequest<T = unknown>(
       ok: false,
       status: response.status,
       error: {
-        message: data?.message || `Error ${response.status}`,
-        code: data?.code,
+        message: responseErrorMessage(data, response.status),
+        code:
+          isRecord(data) && typeof data.code === 'string'
+            ? data.code
+            : undefined,
         status: response.status,
       },
     };
@@ -174,7 +202,7 @@ export async function apiClient<T = unknown>(
   options: ApiClientOptions = {},
 ): Promise<ApiResponse<T>> {
   const baseUrl =
-    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+    process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
   if (options.isRequestCurrent && !options.isRequestCurrent())
     return sessionChanged<T>();
@@ -228,8 +256,11 @@ export async function apiClient<T = unknown>(
         ok: false,
         status: response.status,
         error: {
-          message: data?.message || `Error ${response.status}`,
-          code: data?.code,
+          message: responseErrorMessage(data, response.status),
+          code:
+            isRecord(data) && typeof data.code === 'string'
+              ? data.code
+              : undefined,
           status: response.status,
         },
       };
@@ -259,13 +290,13 @@ export async function apiClient<T = unknown>(
   }
 }
 
-apiClient.get = <T = unknown>(endpoint: string, options?: FetchOptions) =>
+apiClient.get = <T = unknown>(endpoint: string, options?: ApiClientOptions) =>
   apiClient<T>(endpoint, { ...options, method: 'GET' });
 
 apiClient.post = <T = unknown>(
   endpoint: string,
   data?: unknown,
-  options?: FetchOptions,
+  options?: ApiClientOptions,
 ) =>
   apiClient<T>(endpoint, {
     ...options,
@@ -276,7 +307,7 @@ apiClient.post = <T = unknown>(
 apiClient.put = <T = unknown>(
   endpoint: string,
   data?: unknown,
-  options?: FetchOptions,
+  options?: ApiClientOptions,
 ) =>
   apiClient<T>(endpoint, {
     ...options,
@@ -287,7 +318,7 @@ apiClient.put = <T = unknown>(
 apiClient.patch = <T = unknown>(
   endpoint: string,
   data?: unknown,
-  options?: FetchOptions,
+  options?: ApiClientOptions,
 ) =>
   apiClient<T>(endpoint, {
     ...options,
@@ -295,5 +326,7 @@ apiClient.patch = <T = unknown>(
     body: data ? JSON.stringify(data) : undefined,
   });
 
-apiClient.delete = <T = unknown>(endpoint: string, options?: FetchOptions) =>
-  apiClient<T>(endpoint, { ...options, method: 'DELETE' });
+apiClient.delete = <T = unknown>(
+  endpoint: string,
+  options?: ApiClientOptions,
+) => apiClient<T>(endpoint, { ...options, method: 'DELETE' });

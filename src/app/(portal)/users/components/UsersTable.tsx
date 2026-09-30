@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -15,7 +15,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
-import { User } from '@/store/auth-store';
+import { useAuthStore, User } from '@/store/auth-store';
 import ConfirmModal from './confirm-modal';
 
 import formatDate from '@/utils/format-date';
@@ -53,6 +53,10 @@ interface ConfirmModalState {
 export default function UsersTable() {
   const [page, setPage] = useState(1);
   const size = 10;
+  const sessionKey = useAuthStore(
+    (state) =>
+      `${state.user?.id ?? 'anonymous'}:${state.user?.company_id ?? 'none'}:${state.user?.role ?? 'anonymous'}`,
+  );
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
     isOpen: false,
     userId: '',
@@ -61,6 +65,10 @@ export default function UsersTable() {
 
   const { data, isPending, isFetching, error } = useOperatorsQuery(page, size);
   const deleteMutation = useDeleteUserMutation();
+
+  useEffect(() => {
+    setPage(1);
+  }, [sessionKey]);
 
   const handleDeleteClick = (userId: string, userName: string) => {
     setConfirmModal({ isOpen: true, userId, userName });

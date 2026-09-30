@@ -2,15 +2,25 @@
 
 import { useForm } from '@tanstack/react-form';
 import { useCreateUserMutation } from '@/app/(portal)/users/hooks/use-newOperator-mutation';
+import { useCompaniesQuery } from '@/app/(portal)/users/hooks/use-companies-query';
 import { newUserSchema } from './lib/new-user-schema';
 import * as motion from 'motion/react-client';
-import { Mail, User, Briefcase, MapPin, Shield, UserPlus } from 'lucide-react';
+import {
+  Mail,
+  User,
+  Briefcase,
+  MapPin,
+  Shield,
+  UserPlus,
+  Building2,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FormField, PasswordField } from '@/global-components/form-field';
 import Button from '@/global-components/Button';
 
 interface NewUserFormProps {
-  company_id?: string;
+  company_id?: string | null;
+  canSelectCompany?: boolean;
 }
 
 const fieldAnimation = {
@@ -22,8 +32,12 @@ const fieldAnimation = {
   }),
 };
 
-export default function NewUserForm({ company_id }: NewUserFormProps) {
+export default function NewUserForm({
+  company_id,
+  canSelectCompany = false,
+}: NewUserFormProps) {
   const createUser = useCreateUserMutation();
+  const companiesQuery = useCompaniesQuery(canSelectCompany);
 
   const form = useForm({
     defaultValues: {
@@ -90,21 +104,92 @@ export default function NewUserForm({ company_id }: NewUserFormProps) {
           }}
           className='space-y-5'
         >
-          {/* Hidden companyId field for validation */}
-          <form.Field
-            name='companyId'
-            validators={{
-              onChange: newUserSchema.shape.companyId,
-            }}
-            children={(field) => (
-              <input
-                type='hidden'
-                name={field.name}
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-              />
-            )}
-          />
+          {/* Company scope is fixed for admins and explicit for superadmins. */}
+          {canSelectCompany ? (
+            <form.Field
+              name='companyId'
+              validators={{
+                onChange: newUserSchema.shape.companyId,
+              }}
+              children={(field) => {
+                const hasError = field.state.meta.errors.length > 0;
+                const companies = companiesQuery.data?.items ?? [];
+
+                return (
+                  <div className='group'>
+                    <label
+                      htmlFor='companyId'
+                      className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
+                    >
+                      Empresa
+                    </label>
+                    <div
+                      className={cn(
+                        'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
+                        hasError
+                          ? 'border-shDanger-500'
+                          : 'border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 focus-within:ring-2',
+                      )}
+                    >
+                      <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
+                        <Building2 size={16} />
+                      </div>
+                      <select
+                        id='companyId'
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        disabled={
+                          companiesQuery.isPending || companiesQuery.isError
+                        }
+                        className='text-shNeutral-900 flex-1 appearance-none border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none! disabled:cursor-not-allowed disabled:opacity-60'
+                      >
+                        <option value=''>Seleccioná una empresa</option>
+                        {companies.map((company) => (
+                          <option key={company.id} value={company.id}>
+                            {company.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {companiesQuery.isPending && (
+                      <p className='text-shNeutral-500 mt-1.5 text-xs'>
+                        Cargando empresas disponibles...
+                      </p>
+                    )}
+                    {companiesQuery.isError && (
+                      <p className='text-shDanger-700 mt-1.5 text-xs font-medium'>
+                        No se pudieron cargar las empresas. Intenta nuevamente.
+                      </p>
+                    )}
+                    {hasError && (
+                      <p className='text-shDanger-700 mt-1.5 text-xs font-medium'>
+                        Seleccioná una empresa para continuar.
+                      </p>
+                    )}
+                  </div>
+                );
+              }}
+            />
+          ) : (
+            <form.Field
+              name='companyId'
+              validators={{
+                onChange: newUserSchema.shape.companyId,
+              }}
+              children={(field) => (
+                <input
+                  type='hidden'
+                  name={field.name}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                />
+              )}
+            />
+          )}
 
           {/* Row 1: Email + Password */}
           <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>

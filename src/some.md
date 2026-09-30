@@ -2,7 +2,7 @@
 
 ## Resumen General
 
-El backend usa JWT (JSON Web Tokens) con un patrón de Access Token + Refresh Token con rotación. Los access tokens tienen una duración de 2 horas y los refresh tokens son UUIDs almacenados en la base de datos con expiración de 1 día.
+El backend usa JWT (JSON Web Tokens) con un patrón de Access Token + Refresh Token con rotación. Los access tokens tienen una duración de 2 horas y los refresh tokens son UUIDs almacenados en la base de datos con expiración de 7 días, o 30 días con `remember_me`.
 
 ---
 
@@ -15,7 +15,8 @@ Todos bajo el prefijo /api/v1/auth:
 Request Body:
 {
 "email": "usuario@empresa.com",
-"password": "password123"
+"password": "password123",
+"remember_me": false
 }
 Response (200 OK):
 {
@@ -23,10 +24,11 @@ Response (200 OK):
 "refresh_token": "550e8400-e29b-41d4-a716-446655440000",
 "token_type": "bearer",
 "expires_in": 7200,
+"refresh_expires_in": 604800,
 "user": {
 "id": "uuid-del-usuario",
 "email": "usuario@empresa.com",
-"name": "Nombre Completo",
+"full_name": "Nombre Completo",
 "role": "admin",
 "company_id": "uuid-de-la-empresa",
 "is_active": true
@@ -46,7 +48,7 @@ Request Body:
 {
 "refresh_token": "550e8400-e29b-41d4-a716-446655440000"
 }
-Response (200 OK): Mismo formato que el login (nuevo access_token, nuevo refresh_token, datos del usuario).
+Response (200 OK): Mismo formato que el login (nuevo access_token, nuevo refresh_token, vigencias y datos del usuario).
 
 ⚠️ IMPORTANTE — Token Rotation:
 
@@ -95,10 +97,12 @@ Para requests autenticados: Enviar header Authorization: Bearer <access_token>
 
 ## ⏱️ Valores de Expiración (configurables en .env)
 
-Token
-Access Token
-Refresh Token
-El expires_in en la respuesta está en segundos (7200 = 2 horas).
+| Token         | Duración                            |
+| ------------- | ----------------------------------- |
+| Access Token  | 120 minutos                         |
+| Refresh Token | 7 días, o 30 días con `remember_me` |
+
+Los campos `expires_in` y `refresh_expires_in` están expresados en segundos.
 
 ---
 

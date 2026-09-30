@@ -132,7 +132,10 @@ export default function Users() {
               )}
               {activeTab === 'new-operator' && (
                 <div className='mx-auto max-w-7xl'>
-                  <NewUserForm company_id={user?.company_id} />
+                  <NewUserForm
+                    company_id={user?.company_id}
+                    canSelectCompany={user?.role === 'superadmin'}
+                  />
                 </div>
               )}
             </motion.div>

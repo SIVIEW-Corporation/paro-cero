@@ -83,6 +83,8 @@ interface Failure {
   status: number | 'network';
 }
 
+type SyntheticUser = Omit<User, 'company_id'> & { company_id: string };
+
 export class MockAssetsApi {
   readonly companies = new Map<string, ApiAsset[]>([
     ['company-a', [seedAsset()]],
@@ -91,7 +93,7 @@ export class MockAssetsApi {
   readonly calls: Call[] = [];
   readonly blocked: string[] = [];
   readonly cookieActions: string[] = [];
-  private readonly sessions = new Map<string, User>();
+  private readonly sessions = new Map<string, SyntheticUser>();
   private failures: Failure[] = [];
   private sequence = 0;
 
@@ -151,11 +153,14 @@ export class MockAssetsApi {
         const safeArgs =
           name === 'setAuthCookiesAction'
             ? Array.isArray(body) &&
-              body.length === 2 &&
-              body.every(
-                (value: unknown) =>
-                  typeof value === 'string' && value.startsWith('synthetic-'),
-              )
+              (body.length === 2 || body.length === 3) &&
+              body
+                .slice(0, 2)
+                .every(
+                  (value: unknown) =>
+                    typeof value === 'string' && value.startsWith('synthetic-'),
+                ) &&
+              (body.length === 2 || typeof body[2] === 'number')
             : name === 'clearAuthCookiesAction' &&
               Array.isArray(body) &&
               body.length === 0;
@@ -195,7 +200,7 @@ export class MockAssetsApi {
       if (!account || credentials.password !== PASSWORD)
         return json({ message: 'Synthetic accounts only' }, 403);
       const token = `synthetic-access-${++this.sequence}`;
-      const user: User = {
+      const user: SyntheticUser = {
         id: `user-${account.company}-${account.role}`,
         email: credentials.email!,
         full_name: 'Synthetic Tester',
@@ -209,6 +214,7 @@ export class MockAssetsApi {
         refresh_token: `synthetic-refresh-${this.sequence}`,
         token_type: 'bearer',
         expires_in: 7200,
+        refresh_expires_in: 604800,
         user,
       });
     }

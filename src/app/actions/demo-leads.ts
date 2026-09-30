@@ -26,6 +26,7 @@ interface DemoRequestSuccessResponse {
 interface DemoRequestErrorResponse {
   message?: string;
   error?: string;
+  detail?: string;
 }
 
 function buildDemoLeadsEndpoint(): string | null {
@@ -107,7 +108,8 @@ export async function createDemoLeadAction(
       try {
         const json = (await response.json()) as DemoRequestErrorResponse;
 
-        backendMessage = json.message || json.error || backendMessage;
+        backendMessage =
+          json.message || json.error || json.detail || backendMessage;
       } catch {
         // Ignore JSON parsing errors and keep default message.
       }

@@ -12,6 +12,7 @@ export interface LoginResponse {
   refresh_token: string;
   token_type: string;
   expires_in: number;
+  refresh_expires_in: number;
   user: User;
 }
 
@@ -20,6 +21,8 @@ export interface RefreshResponse {
   refresh_token: string;
   token_type: string;
   expires_in: number;
+  refresh_expires_in: number;
+  user: User;
 }
 
 export const authService = {

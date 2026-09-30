@@ -2,6 +2,24 @@
 import { cookies } from 'next/headers';
 
 const ACCESS_TOKEN_MAX_AGE = 2 * 60 * 60;
+const DEFAULT_REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60;
+
+function normalizeMaxAge(value: number | undefined): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    return DEFAULT_REFRESH_TOKEN_MAX_AGE;
+  }
+  return Math.floor(value);
+}
+
+function buildBackendEndpoint(path: string): string {
+  if (process.env.API_URL) {
+    return new URL(`/api/v1${path}`, process.env.API_URL).toString();
+  }
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1';
+  return `${baseUrl.replace(/\/$/, '')}${path}`;
+}
 
 export async function setAuthTokenAction(token: string) {
   const cookieStore = await cookies();
@@ -15,14 +33,17 @@ export async function setAuthTokenAction(token: string) {
   return { success: true };
 }
 
-export async function setRefreshTokenAction(refreshToken: string) {
+export async function setRefreshTokenAction(
+  refreshToken: string,
+  refreshMaxAge?: number,
+) {
   const cookieStore = await cookies();
   cookieStore.set('refresh_token', refreshToken, {
     httpOnly: true,
     path: '/',
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 86400, // 1 day
+    maxAge: normalizeMaxAge(refreshMaxAge),
   });
   return { success: true };
 }
@@ -34,6 +55,7 @@ export async function setRefreshTokenAction(refreshToken: string) {
 export async function setAuthCookiesAction(
   accessToken: string,
   refreshToken: string,
+  refreshMaxAge?: number,
 ) {
   const cookieStore = await cookies();
 
@@ -50,7 +72,7 @@ export async function setAuthCookiesAction(
     path: '/',
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 86400, // 1 day
+    maxAge: normalizeMaxAge(refreshMaxAge),
   });
 
   return { success: true };
@@ -76,6 +98,7 @@ export async function logoutAction() {
 export async function refreshTokenAction(): Promise<{
   success: boolean;
   accessToken?: string;
+  refreshToken?: string;
   error?: string;
 }> {
   const cookieStore = await cookies();
@@ -86,21 +109,21 @@ export async function refreshTokenAction(): Promise<{
       return { success: false };
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      },
-    );
+    const response = await fetch(buildBackendEndpoint('/auth/refresh'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
 
     if (!response.ok) {
       // Try to extract error message from response body
       let errorMessage: string | undefined;
       try {
-        const errorData = (await response.json()) as { message?: string };
-        errorMessage = errorData.message;
+        const errorData = (await response.json()) as {
+          message?: string;
+          detail?: string;
+        };
+        errorMessage = errorData.message ?? errorData.detail;
       } catch {
         // Response wasn't JSON, ignore
       }
@@ -113,6 +136,7 @@ export async function refreshTokenAction(): Promise<{
     const data = (await response.json()) as {
       access_token: string;
       refresh_token: string;
+      refresh_expires_in?: number;
     };
 
     cookieStore.set('access_token', data.access_token, {
@@ -127,10 +151,14 @@ export async function refreshTokenAction(): Promise<{
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 86400,
+      maxAge: normalizeMaxAge(data.refresh_expires_in),
     });
 
-    return { success: true, accessToken: data.access_token };
+    return {
+      success: true,
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+    };
   } catch {
     cookieStore.delete('access_token');
     cookieStore.delete('refresh_token');
