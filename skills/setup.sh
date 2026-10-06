@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup AI Skills for Prowler development
+# Setup AI Skills for PurpleCodeSH projects
 # Configures AI coding assistants that follow agentskills.io standard:
 #   - Opencode: .agents/skills/ symlink (native)
 #   - Claude Code: .claude/skills/ symlink + CLAUDE.md copies
@@ -43,7 +43,7 @@ SETUP_COPILOT=false
 show_help() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
-    echo "Configure AI coding assistants for Prowler development."
+    echo "Configure AI coding assistants for PurpleCodeSH projects."
     echo ""
     echo "Options:"
     echo "  --all       Configure all AI assistants"
@@ -110,79 +110,52 @@ show_menu() {
     SETUP_COPILOT=${selected[4]}
 }
 
-setup_opencode() {
-    local target="$REPO_ROOT/.agents/skills"
+link_skills() {
+    local target="$1"
 
-    if [ ! -d "$REPO_ROOT/.agents" ]; then
-        mkdir -p "$REPO_ROOT/.agents"
-    fi
-
+    # Un symlink a skills/ entera es de la versión anterior del script: expone
+    # setup.sh y cualquier archivo suelto como si fuera una skill. Se reemplaza.
     if [ -L "$target" ]; then
         rm "$target"
     elif [ -d "$target" ]; then
-        mv "$target" "$REPO_ROOT/.agents/skills.backup.$(date +%s)"
+        # Sólo se borran enlaces: si el usuario dejó algo real ahí, se respeta.
+        find "$target" -maxdepth 1 -type l -delete
     fi
 
-    ln -s "$SKILLS_SOURCE" "$target"
-    echo -e "${GREEN}  ✓ .agents/skills -> skills/${NC}"
+    mkdir -p "$target"
+
+    local count=0
+    local skill
+    for skill in "$SKILLS_SOURCE"/*/; do
+        [ -f "${skill}SKILL.md" ] || continue
+        ln -s "${skill%/}" "$target/$(basename "$skill")"
+        count=$((count + 1))
+    done
+
+    echo -e "${GREEN}  ✓ $count skill(s) -> ${target#"$REPO_ROOT/"}/${NC}"
+}
+
+setup_opencode() {
+    link_skills "$REPO_ROOT/.agents/skills"
     echo -e "${GREEN}  ✓ Opencode uses AGENTS.md natively${NC}"
 }
 
 setup_claude() {
-    local target="$REPO_ROOT/.claude/skills"
-
-    if [ ! -d "$REPO_ROOT/.claude" ]; then
-        mkdir -p "$REPO_ROOT/.claude"
-    fi
-
-    if [ -L "$target" ]; then
-        rm "$target"
-    elif [ -d "$target" ]; then
-        mv "$target" "$REPO_ROOT/.claude/skills.backup.$(date +%s)"
-    fi
-
-    ln -s "$SKILLS_SOURCE" "$target"
-    echo -e "${GREEN}  ✓ .claude/skills -> skills/${NC}"
+    link_skills "$REPO_ROOT/.claude/skills"
 
     # Copy AGENTS.md to CLAUDE.md
     copy_agents_md "CLAUDE.md"
 }
 
 setup_gemini() {
-    local target="$REPO_ROOT/.gemini/skills"
-
-    if [ ! -d "$REPO_ROOT/.gemini" ]; then
-        mkdir -p "$REPO_ROOT/.gemini"
-    fi
-
-    if [ -L "$target" ]; then
-        rm "$target"
-    elif [ -d "$target" ]; then
-        mv "$target" "$REPO_ROOT/.gemini/skills.backup.$(date +%s)"
-    fi
-
-    ln -s "$SKILLS_SOURCE" "$target"
-    echo -e "${GREEN}  ✓ .gemini/skills -> skills/${NC}"
+    link_skills "$REPO_ROOT/.gemini/skills"
 
     # Copy AGENTS.md to GEMINI.md
     copy_agents_md "GEMINI.md"
 }
 
 setup_codex() {
-    local target="$REPO_ROOT/.codex/skills"
-
-    if [ ! -d "$REPO_ROOT/.codex" ]; then
-        mkdir -p "$REPO_ROOT/.codex"
-    fi
-
-    if [ -L "$target" ]; then
-        rm "$target"
-    elif [ -d "$target" ]; then
-        mv "$target" "$REPO_ROOT/.codex/skills.backup.$(date +%s)"
-    fi
-
-    ln -s "$SKILLS_SOURCE" "$target"
-    echo -e "${GREEN}  ✓ .codex/skills -> skills/${NC}"
+    link_skills "$REPO_ROOT/.codex/skills"
     echo -e "${GREEN}  ✓ Codex uses AGENTS.md natively${NC}"
 }
 
@@ -261,8 +234,8 @@ done
 # MAIN
 # =============================================================================
 
-echo "🤖 Prowler AI Skills Setup"
-echo "=========================="
+echo "🤖 PurpleCodeSH AI Skills Setup"
+echo "==============================="
 echo ""
 
 # Count skills
