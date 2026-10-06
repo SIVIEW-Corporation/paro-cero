@@ -1,159 +1,160 @@
-import { apiClient } from '@/lib/api-client';
-import { NewAssetSchema } from '../lib/new-asset-schema';
-import { Asset } from '@/store/auth-store';
+import { apiClient, type ApiResponse } from '@/lib/api-client';
+import {
+  ASSET_WRITABLE_FIELDS,
+  type Asset,
+  type AssetCreatePayload,
+  type AssetFieldErrors,
+  type AssetListParams,
+  type AssetUpdatePayload,
+  type PaginatedAssets,
+} from '../types';
 
-export interface PaginatedAssetsResponse {
-  items: Asset[];
-  total: number;
-  page: number;
-  size: number;
-  pages: number;
+const ERROR_MESSAGES = {
+  401: 'Tu sesión expiró. Inicia sesión nuevamente.',
+  403: 'No tienes permiso para realizar esta acción. Verifica que tu usuario esté activo y asignado a una empresa.',
+  404: 'El activo no existe o fue eliminado.',
+  409: 'Ya existe un activo con ese código en tu empresa.',
+  422: 'Hay datos inválidos. Revisa los campos del activo.',
+  network: 'No se pudo conectar con el servidor. Intenta de nuevo.',
+  noChanges: 'No hay cambios para guardar.',
+} as const;
+
+/** Error thrown by the portal assets service. `status` is the HTTP status (0 = network). */
+export class AssetApiError extends Error {
+  readonly status: number;
+  readonly fieldErrors: AssetFieldErrors;
+  /** Raw backend `detail` message, kept for diagnostics. */
+  readonly detail?: string;
+
+  constructor(
+    message: string,
+    status: number,
+    fieldErrors: AssetFieldErrors = {},
+    detail?: string,
+  ) {
+    super(message);
+    this.name = 'AssetApiError';
+    this.status = status;
+    this.fieldErrors = fieldErrors;
+    this.detail = detail;
+  }
 }
 
-export interface GetAssetsParams {
-  offset: number;
-  limit: number;
-  sortBy?: string;
-  sortOrder?: string;
-  criticality?: string | null;
-  status?: string | null;
-  area?: string | null;
-  code?: string | null;
-  serial?: string | null;
-  manufacturer?: string | null;
+export function isAssetApiError(error: unknown): error is AssetApiError {
+  return error instanceof AssetApiError;
 }
 
-export interface UpdateAssetParams {
-  name?: string;
-  area?: string;
-  code?: string;
-  serial?: string | null;
-  model?: string | null;
-  manufacturer?: string | null;
-  cost?: number | null;
-  status?: string;
-  criticality?: string;
-  installedAt?: string | null;
-  isActive?: boolean;
+/**
+ * Maps a failed API response to a user-facing Spanish error.
+ * Note: `apiClient` flattens FastAPI 422 field lists into one message, so
+ * per-field 422 errors are not recoverable here; 409 always maps to `code`.
+ */
+export function toAssetApiError(
+  response: ApiResponse<unknown>,
+  fallback: string,
+): AssetApiError {
+  const { status } = response;
+  const detail = response.error?.message;
+
+  switch (status) {
+    case 401:
+    case 403:
+    case 404:
+    case 422:
+      return new AssetApiError(ERROR_MESSAGES[status], status, {}, detail);
+    case 409:
+      return new AssetApiError(
+        ERROR_MESSAGES[409],
+        status,
+        { code: ERROR_MESSAGES[409] },
+        detail,
+      );
+    case 0:
+      return new AssetApiError(
+        response.error?.code === 'SESSION_CHANGED' && detail
+          ? detail
+          : ERROR_MESSAGES.network,
+        status,
+        {},
+        detail,
+      );
+    default:
+      return new AssetApiError(detail || fallback, status, {}, detail);
+  }
+}
+
+/** Keeps only fields the backend accepts; drops company_id, is_active, etc. */
+function pickWritable(payload: AssetUpdatePayload): AssetUpdatePayload {
+  const body: Record<string, unknown> = {};
+  for (const field of ASSET_WRITABLE_FIELDS) {
+    if (payload[field] !== undefined) body[field] = payload[field];
+  }
+  return body as AssetUpdatePayload;
+}
+
+export function buildAssetListQuery(params: AssetListParams): string {
+  const searchParams = new URLSearchParams();
+  searchParams.set('page', String(params.page));
+  searchParams.set('size', String(params.size));
+  if (params.criticality) searchParams.set('criticality', params.criticality);
+  if (params.status) searchParams.set('status', params.status);
+  return searchParams.toString();
 }
 
 export const assetsService = {
-  /**
-   * Create a new asset sending data to the backend.
-   * Transforms camelCase fields to snake_case for API compatibility.
-   */
-  createAsset: async (values: NewAssetSchema): Promise<Asset> => {
-    // Transform camelCase to snake_case for API
-    const body = {
-      name: values.name,
-      area: values.area,
-      code: values.code,
-      serial: values.serial,
-      model: values.model,
-      manufacturer: values.manufacturer,
-      cost: values.cost,
-      company_id: values.companyId,
-      status: values.status,
-      criticality: values.criticality,
-      installed_at: values.installedAt,
-    };
+  listAssets: async (params: AssetListParams): Promise<PaginatedAssets> => {
+    const response = await apiClient<PaginatedAssets>(
+      `/assets/?${buildAssetListQuery(params)}`,
+      { method: 'GET' },
+    );
+    if (!response.ok)
+      throw toAssetApiError(response, 'Error al obtener activos');
+    return response.data as PaginatedAssets;
+  },
 
-    const response = await apiClient.post<Asset>('/assets/', body);
-
-    if (!response.ok) {
-      throw new Error(response.error?.message || 'Error al crear activo');
-    }
-
+  getAssetById: async (id: string): Promise<Asset> => {
+    const response = await apiClient<Asset>(
+      `/assets/${encodeURIComponent(id)}`,
+      { method: 'GET' },
+    );
+    if (!response.ok)
+      throw toAssetApiError(response, 'Error al obtener activo');
     return response.data as Asset;
   },
 
-  /**
-   * Fetch paginated assets with optional filters and sorting.
-   * Uses URLSearchParams to only include non-null params.
-   */
-  getAssets: async (
-    params: GetAssetsParams,
-  ): Promise<PaginatedAssetsResponse> => {
-    const {
-      offset,
-      limit,
-      sortBy,
-      sortOrder,
-      criticality,
-      status,
-      area,
-      code,
-      serial,
-      manufacturer,
-    } = params;
-
-    const searchParams = new URLSearchParams();
-    searchParams.set('offset', String(offset));
-    searchParams.set('limit', String(limit));
-    searchParams.set('include_inactive', 'false');
-
-    if (sortBy) searchParams.set('sort_by', sortBy);
-    if (sortOrder) searchParams.set('sort_order', sortOrder);
-    if (criticality) searchParams.set('criticality', criticality);
-    if (status) searchParams.set('status', status);
-    if (area) searchParams.set('area', area);
-    if (code) searchParams.set('code', code);
-    if (serial) searchParams.set('serial', serial);
-    if (manufacturer) searchParams.set('manufacturer', manufacturer);
-
-    const response = await apiClient.get<PaginatedAssetsResponse>(
-      `/assets/?${searchParams.toString()}`,
-    );
-
-    if (!response.ok) {
-      throw new Error(response.error?.message || 'Error al traer activos');
-    }
-
-    return response.data as PaginatedAssetsResponse;
+  createAsset: async (payload: AssetCreatePayload): Promise<Asset> => {
+    const response = await apiClient<Asset>('/assets/', {
+      method: 'POST',
+      body: JSON.stringify(pickWritable(payload)),
+    });
+    if (!response.ok) throw toAssetApiError(response, 'Error al crear activo');
+    return response.data as Asset;
   },
 
-  /**
-   * Partially update an existing asset by ID via PATCH.
-   * Transforms camelCase fields to snake_case for API compatibility.
-   * Only includes fields that have values (not undefined).
-   */
+  /** Partial update via PUT. Rejects locally when there is nothing to send. */
   updateAsset: async (
     id: string,
-    values: UpdateAssetParams,
+    payload: AssetUpdatePayload,
   ): Promise<Asset> => {
-    const body: Record<string, unknown> = {};
-
-    if (values.name !== undefined) body.name = values.name;
-    if (values.area !== undefined) body.area = values.area;
-    if (values.code !== undefined) body.code = values.code;
-    if (values.serial !== undefined) body.serial = values.serial;
-    if (values.model !== undefined) body.model = values.model;
-    if (values.manufacturer !== undefined)
-      body.manufacturer = values.manufacturer;
-    if (values.cost !== undefined) body.cost = values.cost;
-    if (values.status !== undefined) body.status = values.status;
-    if (values.criticality !== undefined) body.criticality = values.criticality;
-    if (values.installedAt !== undefined)
-      body.installed_at = values.installedAt;
-    if (values.isActive !== undefined) body.is_active = values.isActive;
-
-    const response = await apiClient.patch<Asset>(`/assets/${id}`, body);
-
-    if (!response.ok) {
-      throw new Error(response.error?.message || 'Error al actualizar activo');
+    const body = pickWritable(payload);
+    if (Object.keys(body).length === 0) {
+      throw new AssetApiError(ERROR_MESSAGES.noChanges, 0);
     }
-
+    const response = await apiClient<Asset>(
+      `/assets/${encodeURIComponent(id)}`,
+      { method: 'PUT', body: JSON.stringify(body) },
+    );
+    if (!response.ok)
+      throw toAssetApiError(response, 'Error al actualizar activo');
     return response.data as Asset;
   },
 
-  /**
-   * Delete an asset by ID.
-   */
+  /** Soft delete (204 No Content). */
   deleteAsset: async (id: string): Promise<void> => {
-    const response = await apiClient.delete(`/assets/${id}`);
-
-    if (!response.ok) {
-      throw new Error(response.error?.message || 'Error al eliminar activo');
-    }
+    const response = await apiClient(`/assets/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok)
+      throw toAssetApiError(response, 'Error al eliminar activo');
   },
 };

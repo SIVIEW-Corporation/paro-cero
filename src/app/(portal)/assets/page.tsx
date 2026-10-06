@@ -9,6 +9,7 @@ import Image from 'next/image';
 
 import NewAssetForm from './NewAssetForm';
 import AssetsTable from './components/AssetsTable';
+import { canManageAssets } from './lib/asset-permissions';
 import {
   SectionTabs,
   type tabInterface,
@@ -16,7 +17,7 @@ import {
 
 export default function AssetsPage() {
   const user = useAuthStore((s) => s.user);
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const isAdmin = canManageAssets(user?.role);
   const [activeTab, setActiveTab] = useState('all-operators');
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -71,7 +72,7 @@ export default function AssetsPage() {
           Gestión de activos
         </h1>
         <p className='text-shNeutral-500 font-inter max-w-2xl text-sm leading-6 md:text-base'>
-          Aquí puedes ver los assets disponibles y sus procesos relacionados.
+          Aquí puedes ver los activos disponibles y sus procesos relacionados.
         </p>
       </section>
 
@@ -99,7 +100,7 @@ export default function AssetsPage() {
               )}
               {activeTab === 'new-operator' && (
                 <div className='mx-auto max-w-7xl'>
-                  <NewAssetForm company_id={user?.company_id ?? undefined} />
+                  <NewAssetForm />
                 </div>
               )}
             </motion.div>

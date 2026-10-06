@@ -9,18 +9,28 @@ import {
   Cpu,
   Factory,
   Banknote,
-  Activity,
-  AlertTriangle,
-  Calendar,
   Save,
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import { useForm } from '@tanstack/react-form';
-import type { Asset } from '@/store/auth-store';
-import { newAssetSchema } from '../lib/new-asset-schema';
-import { useUpdateAssetMutation } from '../hooks/use-update-asset-mutation';
+import { toast } from 'sonner';
 import { FormField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
+import {
+  AssetCriticalitySelect,
+  AssetInstalledAtInput,
+  AssetStatusSelect,
+  firstErrorMessage,
+} from './asset-form-controls';
+import { newAssetSchema } from '../lib/new-asset-schema';
+import {
+  assetToFormValues,
+  buildAssetUpdatePayload,
+  hasAssetChanges,
+} from '../lib/asset-payload';
+import { useUpdateAssetMutation } from '../hooks/use-update-asset-mutation';
+import { isAssetApiError } from '../services/assets-service';
+import type { Asset } from '../types';
 
 interface EditAssetModalProps {
   isOpen: boolean;
@@ -36,50 +46,42 @@ export default function EditAssetModal({
   const updateAsset = useUpdateAssetMutation();
 
   const form = useForm({
-    defaultValues: {
-      name: asset.name,
-      code: asset.code,
-      area: asset.area,
-      serial: asset.serial ?? '',
-      model: asset.model ?? '',
-      manufacturer: asset.manufacturer ?? '',
-      cost: asset.cost ?? undefined,
-      status: asset.status,
-      criticality: asset.criticality,
-      installedAt: asset.installed_at ? new Date(asset.installed_at) : null,
-    },
+    defaultValues: assetToFormValues(asset),
     onSubmit: async ({ value }) => {
-      const values: Record<string, unknown> = {};
+      let payload;
+      try {
+        payload = buildAssetUpdatePayload(asset, value);
+      } catch {
+        toast.error('Revisa los campos del activo.');
+        return;
+      }
 
-      if (value.name !== '') values.name = value.name;
-      if (value.code !== '') values.code = value.code;
-      if (value.area !== '') values.area = value.area;
-      if (value.serial !== '') values.serial = value.serial;
-      if (value.model !== '') values.model = value.model;
-      if (value.manufacturer !== '') values.manufacturer = value.manufacturer;
-      if (value.cost !== undefined) values.cost = value.cost;
-      values.status = value.status;
-      values.criticality = value.criticality;
-      if (value.installedAt)
-        values.installedAt = value.installedAt.toISOString();
+      // The API rejects an empty body (422): skip the request entirely.
+      if (!hasAssetChanges(payload)) {
+        toast.info('No hay cambios para guardar.');
+        onClose();
+        return;
+      }
 
-      await updateAsset.mutateAsync({
-        id: asset.id,
-        values: values as {
-          name?: string;
-          area?: string;
-          code?: string;
-          serial?: string | null;
-          model?: string | null;
-          manufacturer?: string | null;
-          cost?: number | null;
-          status?: string;
-          criticality?: string;
-          installedAt?: string | null;
-          isActive?: boolean;
-        },
-      });
-      onClose();
+      try {
+        await updateAsset.mutateAsync({ id: asset.id, payload });
+        onClose();
+      } catch (error) {
+        // Toast is shown by the mutation hook; surface field-level errors.
+        if (!isAssetApiError(error)) return;
+        if (error.status === 404) {
+          onClose();
+          return;
+        }
+        const codeError = error.fieldErrors.code;
+        if (codeError) {
+          form.setFieldMeta('code', (meta) => ({
+            ...meta,
+            isTouched: true,
+            errorMap: { ...meta.errorMap, onServer: codeError },
+          }));
+        }
+      }
     },
   });
 
@@ -96,10 +98,16 @@ export default function EditAssetModal({
         transition={{ duration: 0.2 }}
         className='border-shNeutral-200 w-full max-w-5xl rounded-2xl border bg-white shadow-lg'
         onClick={(e) => e.stopPropagation()}
+        role='dialog'
+        aria-modal='true'
+        aria-labelledby='edit-asset-title'
       >
         {/* Header */}
         <div className='border-shNeutral-200 flex items-center justify-between border-b px-6 py-4'>
-          <h2 className='text-shNeutral-900 text-lg font-bold'>
+          <h2
+            id='edit-asset-title'
+            className='text-shNeutral-900 text-lg font-bold'
+          >
             Editar activo
           </h2>
           <Button
@@ -127,9 +135,7 @@ export default function EditAssetModal({
               <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
                 <form.Field
                   name='name'
-                  validators={{
-                    onChange: newAssetSchema.shape.name,
-                  }}
+                  validators={{ onChange: newAssetSchema.shape.name }}
                   children={(field) => (
                     <FormField
                       name='name'
@@ -142,9 +148,7 @@ export default function EditAssetModal({
                 />
                 <form.Field
                   name='code'
-                  validators={{
-                    onChange: newAssetSchema.shape.code,
-                  }}
+                  validators={{ onChange: newAssetSchema.shape.code }}
                   children={(field) => (
                     <FormField
                       name='code'
@@ -161,9 +165,7 @@ export default function EditAssetModal({
               <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
                 <form.Field
                   name='area'
-                  validators={{
-                    onChange: newAssetSchema.shape.area,
-                  }}
+                  validators={{ onChange: newAssetSchema.shape.area }}
                   children={(field) => (
                     <FormField
                       name='area'
@@ -176,6 +178,7 @@ export default function EditAssetModal({
                 />
                 <form.Field
                   name='serial'
+                  validators={{ onChange: newAssetSchema.shape.serial }}
                   children={(field) => (
                     <FormField
                       name='serial'
@@ -192,6 +195,7 @@ export default function EditAssetModal({
               <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
                 <form.Field
                   name='model'
+                  validators={{ onChange: newAssetSchema.shape.model }}
                   children={(field) => (
                     <FormField
                       name='model'
@@ -204,6 +208,7 @@ export default function EditAssetModal({
                 />
                 <form.Field
                   name='manufacturer'
+                  validators={{ onChange: newAssetSchema.shape.manufacturer }}
                   children={(field) => (
                     <FormField
                       name='manufacturer'
@@ -220,76 +225,27 @@ export default function EditAssetModal({
               <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
                 <form.Field
                   name='cost'
-                  children={(field) => {
-                    const costField = {
-                      ...field,
-                      state: {
-                        ...field.state,
-                        value:
-                          field.state.value === undefined
-                            ? ''
-                            : field.state.value,
-                      },
-                      handleChange: (value: string) => {
-                        if (value === '') {
-                          return field.handleChange(undefined);
-                        }
-                        return field.handleChange(Number(value));
-                      },
-                    };
-                    return (
-                      <FormField
-                        name='cost'
-                        label='Costo'
-                        placeholder='0.00'
-                        type='number'
-                        icon={Banknote}
-                        field={costField}
-                      />
-                    );
-                  }}
+                  validators={{ onChange: newAssetSchema.shape.cost }}
+                  children={(field) => (
+                    <FormField
+                      name='cost'
+                      label='Costo'
+                      placeholder='0'
+                      type='number'
+                      icon={Banknote}
+                      field={field}
+                    />
+                  )}
                 />
                 <form.Field
                   name='status'
                   children={(field) => (
-                    <div className='group'>
-                      <label
-                        htmlFor='status'
-                        className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
-                      >
-                        Estado
-                      </label>
-                      <div className='custom-select-container border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
-                        <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
-                          <Activity size={16} />
-                        </div>
-                        <select
-                          id='status'
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) =>
-                            field.handleChange(
-                              () =>
-                                e.target.value as
-                                  | 'commissioning'
-                                  | 'operational'
-                                  | 'standby'
-                                  | 'maintenance'
-                                  | 'down'
-                                  | 'decommissioned',
-                            )
-                          }
-                          className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 cursor-pointer appearance-none rounded-none! border-0! border-l! py-2.5 pr-12 pl-2 shadow-inner! ring-0! outline-none!'
-                        >
-                          <option value='commissioning'>En instalación</option>
-                          <option value='operational'>Operando</option>
-                          <option value='standby'>En espera</option>
-                          <option value='maintenance'>En mantenimiento</option>
-                          <option value='down'>Fuera de servicio</option>
-                          <option value='decommissioned'>Dado de baja</option>
-                        </select>
-                      </div>
-                    </div>
+                    <AssetStatusSelect
+                      id='edit-status'
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(status) => field.handleChange(status)}
+                    />
                   )}
                 />
               </div>
@@ -299,75 +255,27 @@ export default function EditAssetModal({
                 <form.Field
                   name='criticality'
                   children={(field) => (
-                    <div className='group'>
-                      <label
-                        htmlFor='criticality'
-                        className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
-                      >
-                        Criticidad
-                      </label>
-                      <div className='custom-select-container border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
-                        <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
-                          <AlertTriangle size={16} />
-                        </div>
-                        <select
-                          id='criticality'
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) =>
-                            field.handleChange(
-                              () =>
-                                e.target.value as
-                                  | 'low'
-                                  | 'medium'
-                                  | 'high'
-                                  | 'critical',
-                            )
-                          }
-                          className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 cursor-pointer appearance-none rounded-none! border-0! border-l! py-2.5 pr-12 pl-2 shadow-inner! ring-0! outline-none!'
-                        >
-                          <option value='low'>Baja</option>
-                          <option value='medium'>Media</option>
-                          <option value='high'>Alta</option>
-                          <option value='critical'>Crítica</option>
-                        </select>
-                      </div>
-                    </div>
+                    <AssetCriticalitySelect
+                      id='edit-criticality'
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(criticality) =>
+                        field.handleChange(criticality)
+                      }
+                    />
                   )}
                 />
                 <form.Field
                   name='installedAt'
+                  validators={{ onChange: newAssetSchema.shape.installedAt }}
                   children={(field) => (
-                    <div className='group'>
-                      <label
-                        htmlFor='installedAt'
-                        className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
-                      >
-                        Fecha instalación
-                      </label>
-                      <div className='border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
-                        <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
-                          <Calendar size={16} />
-                        </div>
-                        <input
-                          id='installedAt'
-                          type='date'
-                          value={
-                            field.state.value instanceof Date
-                              ? field.state.value.toISOString().split('T')[0]
-                              : ''
-                          }
-                          onBlur={field.handleBlur}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            field.handleChange(
-                              val ? new Date(val + 'T00:00:00') : null,
-                            );
-                          }}
-                          className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 appearance-none rounded-none! border-0! border-l! py-2.5 pr-4 pl-2 shadow-inner! ring-0! outline-none!'
-                        />
-                      </div>
-                    </div>
+                    <AssetInstalledAtInput
+                      id='edit-installedAt'
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(value) => field.handleChange(value)}
+                      error={firstErrorMessage(field.state.meta.errors)}
+                    />
                   )}
                 />
               </div>
@@ -386,17 +294,23 @@ export default function EditAssetModal({
             >
               Cancelar
             </Button>
-            <Button
-              type='submit'
-              loading={updateAsset.isPending}
-              loadingText='Guardando...'
-              icon={<Save size={18} />}
-              intent='accent'
-              variant='primary'
-              fullWidth
-            >
-              Guardar cambios
-            </Button>
+            <form.Subscribe
+              selector={(state) => state.canSubmit}
+              children={(canSubmit) => (
+                <Button
+                  type='submit'
+                  disabled={!canSubmit || updateAsset.isPending}
+                  loading={updateAsset.isPending}
+                  loadingText='Guardando...'
+                  icon={<Save size={18} />}
+                  intent='accent'
+                  variant='primary'
+                  fullWidth
+                >
+                  Guardar cambios
+                </Button>
+              )}
+            />
           </div>
         </form>
       </motion.div>

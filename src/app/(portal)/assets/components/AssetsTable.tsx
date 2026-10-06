@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import Link from 'next/link';
 import {
   ColumnDef,
   flexRender,
@@ -14,96 +15,28 @@ import {
   Pencil,
   Trash2,
   Filter,
-  Search,
-  ArrowUpDown,
+  RotateCw,
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
-import { Asset, useAuthStore } from '@/store/auth-store';
+import { useAuthStore } from '@/store/auth-store';
+import Button from '@/global-components/Button';
 import ConfirmModal from './confirm-modal';
 import EditAssetModal from './EditAssetModal';
-
-import formatDate from '@/utils/format-date';
-import { useAssetsQuery } from '../hooks/use-users-query';
-import { useDeleteAssetMutation } from '../hooks/use-delete-user-mutation';
-import Button from '@/global-components/Button';
-
-const criticalityBadgeStyles: Record<
-  string,
-  { bg: string; text: string; border: string }
-> = {
-  low: {
-    bg: 'bg-shSuccess-50',
-    text: 'text-shSuccess-800',
-    border: 'border-shSuccess-200',
-  },
-  medium: {
-    bg: 'bg-shPrimary-50',
-    text: 'text-shPrimary-800',
-    border: 'border-shPrimary-200',
-  },
-  high: {
-    bg: 'bg-shAccent-50',
-    text: 'text-shAccent-800',
-    border: 'border-shAccent-200',
-  },
-  critical: {
-    bg: 'bg-shDanger-50',
-    text: 'text-shDanger-800',
-    border: 'border-shDanger-200',
-  },
-};
-
-const statusBadgeStyles: Record<
-  string,
-  { bg: string; text: string; border: string }
-> = {
-  commissioning: {
-    bg: 'bg-shPrimary-50',
-    text: 'text-shPrimary-800',
-    border: 'border-shPrimary-200',
-  },
-  operational: {
-    bg: 'bg-shSuccess-50',
-    text: 'text-shSuccess-800',
-    border: 'border-shSuccess-200',
-  },
-  standby: {
-    bg: 'bg-shAccent-50',
-    text: 'text-shAccent-800',
-    border: 'border-shAccent-200',
-  },
-  maintenance: {
-    bg: 'bg-shNeutral-50',
-    text: 'text-shNeutral-800',
-    border: 'border-shNeutral-200',
-  },
-  down: {
-    bg: 'bg-shDanger-50',
-    text: 'text-shDanger-800',
-    border: 'border-shDanger-200',
-  },
-  decommissioned: {
-    bg: 'bg-shNeutral-100',
-    text: 'text-shNeutral-500',
-    border: 'border-shNeutral-200',
-  },
-};
-
-const statusLabels: Record<string, string> = {
-  commissioning: 'En instalación',
-  operational: 'Operando',
-  standby: 'En espera',
-  maintenance: 'En mantenimiento',
-  down: 'Fuera de servicio',
-  decommissioned: 'Dado de baja',
-};
-
-const criticalityLabels: Record<string, string> = {
-  low: 'Baja',
-  medium: 'Media',
-  high: 'Alta',
-  critical: 'Crítica',
-};
+import { AssetCriticalityBadge, AssetStatusBadge } from './asset-badges';
+import { useAssetsQuery } from '../hooks/use-assets-query';
+import { useDeleteAssetMutation } from '../hooks/use-delete-asset-mutation';
+import { canManageAssets } from '../lib/asset-permissions';
+import { formatAssetDateTime, formatAssetShortDate } from '../lib/asset-format';
+import {
+  ASSET_CRITICALITIES,
+  ASSET_CRITICALITY_LABELS,
+  ASSET_PAGE_SIZE,
+  ASSET_STATUSES,
+  ASSET_STATUS_LABELS,
+  type Asset,
+  type AssetCriticality,
+  type AssetStatus,
+} from '../types';
 
 interface ConfirmModalState {
   isOpen: boolean;
@@ -113,30 +46,26 @@ interface ConfirmModalState {
 
 export default function AssetsTable() {
   const user = useAuthStore((s) => s.user);
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const isAdmin = canManageAssets(user?.role);
 
   const [page, setPage] = useState(1);
-  const size = 10;
+  const size = ASSET_PAGE_SIZE;
 
-  const [criticalityFilter, setCriticalityFilter] = useState<string | null>(
-    null,
-  );
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [areaFilter, setAreaFilter] = useState('');
-  const [codeFilter, setCodeFilter] = useState('');
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [criticalityFilter, setCriticalityFilter] =
+    useState<AssetCriticality | null>(null);
+  const [statusFilter, setStatusFilter] = useState<AssetStatus | null>(null);
 
-  useEffect(() => {
+  const handleCriticalityChange = (value: string) => {
+    setCriticalityFilter(
+      ASSET_CRITICALITIES.find((item) => item === value) ?? null,
+    );
     setPage(1);
-  }, [
-    criticalityFilter,
-    statusFilter,
-    areaFilter,
-    codeFilter,
-    sortBy,
-    sortOrder,
-  ]);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(ASSET_STATUSES.find((item) => item === value) ?? null);
+    setPage(1);
+  };
 
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
     isOpen: false,
@@ -148,23 +77,25 @@ export default function AssetsTable() {
     asset: Asset | null;
   }>({ isOpen: false, asset: null });
 
-  const { data, isPending, isFetching, error } = useAssetsQuery({
+  const { data, isPending, isFetching, error, refetch } = useAssetsQuery({
     page,
     size,
-    sortBy: sortBy || undefined,
-    sortOrder: sortOrder || undefined,
     criticality: criticalityFilter,
     status: statusFilter,
-    area: areaFilter || undefined,
-    code: codeFilter || undefined,
   });
   const deleteMutation = useDeleteAssetMutation();
+
+  // Deleting the last row of the last page leaves `page` out of range.
+  if (data && data.pages > 0 && page > data.pages) {
+    setPage(data.pages);
+  }
 
   const handleDeleteClick = (assetId: string, assetName: string) => {
     setConfirmModal({ isOpen: true, assetId, assetName });
   };
 
   const handleCloseModal = () => {
+    if (deleteMutation.isPending) return;
     setConfirmModal({ isOpen: false, assetId: '', assetName: '' });
   };
 
@@ -174,39 +105,44 @@ export default function AssetsTable() {
 
   const handleConfirmDelete = () => {
     if (deleteMutation.isPending) return;
-    deleteMutation.mutate(confirmModal.assetId);
-    handleCloseModal();
+    // Keep the modal open while pending; close once the result is known.
+    // Success, 404 (already gone) and other errors are toasted by the hook.
+    deleteMutation.mutate(confirmModal.assetId, {
+      onSettled: () =>
+        setConfirmModal({ isOpen: false, assetId: '', assetName: '' }),
+    });
   };
 
   const columns: ColumnDef<Asset>[] = [
     {
       accessorKey: 'name',
-      header: 'Asset',
+      header: 'Activo',
       cell: ({ row }) => {
         const fullName = row.original.name;
         const displayName =
           fullName.length > 25 ? `${fullName.slice(0, 25)}…` : fullName;
         const code = row.original.code;
         return (
-          <div
-            title={fullName}
-            className='truncate text-xs sm:text-sm lg:text-base'
+          <Link
+            href={`/assets/${row.original.id}`}
+            title={`Ver detalle de ${fullName}`}
+            className='group/link focus-visible:ring-shPrimary-500/40 block truncate rounded-md text-xs outline-none focus-visible:ring-2 sm:text-sm lg:text-base'
           >
-            <p className='text-shNeutral-900 font-semibold capitalize'>
+            <p className='text-shNeutral-900 group-hover/link:text-shPrimary-700 font-semibold capitalize underline-offset-2 group-hover/link:underline'>
               {displayName}
             </p>
             <p className='text-shNeutral-500 text-[10px] font-normal sm:text-xs lg:text-sm'>
               {code}
             </p>
-          </div>
+          </Link>
         );
       },
     },
     {
       accessorKey: 'area',
-      header: 'Area',
+      header: 'Área',
       cell: ({ row }) => {
-        const jobArea = row.original.area ?? 'N/A';
+        const jobArea = row.original.area;
         return (
           <span
             title={jobArea}
@@ -220,59 +156,26 @@ export default function AssetsTable() {
     {
       accessorKey: 'status',
       header: 'Estado',
-      cell: ({ row }) => {
-        const status = row.original.status;
-        const style = statusBadgeStyles[status] ?? {
-          bg: 'bg-shNeutral-50',
-          text: 'text-shNeutral-700',
-          border: 'border-shNeutral-200',
-        };
-        return (
-          <span
-            title={statusLabels[status] ?? status}
-            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${style.bg} ${style.text} ${style.border}`}
-          >
-            {statusLabels[status] ?? status}
-          </span>
-        );
-      },
+      cell: ({ row }) => <AssetStatusBadge status={row.original.status} />,
     },
     {
       accessorKey: 'criticality',
       header: 'Criticidad',
-      cell: ({ row }) => {
-        const criticality = row.original.criticality;
-        const style = criticalityBadgeStyles[criticality] ?? {
-          bg: 'bg-shNeutral-50',
-          text: 'text-shNeutral-700',
-          border: 'border-shNeutral-200',
-        };
-        return (
-          <span
-            title={criticalityLabels[criticality] ?? criticality}
-            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${style.bg} ${style.text} ${style.border}`}
-          >
-            {criticalityLabels[criticality] ?? criticality}
-          </span>
-        );
-      },
+      cell: ({ row }) => (
+        <AssetCriticalityBadge criticality={row.original.criticality} />
+      ),
     },
     {
       accessorKey: 'created_at',
       header: 'Agregado',
-      cell: ({ row }) => {
-        const dateStr = row.original.created_at ?? '';
-        const formatted = formatDate(dateStr);
-        const dateWithoutHour = formatted.split(',')[0];
-        return (
-          <span
-            className='text-shNeutral-400 text-xs sm:text-sm lg:text-base'
-            title={formatted}
-          >
-            {dateWithoutHour}
-          </span>
-        );
-      },
+      cell: ({ row }) => (
+        <span
+          className='text-shNeutral-400 text-xs sm:text-sm lg:text-base'
+          title={formatAssetDateTime(row.original.created_at)}
+        >
+          {formatAssetShortDate(row.original.created_at)}
+        </span>
+      ),
     },
     ...(isAdmin
       ? [
@@ -339,148 +242,81 @@ export default function AssetsTable() {
         <p className='text-shNeutral-900 text-lg font-bold'>
           Error al cargar activos
         </p>
-        <p className='text-shNeutral-500'>{error.message}</p>
+        <p className='text-shNeutral-500 mb-4'>{error.message}</p>
+        <Button
+          type='button'
+          onClick={() => refetch()}
+          loading={isFetching}
+          loadingText='Reintentando...'
+          icon={<RotateCw size={16} />}
+          intent='primary'
+          variant='secondary'
+        >
+          Reintentar
+        </Button>
       </div>
     );
   }
+
+  const hasFilters = Boolean(criticalityFilter || statusFilter);
 
   return (
     <div className='relative flex w-full flex-col gap-6 xl:gap-8'>
       {/* Decorative orb */}
       <div className='bg-shAccent-500/5 pointer-events-none absolute -top-12 -right-12 h-64 w-64 rounded-full blur-3xl' />
 
-      {/* Filter & Sort Bar */}
+      {/* Filter Bar (the API only filters by criticality and status; order is fixed: newest first) */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
       >
-        <div className='flex flex-col gap-4 xl:flex-row xl:items-center'>
-          {/* Left: Filters */}
-          <section className='from-shNeutral-50 w-fit shrink-0 rounded-xl border-0 bg-linear-to-t to-white px-6 pt-4 pb-1 shadow-xs xl:w-full xl:flex-1 xl:grow'>
-            <div className='text-shNeutral-500 flex items-center gap-2'>
-              <Filter size={14} />
-              <span className='text-xs font-medium'>Filtrar por:</span>
-            </div>
+        <section className='from-shNeutral-50 w-full rounded-xl border-0 bg-linear-to-t to-white px-6 pt-4 pb-1 shadow-xs'>
+          <div className='text-shNeutral-500 flex items-center gap-2'>
+            <Filter size={14} />
+            <span className='text-xs font-medium'>Filtrar por:</span>
+          </div>
 
-            <div className='flex flex-1 flex-wrap items-center gap-3 py-4'>
-              {/* Criticality Dropdown */}
-              <div className='custom-select-container text-xs'>
-                <select
-                  value={criticalityFilter ?? ''}
-                  onChange={(e) => setCriticalityFilter(e.target.value || null)}
-                  className='custom-select rounded-lg px-3 py-2 text-xs shadow-inner'
-                >
-                  <option value=''>Todas las criticidades</option>
-                  <option value='low'>Baja</option>
-                  <option value='medium'>Media</option>
-                  <option value='high'>Alta</option>
-                  <option value='critical'>Crítica</option>
-                </select>
-              </div>
-
-              {/* Status Dropdown */}
-              <div className='custom-select-container text-xs'>
-                <select
-                  value={statusFilter ?? ''}
-                  onChange={(e) => setStatusFilter(e.target.value || null)}
-                  className='custom-select rounded-lg px-3 py-2 text-xs shadow-inner'
-                >
-                  <option value=''>Todos los estados</option>
-                  <option value='commissioning'>En instalación</option>
-                  <option value='operational'>Operando</option>
-                  <option value='standby'>En espera</option>
-                  <option value='maintenance'>En mantenimiento</option>
-                  <option value='down'>Fuera de servicio</option>
-                  <option value='decommissioned'>Dado de baja</option>
-                </select>
-              </div>
-
-              {/* Area Input */}
-              <div className='group'>
-                <div className='border-shPrimary-100 focus-within:border-shAccent-500 flex items-center overflow-hidden rounded-lg border bg-white transition-all'>
-                  <div className='text-shNeutral-500 group-focus-within:text-shAccent-600 flex w-10 shrink-0 items-center justify-center transition-colors'>
-                    <Search size={14} />
-                  </div>
-                  <input
-                    type='text'
-                    placeholder='Área...'
-                    value={areaFilter}
-                    onChange={(e) => setAreaFilter(e.target.value)}
-                    className='bg-shNeutral-50 text-shNeutral-900 placeholder:text-shNeutral-600 border-shNeutral-200 flex-1 border-l px-3 py-2 pr-4 pl-2 text-xs shadow-inner ring-0! outline-none'
-                  />
-                </div>
-              </div>
-
-              {/* Code Input */}
-              <div className='group'>
-                <div className='border-shPrimary-100 focus-within:border-shAccent-500 flex items-center overflow-hidden rounded-lg border bg-white transition-all'>
-                  <div className='text-shNeutral-500 group-focus-within:text-shAccent-600 flex w-10 shrink-0 items-center justify-center transition-colors'>
-                    <Search size={14} />
-                  </div>
-                  <input
-                    type='text'
-                    placeholder='Código...'
-                    value={codeFilter}
-                    onChange={(e) => setCodeFilter(e.target.value)}
-                    className='bg-shNeutral-50 text-shNeutral-900 placeholder:text-shNeutral-600 border-shNeutral-200 flex-1 border-l px-3 py-2 pr-4 pl-2 text-xs shadow-inner ring-0! outline-none'
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Right: Sort Controls */}
-          <section className='from-shNeutral-50 w-fit flex-none shrink-0 grow-0 rounded-xl bg-linear-to-tl to-white px-6 pt-4 pb-1 shadow-xs'>
-            <div className='text-shNeutral-500 flex items-center gap-2'>
-              <ArrowUpDown size={14} />
-              <span className='text-xs font-medium'>Ordenar por:</span>
-            </div>
-
-            <div className='flex flex-1 flex-wrap items-center gap-3 py-4'>
-              <div className='custom-select-container text-xs'>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className='custom-select rounded-lg px-3 py-2 text-xs shadow-inner'
-                >
-                  <option value='created_at'>Fecha creación</option>
-                  <option value='name'>Nombre</option>
-                  <option value='code'>Código</option>
-                  <option value='area'>Área</option>
-                  <option value='criticality'>Criticidad</option>
-                  <option value='status'>Estado</option>
-                </select>
-              </div>
-              <div className='custom-select-container text-xs'>
-                <select
-                  value={sortOrder}
-                  onChange={(e) =>
-                    setSortOrder(e.target.value as 'asc' | 'desc')
-                  }
-                  className='custom-select rounded-lg px-3 py-2 text-xs shadow-inner'
-                >
-                  <option value='asc'>Ascendente</option>
-                  <option value='desc'>Descendente</option>
-                </select>
-              </div>
-              {/* <button
-                type='button'
-                onClick={() =>
-                  setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
-                }
-                className='bg-shNeutral-50 border-shNeutral-200 hover:bg-shNeutral-100 flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors'
-                title={sortOrder === 'asc' ? 'Ascendente' : 'Descendente'}
+          <div className='flex flex-1 flex-wrap items-center gap-3 py-4'>
+            {/* Criticality Dropdown */}
+            <div className='custom-select-container text-xs'>
+              <select
+                aria-label='Filtrar por criticidad'
+                value={criticalityFilter ?? ''}
+                onChange={(e) => handleCriticalityChange(e.target.value)}
+                className='custom-select rounded-lg px-3 py-2 text-xs shadow-inner'
               >
-                {sortOrder === 'asc' ? (
-                  <ArrowUp size={14} className='text-shNeutral-600' />
-                ) : (
-                  <ArrowDown size={14} className='text-shNeutral-600' />
-                )}
-              </button> */}
+                <option value=''>Todas las criticidades</option>
+                {ASSET_CRITICALITIES.map((criticality) => (
+                  <option key={criticality} value={criticality}>
+                    {ASSET_CRITICALITY_LABELS[criticality]}
+                  </option>
+                ))}
+              </select>
             </div>
-          </section>
-        </div>
+
+            {/* Status Dropdown */}
+            <div className='custom-select-container text-xs'>
+              <select
+                aria-label='Filtrar por estado'
+                value={statusFilter ?? ''}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className='custom-select rounded-lg px-3 py-2 text-xs shadow-inner'
+              >
+                <option value=''>Todos los estados</option>
+                {ASSET_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {ASSET_STATUS_LABELS[status]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <span className='text-shNeutral-400 text-xs'>
+              Ordenados del más reciente al más antiguo
+            </span>
+          </div>
+        </section>
       </motion.div>
 
       <motion.div
@@ -566,7 +402,9 @@ export default function AssetsTable() {
               No se encontraron activos
             </p>
             <p className='text-shNeutral-500 text-sm'>
-              Crea un nuevo activo para comenzar.
+              {hasFilters
+                ? 'Prueba con otros filtros de criticidad o estado.'
+                : 'Crea un nuevo activo para comenzar.'}
             </p>
           </motion.div>
         )}

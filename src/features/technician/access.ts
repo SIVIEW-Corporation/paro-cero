@@ -245,6 +245,7 @@ export function canVisitDashboard(
   }
 
   const moduleByPath = [
+    { prefix: '/assets', module: 'assets' },
     { prefix: '/dashboard/assets', module: 'assets' },
     { prefix: '/dashboard/plans', module: 'plans' },
     { prefix: '/dashboard/workorders', module: 'workOrders' },

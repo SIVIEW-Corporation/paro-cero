@@ -14,6 +14,7 @@
     "build:fast": "next build",
     "build:local": "npm run format:check && npm run build",
     "test:assets:unit": "node --test src/components/assets/__tests__/assets.test.mjs",
+    "test:portal-assets:unit": "node --test \"src/app/(portal)/assets/__tests__/portal-assets.test.mjs\"",
     "test:assets:browser": "playwright test",
     "test:assets:browser:install": "playwright install chromium"
   },

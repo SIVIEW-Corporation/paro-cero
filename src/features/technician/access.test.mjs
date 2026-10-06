@@ -117,3 +117,30 @@ test('la matriz separa jefe, técnico, visor y superusuario', () => {
   assert.equal(getRolePermissions('superadmin').users, true);
   assert.equal(getRolePermissions('admin').users, false);
 });
+
+test('el portal de activos /assets es visible para perfiles activos con lectura de activos', () => {
+  const assetId = '550e8400-e29b-41d4-a716-446655440000';
+  for (const role of [
+    'superadmin',
+    'admin',
+    'jefe',
+    'supervisor',
+    'operator',
+    'tecnico',
+    'viewer',
+  ]) {
+    assert.equal(canVisitDashboard(user({ role }), '/assets'), true, role);
+    assert.equal(
+      canVisitDashboard(user({ role }), `/assets/${assetId}`),
+      true,
+      role,
+    );
+  }
+  assert.equal(canVisitDashboard(user({ is_active: false }), '/assets'), false);
+  assert.equal(canVisitDashboard(null, '/assets'), false);
+  assert.equal(
+    canVisitDashboard(user({ role: 'desconocido' }), '/assets'),
+    false,
+  );
+  assert.equal(canVisitDashboard(user(), '/assets-otro'), false);
+});

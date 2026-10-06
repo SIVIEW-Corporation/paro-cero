@@ -68,7 +68,8 @@ Rutas verificadas desde `src/app/**/page.tsx`:
 | Ruta             | Archivo                                      | Estado actual                                                   |
 | ---------------- | -------------------------------------------- | --------------------------------------------------------------- |
 | `/`              | `src/app/(dashboard)/page.tsx`               | Dashboard principal, consume órdenes desde `useWorkOrdersStore` |
-| `/assets`        | `src/app/(dashboard)/assets/page.tsx`        | Vista de activos basada en datos de órdenes del store           |
+| `/assets`        | `src/app/(portal)/assets/page.tsx`           | Gestión de activos conectada a la API (listado, alta, edición)  |
+| `/assets/[id]`   | `src/app/(portal)/assets/[id]/page.tsx`      | Detalle de un activo conectado a la API                         |
 | `/plans`         | `src/app/(dashboard)/plans/page.tsx`         | Pantalla de planes de mantenimiento (`PlansScreen`)             |
 | `/workorders`    | `src/app/(dashboard)/workorders/page.tsx`    | Gestión de órdenes con sincronización al store global           |
 | `/inspecciones`  | `src/app/(dashboard)/inspecciones/page.tsx`  | Checklists, hallazgos y plantillas desde `useInspeccionesStore` |

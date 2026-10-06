@@ -1,8 +1,6 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
-import { useCreateAssetMutation } from '@/app/(portal)/assets/hooks/use-create-asset-mutation';
-import { newAssetSchema } from './lib/new-asset-schema';
 import * as motion from 'motion/react-client';
 import {
   Tag,
@@ -12,17 +10,24 @@ import {
   Cpu,
   Factory,
   Banknote,
-  Activity,
-  AlertTriangle,
-  Calendar,
   PackagePlus,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { FormField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
-
-interface NewAssetFormProps {
-  company_id?: string;
-}
+import {
+  AssetCriticalitySelect,
+  AssetInstalledAtInput,
+  AssetStatusSelect,
+  firstErrorMessage,
+} from './components/asset-form-controls';
+import { useCreateAssetMutation } from './hooks/use-create-asset-mutation';
+import {
+  EMPTY_ASSET_FORM_VALUES,
+  newAssetSchema,
+} from './lib/new-asset-schema';
+import { buildAssetCreatePayload } from './lib/asset-payload';
+import { isAssetApiError } from './services/assets-service';
 
 const fieldAnimation = {
   hidden: { opacity: 0, y: 20 },
@@ -33,35 +38,35 @@ const fieldAnimation = {
   }),
 };
 
-export default function NewAssetForm({ company_id }: NewAssetFormProps) {
+export default function NewAssetForm() {
   const createAsset = useCreateAssetMutation();
 
   const form = useForm({
-    defaultValues: {
-      name: '',
-      code: '',
-      area: '',
-      serial: '',
-      model: '',
-      manufacturer: '',
-      cost: undefined as number | undefined,
-      companyId: company_id || '',
-      status: 'operational' as
-        | 'commissioning'
-        | 'operational'
-        | 'standby'
-        | 'maintenance'
-        | 'down'
-        | 'decommissioned',
-      criticality: 'medium' as 'low' | 'medium' | 'high' | 'critical',
-      installedAt: null as Date | null,
-    },
+    defaultValues: EMPTY_ASSET_FORM_VALUES,
     onSubmit: async ({ value }) => {
+      let payload;
       try {
-        await createAsset.mutateAsync(value);
-        form.reset();
+        payload = buildAssetCreatePayload(value);
       } catch {
-        // Error handled by mutation hook via toast
+        toast.error('Revisa los campos del activo.');
+        return;
+      }
+
+      try {
+        await createAsset.mutateAsync(payload);
+        form.reset();
+      } catch (error) {
+        // Toast is shown by the mutation hook; surface field-level errors.
+        const codeError = isAssetApiError(error)
+          ? error.fieldErrors.code
+          : undefined;
+        if (codeError) {
+          form.setFieldMeta('code', (meta) => ({
+            ...meta,
+            isTouched: true,
+            errorMap: { ...meta.errorMap, onServer: codeError },
+          }));
+        }
       }
     },
   });
@@ -91,7 +96,8 @@ export default function NewAssetForm({ company_id }: NewAssetFormProps) {
           transition={{ delay: 0.15, duration: 0.3 }}
           className='text-shNeutral-500 font-inter text-sm'
         >
-          Completa el formulario para registrar un nuevo asset en la plataforma.
+          Completa el formulario para registrar un nuevo activo en la
+          plataforma.
         </motion.p>
       </div>
 
@@ -109,22 +115,6 @@ export default function NewAssetForm({ company_id }: NewAssetFormProps) {
             form.handleSubmit();
           }}
         >
-          {/* Hidden companyId field for validation */}
-          <form.Field
-            name='companyId'
-            validators={{
-              onChange: newAssetSchema.shape.companyId,
-            }}
-            children={(field) => (
-              <input
-                type='hidden'
-                name={field.name}
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-              />
-            )}
-          />
-
           {/* Section 1: Required Fields */}
           <div>
             <motion.h3
@@ -209,7 +199,7 @@ export default function NewAssetForm({ company_id }: NewAssetFormProps) {
               <form.Field
                 name='serial'
                 validators={{
-                  onChange: newAssetSchema.shape.serial.unwrap(),
+                  onChange: newAssetSchema.shape.serial,
                 }}
                 children={(field) => (
                   <FormField
@@ -224,7 +214,7 @@ export default function NewAssetForm({ company_id }: NewAssetFormProps) {
               <form.Field
                 name='model'
                 validators={{
-                  onChange: newAssetSchema.shape.model.unwrap(),
+                  onChange: newAssetSchema.shape.model,
                 }}
                 children={(field) => (
                   <FormField
@@ -243,7 +233,7 @@ export default function NewAssetForm({ company_id }: NewAssetFormProps) {
               <form.Field
                 name='manufacturer'
                 validators={{
-                  onChange: newAssetSchema.shape.manufacturer.unwrap(),
+                  onChange: newAssetSchema.shape.manufacturer,
                 }}
                 children={(field) => (
                   <FormField
@@ -260,34 +250,16 @@ export default function NewAssetForm({ company_id }: NewAssetFormProps) {
                 validators={{
                   onChange: newAssetSchema.shape.cost,
                 }}
-                children={(field) => {
-                  const costField = {
-                    ...field,
-                    state: {
-                      ...field.state,
-                      value:
-                        field.state.value === undefined
-                          ? ''
-                          : field.state.value,
-                    },
-                    handleChange: (value: string) => {
-                      if (value === '') {
-                        return field.handleChange(undefined);
-                      }
-                      return field.handleChange(Number(value));
-                    },
-                  };
-                  return (
-                    <FormField
-                      name='cost'
-                      label='Costo'
-                      placeholder='0.00'
-                      type='number'
-                      icon={Banknote}
-                      field={costField}
-                    />
-                  );
-                }}
+                children={(field) => (
+                  <FormField
+                    name='cost'
+                    label='Costo'
+                    placeholder='0'
+                    type='number'
+                    icon={Banknote}
+                    field={field}
+                  />
+                )}
               />
             </div>
 
@@ -295,91 +267,24 @@ export default function NewAssetForm({ company_id }: NewAssetFormProps) {
             <div className='mt-5 grid grid-cols-1 gap-5 md:grid-cols-2'>
               <form.Field
                 name='status'
-                validators={{
-                  onChange: newAssetSchema.shape.status.removeDefault(),
-                }}
                 children={(field) => (
-                  <div className='group'>
-                    <label
-                      htmlFor='status'
-                      className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
-                    >
-                      Estado
-                    </label>
-                    <div className='custom-select-container border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
-                      <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
-                        <Activity size={16} />
-                      </div>
-                      <select
-                        id='status'
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) =>
-                          field.handleChange(
-                            () =>
-                              e.target.value as
-                                | 'commissioning'
-                                | 'operational'
-                                | 'standby'
-                                | 'maintenance'
-                                | 'down'
-                                | 'decommissioned',
-                          )
-                        }
-                        className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 cursor-pointer appearance-none rounded-none! border-0! border-l! py-2.5 pr-12 pl-2 shadow-inner! ring-0! outline-none!'
-                      >
-                        <option value='commissioning'>En instalación</option>
-                        <option value='operational'>Operando</option>
-                        <option value='standby'>En espera</option>
-                        <option value='maintenance'>En mantenimiento</option>
-                        <option value='down'>Fuera de servicio</option>
-                        <option value='decommissioned'>Dado de baja</option>
-                      </select>
-                    </div>
-                  </div>
+                  <AssetStatusSelect
+                    id='status'
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(status) => field.handleChange(status)}
+                  />
                 )}
               />
-
               <form.Field
                 name='criticality'
-                validators={{
-                  onChange: newAssetSchema.shape.criticality.removeDefault(),
-                }}
                 children={(field) => (
-                  <div className='group'>
-                    <label
-                      htmlFor='criticality'
-                      className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
-                    >
-                      Criticidad
-                    </label>
-                    <div className='custom-select-container border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
-                      <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
-                        <AlertTriangle size={16} />
-                      </div>
-                      <select
-                        id='criticality'
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) =>
-                          field.handleChange(
-                            () =>
-                              e.target.value as
-                                | 'low'
-                                | 'medium'
-                                | 'high'
-                                | 'critical',
-                          )
-                        }
-                        className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 cursor-pointer appearance-none rounded-none! border-0! border-l! py-2.5 pr-12 pl-2 shadow-inner! ring-0! outline-none!'
-                      >
-                        <option value='low'>Baja</option>
-                        <option value='medium'>Media</option>
-                        <option value='high'>Alta</option>
-                        <option value='critical'>Crítica</option>
-                      </select>
-                    </div>
-                  </div>
+                  <AssetCriticalitySelect
+                    id='criticality'
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(criticality) => field.handleChange(criticality)}
+                  />
                 )}
               />
             </div>
@@ -388,40 +293,15 @@ export default function NewAssetForm({ company_id }: NewAssetFormProps) {
             <div className='mt-5'>
               <form.Field
                 name='installedAt'
-                validators={{
-                  onChange: newAssetSchema.shape.installedAt.unwrap(),
-                }}
+                validators={{ onChange: newAssetSchema.shape.installedAt }}
                 children={(field) => (
-                  <div className='group'>
-                    <label
-                      htmlFor='installedAt'
-                      className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
-                    >
-                      Fecha instalación
-                    </label>
-                    <div className='border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
-                      <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
-                        <Calendar size={16} />
-                      </div>
-                      <input
-                        id='installedAt'
-                        type='date'
-                        value={
-                          field.state.value instanceof Date
-                            ? field.state.value.toISOString().split('T')[0]
-                            : ''
-                        }
-                        onBlur={field.handleBlur}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          field.handleChange(
-                            val ? new Date(val + 'T00:00:00') : null,
-                          );
-                        }}
-                        className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 appearance-none rounded-none! border-0! border-l! py-2.5 pr-4 pl-2 shadow-inner! ring-0! outline-none!'
-                      />
-                    </div>
-                  </div>
+                  <AssetInstalledAtInput
+                    id='installedAt'
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(value) => field.handleChange(value)}
+                    error={firstErrorMessage(field.state.meta.errors)}
+                  />
                 )}
               />
             </div>
@@ -435,15 +315,7 @@ export default function NewAssetForm({ company_id }: NewAssetFormProps) {
             className='flex items-center justify-end gap-3 pt-6'
           >
             <form.Subscribe
-              selector={(state) => {
-                const v = state.values;
-                const allFilled =
-                  v.name.length > 0 &&
-                  v.code.length > 0 &&
-                  v.area.length > 0 &&
-                  v.companyId.length > 0;
-                return [allFilled && state.canSubmit, state.isSubmitting];
-              }}
+              selector={(state) => [state.canSubmit, state.isSubmitting]}
               children={([canSubmit]) => (
                 <Button
                   type='submit'
