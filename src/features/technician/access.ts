@@ -104,6 +104,12 @@ const managerPermissions: RolePermissions = {
   reports: true,
 };
 
+/** Backend only lets admin/superadmin create, update or delete assets. */
+const supervisorPermissions: RolePermissions = {
+  ...managerPermissions,
+  assets: { read: true, manage: false },
+};
+
 const ROLE_ALIASES: Record<string, AppRole> = {
   [APP_ROLES.SUPERADMIN]: APP_ROLES.SUPERADMIN,
   [APP_ROLES.ADMIN]: APP_ROLES.ADMIN,
@@ -117,8 +123,8 @@ const ROLE_ALIASES: Record<string, AppRole> = {
 const ROLE_PERMISSIONS: Record<AppRole, RolePermissions> = {
   superadmin: { ...managerPermissions, users: true },
   admin: managerPermissions,
-  jefe: managerPermissions,
-  supervisor: managerPermissions,
+  jefe: supervisorPermissions,
+  supervisor: supervisorPermissions,
   operator: {
     users: false,
     assets: { read: true, manage: false },

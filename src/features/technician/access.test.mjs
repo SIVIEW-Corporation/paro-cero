@@ -92,7 +92,8 @@ test('guard de interfaz restringe técnico a Mis tareas y jefe accede a Planeaci
 
 test('la matriz separa jefe, técnico, visor y superusuario', () => {
   const jefe = getRolePermissions('jefe');
-  assert.equal(jefe.assets.manage, true);
+  assert.equal(jefe.assets.read, true);
+  assert.equal(jefe.assets.manage, false);
   assert.equal(jefe.plans.manage, true);
   assert.equal(jefe.planning.manage, true);
   assert.equal(jefe.users, false);
@@ -116,6 +117,20 @@ test('la matriz separa jefe, técnico, visor y superusuario', () => {
 
   assert.equal(getRolePermissions('superadmin').users, true);
   assert.equal(getRolePermissions('admin').users, false);
+});
+
+test('jefe y supervisor solo leen activos y conservan el resto de permisos de gestión', () => {
+  const admin = getRolePermissions('admin');
+  for (const role of ['jefe', 'supervisor']) {
+    const permissions = getRolePermissions(role);
+    assert.deepEqual(permissions.assets, { read: true, manage: false }, role);
+    const { assets: _assets, ...rest } = permissions;
+    const { assets: adminAssets, ...adminRest } = admin;
+    void _assets;
+    assert.deepEqual(rest, adminRest, role);
+    assert.deepEqual(adminAssets, { read: true, manage: true });
+  }
+  assert.equal(getRolePermissions('superadmin').assets.manage, true);
 });
 
 test('el portal de activos /assets es visible para perfiles activos con lectura de activos', () => {
