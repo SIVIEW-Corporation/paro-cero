@@ -1,18 +1,26 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { tabPaths } from './constants/tab-paths';
+import { isProtectedPath } from './constants/protected-paths';
+import { isAccessTokenValid } from './lib/session-token';
+
+const ACCESS_TOKEN_COOKIE = 'access_token';
 
 export function proxy(request: NextRequest) {
-  const token = request.cookies.get('access_token')?.value;
+  const rawToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  // An expired or malformed access token counts as no session.
+  const token = isAccessTokenValid(rawToken, Date.now()) ? rawToken : undefined;
   const { pathname, searchParams } = request.nextUrl;
 
-  const isProtectedRoute = tabPaths.some((p) => pathname.startsWith(p));
+  const isProtectedRoute = isProtectedPath(pathname);
   const isAuthRoute = pathname === '/login';
   const isLandingRoute = pathname === '/';
   const hasLandingBypass = searchParams.get('landing') === '1';
 
   if (!token && isProtectedRoute && !isAuthRoute) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const response = NextResponse.redirect(new URL('/login', request.url));
+    if (rawToken)
+      response.cookies.delete({ name: ACCESS_TOKEN_COOKIE, path: '/' });
+    return response;
   }
 
   if (token && isAuthRoute) {
