@@ -53,30 +53,63 @@ export interface Asset {
   updated_at: string | null;
 }
 
+export const AUTH_STATUS = {
+  /** Before `/api/auth/session` answered (a persisted user may be shown). */
+  CHECKING: 'checking',
+  AUTHENTICATED: 'authenticated',
+  ANONYMOUS: 'anonymous',
+} as const;
+
+export type AuthStatus = (typeof AUTH_STATUS)[keyof typeof AUTH_STATUS];
+
+/**
+ * Client auth state. Tokens never live here: they stay in httpOnly cookies
+ * owned by the BFF (`/api/auth/*`).
+ */
 interface AuthState {
   user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
+  status: AuthStatus;
   setUser: (user: User | null) => void;
-  setAccessToken: (token: string | null) => void;
-  setRefreshToken: (token: string | null) => void;
   logout: () => void;
 }
 
+interface PersistedAuthState {
+  user: User | null;
+}
+
+/** v2 dropped `accessToken`/`refreshToken` from `auth-storage`. */
+const AUTH_STORAGE_VERSION = 2;
+
+/** Keeps only the user from any older persisted shape (drops tokens). */
+export function migrateAuthStorage(
+  persisted: unknown,
+  _version: number,
+): PersistedAuthState {
+  const user =
+    typeof persisted === 'object' && persisted !== null && 'user' in persisted
+      ? ((persisted as { user: unknown }).user as User | null)
+      : null;
+  return { user: user ?? null };
+}
+
 export const useAuthStore = create<AuthState>()(
-  persist<AuthState>(
+  persist(
     (set) => ({
       user: null,
-      accessToken: null,
-      refreshToken: null,
-      setUser: (user) => set({ user }),
-      setAccessToken: (token) => set({ accessToken: token }),
-      setRefreshToken: (token) => set({ refreshToken: token }),
-      logout: () => set({ user: null, accessToken: null, refreshToken: null }),
+      status: AUTH_STATUS.CHECKING,
+      setUser: (user) =>
+        set({
+          user,
+          status: user ? AUTH_STATUS.AUTHENTICATED : AUTH_STATUS.ANONYMOUS,
+        }),
+      logout: () => set({ user: null, status: AUTH_STATUS.ANONYMOUS }),
     }),
     {
       name: 'auth-storage',
+      version: AUTH_STORAGE_VERSION,
       storage: createJSONStorage(() => localStorage),
+      partialize: (state): PersistedAuthState => ({ user: state.user }),
+      migrate: migrateAuthStorage,
     },
   ),
 );

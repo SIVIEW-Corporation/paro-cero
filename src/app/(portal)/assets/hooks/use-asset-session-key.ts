@@ -10,15 +10,14 @@ interface AssetSessionSource {
     NonNullable<AuthSnapshot['user']>,
     'id' | 'company_id' | 'role' | 'is_active'
   > | null;
-  accessToken?: string | null;
 }
 
 /** Snapshot returned during SSR / before hydration; queries stay disabled. */
 export const SERVER_SESSION_KEY = 'server';
 
 /**
- * Identity used to scope asset query keys. Token refresh alone does not change
- * it, and the bearer token itself never enters a query key.
+ * Identity used to scope asset query keys. Tokens live in httpOnly cookies and
+ * never reach the client, so session refreshes cannot change it.
  */
 export function assetSessionKey(state: AssetSessionSource): string {
   return JSON.stringify([
@@ -26,7 +25,6 @@ export function assetSessionKey(state: AssetSessionSource): string {
     state.user?.company_id ?? null,
     state.user?.role ?? null,
     state.user?.is_active ?? null,
-    Boolean(state.accessToken),
   ]);
 }
 

@@ -10,7 +10,6 @@ function identity(state: ReturnType<typeof useAuthStore.getState>) {
     state.user?.company_id,
     state.user?.role,
     state.user?.is_active,
-    Boolean(state.accessToken),
   ]);
 }
 
@@ -40,13 +39,10 @@ export function useAssetSession(): AssetSession {
   const key = useSyncExternalStore(subscribe, sessionKey, serverSnapshot);
   if (key === serverSnapshot())
     return { key, companyId: '', canRead: false, canManage: false };
-  const { user, accessToken } = useAuthStore.getState();
+  const { user } = useAuthStore.getState();
   const permissions = getRolePermissions(user?.role);
   const canRead = Boolean(
-    accessToken &&
-    user?.id?.trim() &&
-    user.company_id?.trim() &&
-    user.is_active,
+    user?.id?.trim() && user.company_id?.trim() && user.is_active,
   );
 
   return {

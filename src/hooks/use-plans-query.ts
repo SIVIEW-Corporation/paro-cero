@@ -9,14 +9,12 @@ import {
 import { useAuthStore } from '@/store/auth-store';
 
 function currentPlanSession() {
-  const { user, accessToken } = useAuthStore.getState();
+  const { user } = useAuthStore.getState();
   return {
     userId: user?.id ?? '',
     companyId: user?.company_id ?? '',
     role: user?.role ?? '',
-    active: Boolean(
-      accessToken && user?.id && user.company_id && user.is_active,
-    ),
+    active: Boolean(user?.id && user.company_id && user.is_active),
   };
 }
 
@@ -33,14 +31,11 @@ function samePlanSession(identity: ReturnType<typeof currentPlanSession>) {
 
 export function usePlansQuery(canRead: boolean) {
   const user = useAuthStore((state) => state.user);
-  const accessToken = useAuthStore((state) => state.accessToken);
   const identity = {
     userId: user?.id ?? '',
     companyId: user?.company_id ?? '',
     role: user?.role ?? '',
-    active: Boolean(
-      accessToken && user?.id && user.company_id && user.is_active,
-    ),
+    active: Boolean(user?.id && user.company_id && user.is_active),
   };
 
   return useQuery({
@@ -58,14 +53,11 @@ export function usePlansQuery(canRead: boolean) {
 export function useCreatePlanMutation() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
-  const accessToken = useAuthStore((state) => state.accessToken);
   const identity = {
     userId: user?.id ?? '',
     companyId: user?.company_id ?? '',
     role: user?.role ?? '',
-    active: Boolean(
-      accessToken && user?.id && user.company_id && user.is_active,
-    ),
+    active: Boolean(user?.id && user.company_id && user.is_active),
   };
   const options = { isRequestCurrent: () => samePlanSession(identity) };
   return useMutation({
@@ -78,14 +70,11 @@ export function useCreatePlanMutation() {
 export function useUpdatePlanExecutionMutation() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
-  const accessToken = useAuthStore((state) => state.accessToken);
   const identity = {
     userId: user?.id ?? '',
     companyId: user?.company_id ?? '',
     role: user?.role ?? '',
-    active: Boolean(
-      accessToken && user?.id && user.company_id && user.is_active,
-    ),
+    active: Boolean(user?.id && user.company_id && user.is_active),
   };
   const options = { isRequestCurrent: () => samePlanSession(identity) };
   return useMutation({

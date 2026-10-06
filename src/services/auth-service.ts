@@ -1,5 +1,4 @@
-import { apiClient } from '@/lib/api-client';
-import type { ApiClientOptions } from '@/lib/api-client';
+import { apiClient, authRequest } from '@/lib/api-client';
 import type { LoginInput } from '@/lib/auth-schema';
 import type { User } from '@/store/auth-store';
 
@@ -7,39 +6,49 @@ export type UserProfileUpdateInput = Partial<
   Pick<User, 'email' | 'full_name' | 'area' | 'job_title' | 'profile_image'>
 >;
 
+/** BFF login answer: tokens stay in httpOnly cookies, only the user is returned. */
 export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-  refresh_expires_in: number;
   user: User;
 }
 
-export interface RefreshResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
-  refresh_expires_in: number;
-  user: User;
-}
+export const SESSION_STATE = {
+  AUTHENTICATED: 'authenticated',
+  ANONYMOUS: 'anonymous',
+} as const;
+
+export type SessionResult =
+  | { state: typeof SESSION_STATE.AUTHENTICATED; user: User }
+  | { state: typeof SESSION_STATE.ANONYMOUS };
 
 export const authService = {
-  /**
-   * Login enviando credenciales al backend
-   */
+  /** Login through the BFF (`POST /api/auth/login`), which sets the cookies. */
   login: async (credentials: LoginInput): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>(
-      '/auth/login',
-      credentials,
-    );
+    const response = await authRequest<LoginResponse>('/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
 
-    if (!response.ok) {
+    if (!response.ok || !response.data?.user) {
       throw new Error(response.error?.message || 'Error al iniciar sesión');
     }
 
-    return response.data as LoginResponse;
+    return response.data;
+  },
+
+  /**
+   * Current session (`GET /api/auth/session`). 401 means anonymous; transient
+   * failures throw so callers keep the local state.
+   */
+  getSession: async (): Promise<SessionResult> => {
+    const response = await authRequest<{ user: User }>('/session', {
+      method: 'GET',
+    });
+
+    if (response.ok && response.data?.user)
+      return { state: SESSION_STATE.AUTHENTICATED, user: response.data.user };
+    if (response.status === 401) return { state: SESSION_STATE.ANONYMOUS };
+
+    throw new Error(response.error?.message || 'Error al validar la sesión');
   },
 
   /**
@@ -68,43 +77,21 @@ export const authService = {
     return response.data as User;
   },
 
-  /**
-   * Refresh token — calls POST /api/v1/auth/refresh
-   * Backend rotates: old refresh token is revoked, new pair returned.
-   */
-  refreshToken: async (refreshToken: string): Promise<RefreshResponse> => {
-    const response = await apiClient.post<RefreshResponse>('/auth/refresh', {
-      refresh_token: refreshToken,
-    });
-
-    if (!response.ok) {
-      throw new Error(response.error?.message || 'Error al refrescar sesión');
-    }
-
-    return response.data as RefreshResponse;
-  },
-
-  /**
-   * Logout — calls POST /api/v1/auth/logout with Authorization header.
-   * Backend revokes the refresh token.
-   */
-  logout: async (
-    accessToken: string,
-    refreshToken: string,
-  ): Promise<{ message: string }> => {
-    const options: ApiClientOptions = {
-      authToken: accessToken,
-    };
-    const response = await apiClient.post<{ message: string }>(
-      '/auth/logout',
-      { refresh_token: refreshToken },
-      options,
-    );
-
-    if (!response.ok) {
+  /** Logout through the BFF; it revokes the refresh token and clears cookies. */
+  logout: async (): Promise<void> => {
+    const response = await authRequest<null>('/logout', { method: 'POST' });
+    if (!response.ok && response.status !== 401) {
       throw new Error(response.error?.message || 'Error al cerrar sesión');
     }
+  },
 
-    return response.data as { message: string };
+  /** Revokes every session of the user (`POST /api/auth/logout-all`). */
+  logoutAll: async (): Promise<void> => {
+    const response = await authRequest<null>('/logout-all', { method: 'POST' });
+    if (!response.ok && response.status !== 401) {
+      throw new Error(
+        response.error?.message || 'Error al cerrar todas las sesiones',
+      );
+    }
   },
 };

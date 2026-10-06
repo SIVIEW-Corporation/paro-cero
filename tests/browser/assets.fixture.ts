@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { test as base, expect } from '@playwright/test';
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import type {
@@ -11,38 +10,24 @@ import type { User } from '../../src/store/auth-store';
 const ORIGIN = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
 const PASSWORD = 'Synthetic-only-123!';
 const SAFE_PAGES = new Set(['/login', '/dashboard', '/dashboard/assets']);
-const SAFE_ACTIONS = new Set([
-  'setAuthCookiesAction',
-  'clearAuthCookiesAction',
-]);
+// Session cookie as the dev proxy reads it (production uses `__Host-` names).
+const ACCESS_COOKIE = 'access_token';
+const SESSION_EXPIRED = { 'x-session-expired': '1' };
 
-interface ActionEntry {
-  exportedName?: string;
-  workers: Record<string, { filename?: string; exportedName?: string }>;
+/** Unsigned JWT whose `exp` satisfies the proxy's expiry check. */
+function syntheticJwt(sequence: number): string {
+  const part = (value: unknown) =>
+    Buffer.from(JSON.stringify(value)).toString('base64url');
+  const exp = Math.floor(Date.now() / 1000) + 60 * 60;
+  return `${part({ alg: 'none' })}.${part({ exp, sid: sequence })}.synthetic`;
 }
 
-// Read only the dev manifest; never print its encryption key or read .env files.
-// Unknown/missing action IDs fail CLOSED. In particular refreshTokenAction is
-// forbidden because browser routing cannot intercept a server-side fetch.
-function safeActionName(id: string): string | undefined {
-  try {
-    const manifest = JSON.parse(
-      readFileSync('.next/dev/server/server-reference-manifest.json', 'utf8'),
-    ) as { node: Record<string, ActionEntry> };
-    const action = manifest.node[id];
-    if (!action?.exportedName || !SAFE_ACTIONS.has(action.exportedName)) return;
-    if (
-      !Object.values(action.workers).every(
-        (worker) =>
-          worker.filename === 'src/app/actions/auth.ts' &&
-          worker.exportedName === action.exportedName,
-      )
-    )
-      return;
-    return action.exportedName;
-  } catch {
-    return;
+function cookieValue(header: string | undefined, name: string) {
+  for (const part of (header ?? '').split(';')) {
+    const [key, ...rest] = part.trim().split('=');
+    if (key === name) return rest.join('=');
   }
+  return '';
 }
 
 export function seedAsset(
@@ -92,7 +77,7 @@ export class MockAssetsApi {
   ]);
   readonly calls: Call[] = [];
   readonly blocked: string[] = [];
-  readonly cookieActions: string[] = [];
+  private context: BrowserContext | null = null;
   private readonly sessions = new Map<string, SyntheticUser>();
   private failures: Failure[] = [];
   private sequence = 0;
@@ -112,6 +97,7 @@ export class MockAssetsApi {
   }
 
   async install(context: BrowserContext) {
+    this.context = context;
     // Registered before the first navigation; no external socket is connected.
     await context.routeWebSocket('**/*', (socket) => {
       if (new URL(socket.url()).host === new URL(ORIGIN).host) {
@@ -125,72 +111,61 @@ export class MockAssetsApi {
       const request = route.request();
       const url = new URL(request.url());
       const method = request.method();
-      const match = url.pathname.match(
-        /(?:\/api\/v1)?(\/(?:auth|users|assets)(?:\/.*)?)$/,
-      );
-      // API handlers run before the local-page allowlist, regardless of origin.
+      // The browser only talks to the same-origin BFF; both prefixes are
+      // fulfilled here so no request reaches the Next server or a backend.
+      if (url.origin === ORIGIN && url.pathname.startsWith('/api/auth/'))
+        return this.auth(route, url.pathname.slice('/api/auth'.length), method);
+      if (url.origin === ORIGIN && url.pathname.startsWith('/api/backend/'))
+        return this.api(
+          route,
+          url.pathname.slice('/api/backend'.length),
+          method,
+        );
       if (
-        match &&
-        (url.origin !== ORIGIN || url.pathname.startsWith('/api/'))
+        url.origin === ORIGIN &&
+        method === 'GET' &&
+        (SAFE_PAGES.has(url.pathname) ||
+          url.pathname.startsWith('/_next/static/') ||
+          url.pathname.startsWith('/__nextjs_font/') ||
+          url.pathname === '/PM0-logo.webp' ||
+          url.pathname === '/favicon.ico' ||
+          url.pathname.startsWith('/images/'))
       ) {
-        return this.api(route, match[1], method);
+        return route.continue();
       }
-      if (url.origin === ORIGIN) {
-        if (
-          method === 'GET' &&
-          (SAFE_PAGES.has(url.pathname) ||
-            url.pathname.startsWith('/_next/static/') ||
-            url.pathname.startsWith('/__nextjs_font/') ||
-            url.pathname === '/PM0-logo.webp' ||
-            url.pathname === '/favicon.ico' ||
-            url.pathname.startsWith('/images/'))
-        ) {
-          return route.continue();
-        }
-        const action = request.headers()['next-action'];
-        const name = action && safeActionName(action);
-        const body: unknown = request.postDataJSON();
-        const safeArgs =
-          name === 'setAuthCookiesAction'
-            ? Array.isArray(body) &&
-              (body.length === 2 || body.length === 3) &&
-              body
-                .slice(0, 2)
-                .every(
-                  (value: unknown) =>
-                    typeof value === 'string' && value.startsWith('synthetic-'),
-                ) &&
-              (body.length === 2 || typeof body[2] === 'number')
-            : name === 'clearAuthCookiesAction' &&
-              Array.isArray(body) &&
-              body.length === 0;
-        if (
-          method === 'POST' &&
-          SAFE_PAGES.has(url.pathname) &&
-          name &&
-          safeArgs
-        ) {
-          this.cookieActions.push(name);
-          return route.continue();
-        }
-      }
-      // Unknown external requests, same-origin API routes and unsafe actions
-      // never reach a server. Teardown makes unexpected requests fail the test.
+      // Unknown external requests, other API routes and server actions never
+      // reach a server. Teardown makes unexpected requests fail the test.
       this.blocked.push(`${method} ${url.origin}${url.pathname}`);
       await route.abort('blockedbyclient');
     });
   }
 
-  private async api(route: Route, path: string, method: string) {
-    const body: unknown = route.request().postDataJSON();
-    const json = (data: unknown, status = 200) =>
-      route.fulfill({
-        status,
-        contentType: 'application/json',
-        body: JSON.stringify(data),
-      });
-    if (path === '/auth/login' && method === 'POST') {
-      const credentials = body as { email?: string; password?: string };
+  private json(route: Route, data: unknown, status = 200, headers = {}) {
+    return route.fulfill({
+      status,
+      contentType: 'application/json',
+      headers,
+      body: JSON.stringify(data),
+    });
+  }
+
+  private async sessionUser(route: Route) {
+    const headers = await route.request().allHeaders();
+    const token = cookieValue(headers.cookie, ACCESS_COOKIE);
+    return { token, user: this.sessions.get(token) };
+  }
+
+  private async auth(route: Route, path: string, method: string) {
+    const request = route.request();
+    if (request.headers()['x-requested-with'] !== 'paro-cero') {
+      this.blocked.push(`${method} /api/auth${path} without X-Requested-With`);
+      return route.abort('blockedbyclient');
+    }
+    if (path === '/login' && method === 'POST') {
+      const credentials = request.postDataJSON() as {
+        email?: string;
+        password?: string;
+      };
       const accounts: Record<string, { company: string; role: string }> = {
         'admin-a@example.invalid': { company: 'company-a', role: 'admin' },
         'admin-b@example.invalid': { company: 'company-b', role: 'admin' },
@@ -198,8 +173,8 @@ export class MockAssetsApi {
       };
       const account = accounts[credentials.email ?? ''];
       if (!account || credentials.password !== PASSWORD)
-        return json({ message: 'Synthetic accounts only' }, 403);
-      const token = `synthetic-access-${++this.sequence}`;
+        return this.json(route, { detail: 'Synthetic accounts only' }, 401);
+      const token = syntheticJwt(++this.sequence);
       const user: SyntheticUser = {
         id: `user-${account.company}-${account.role}`,
         email: credentials.email!,
@@ -209,27 +184,47 @@ export class MockAssetsApi {
         is_active: true,
       };
       this.sessions.set(token, user);
-      return json({
-        access_token: token,
-        refresh_token: `synthetic-refresh-${this.sequence}`,
-        token_type: 'bearer',
-        expires_in: 7200,
-        refresh_expires_in: 604800,
-        user,
-      });
+      // Mirrors the BFF: tokens only in httpOnly cookies, body is `{ user }`.
+      await this.context!.addCookies([
+        {
+          name: ACCESS_COOKIE,
+          value: token,
+          url: ORIGIN,
+          httpOnly: true,
+          sameSite: 'Lax',
+        },
+      ]);
+      return this.json(route, { user });
     }
-    const token =
-      route
-        .request()
-        .headers()
-        .authorization?.replace(/^Bearer /, '') ?? '';
-    const user = this.sessions.get(token);
-    if (!user) return json({ message: 'No synthetic session' }, 403);
-    if (path === '/users/me' && method === 'GET') return json(user);
-    if (path === '/auth/logout' && method === 'POST') {
+    const { token, user } = await this.sessionUser(route);
+    if (path === '/session' && method === 'GET')
+      return user
+        ? this.json(route, { user })
+        : this.json(route, { detail: 'No session' }, 401, SESSION_EXPIRED);
+    if (path === '/logout' && method === 'POST') {
       this.sessions.delete(token);
-      return json({ message: 'Synthetic logout' });
+      await this.context!.clearCookies();
+      return route.fulfill({ status: 204 });
     }
+    this.blocked.push(`${method} unsupported auth route ${path}`);
+    return route.abort('blockedbyclient');
+  }
+
+  private async api(route: Route, path: string, method: string) {
+    const request = route.request();
+    const body: unknown = request.postDataJSON();
+    const json = (data: unknown, status = 200) =>
+      this.json(route, data, status);
+    if (request.headers()['x-requested-with'] !== 'paro-cero') {
+      this.blocked.push(
+        `${method} /api/backend${path} without X-Requested-With`,
+      );
+      return route.abort('blockedbyclient');
+    }
+    const { user } = await this.sessionUser(route);
+    if (!user)
+      return this.json(route, { detail: 'No session' }, 401, SESSION_EXPIRED);
+    if (path === '/users/me' && method === 'GET') return json(user);
     const collection = path === '/assets/';
     const id = path.match(/^\/assets\/([^/]+)$/)?.[1];
     if (
@@ -247,7 +242,7 @@ export class MockAssetsApi {
       const [failure] = this.failures.splice(failureIndex, 1);
       return failure.status === 'network'
         ? route.abort('failed')
-        : json({ message: 'Synthetic request failed' }, failure.status);
+        : json({ detail: 'Synthetic request failed' }, failure.status);
     }
     const assets = this.assets(user.company_id);
     if (method === 'GET' && collection)
@@ -260,14 +255,14 @@ export class MockAssetsApi {
       });
     const asset = assets.find((item) => item.id === id);
     if (method === 'GET')
-      return asset ? json(asset) : json({ message: 'Not found' }, 404);
-    if (user.role !== 'admin') return json({ message: 'Forbidden' }, 403);
+      return asset ? json(asset) : json({ detail: 'Not found' }, 404);
+    if (user.role !== 'admin') return json({ detail: 'Forbidden' }, 403);
     const input = body as AssetCreateInput | AssetUpdateInput | null;
     if (
       input?.code &&
       assets.some((item) => item.code === input.code && item.id !== id)
     )
-      return json({ message: 'Duplicate code' }, 409);
+      return json({ detail: 'Duplicate code' }, 409);
     if (method === 'POST' && collection) {
       const created = seedAsset(user.company_id, {
         ...input,
@@ -276,7 +271,7 @@ export class MockAssetsApi {
       assets.push(created);
       return json(created, 201);
     }
-    if (!asset) return json({ message: 'Not found' }, 404);
+    if (!asset) return json({ detail: 'Not found' }, 404);
     if (method === 'PUT') {
       Object.assign(asset, input);
       return json(asset);

@@ -3,18 +3,22 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuthStore } from '@/store/auth-store';
+import { AUTH_STATUS, useAuthStore } from '@/store/auth-store';
 import { canVisitDashboard, isTechnicianRole } from './access';
 
 /** Client-only demo guard; backend authorization remains a production prerequisite. */
 export default function DashboardAccess({ children }: { children: ReactNode }) {
   const user = useAuthStore((state) => state.user);
+  // Wait for `/api/auth/session` when no persisted user is available yet.
+  const checking = useAuthStore(
+    (state) => !state.user && state.status === AUTH_STATUS.CHECKING,
+  );
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
   useEffect(() => {
     setReady(true);
   }, []);
-  if (!ready)
+  if (!ready || checking)
     return (
       <p className='text-app-text-secondary p-6 text-sm' role='status'>
         Cargando perfil…

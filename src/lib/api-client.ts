@@ -1,5 +1,19 @@
-import { useAuthStore } from '@/store/auth-store';
-import { ensureValidToken } from '@/lib/token-refresh';
+import {
+  BFF_ACTION,
+  BFF_AUTH_PREFIX,
+  BFF_BACKEND_PREFIX,
+  REQUESTED_WITH_HEADER,
+  REQUESTED_WITH_VALUE,
+  classifyBffResponse,
+} from '@/lib/auth/bff-protocol';
+import { notifySessionExpired } from '@/lib/auth/session-events';
+
+/**
+ * Browser HTTP client for the same-origin BFF. Requests go to
+ * `/api/backend/<endpoint>`; the BFF attaches the httpOnly session, refreshes
+ * it and answers with the session protocol in `bff-protocol.ts`. This client
+ * never reads, stores or sends tokens.
+ */
 
 /** One FastAPI/Pydantic validation issue from a `422` `detail` list. */
 export interface ApiValidationIssue {
@@ -43,16 +57,6 @@ interface FetchOptions extends RequestInit {
 const DEFAULT_TIMEOUT = 30000;
 const DEFAULT_RETRIES = 0;
 const DEFAULT_RETRY_DELAY = 1000;
-
-/**
- * Auth endpoints that should NOT trigger token refresh on 401.
- * Prevents infinite loops when login/refresh/logout themselves fail.
- */
-const AUTH_ENDPOINTS = ['/auth/login', '/auth/refresh', '/auth/logout'];
-
-function isAuthEndpoint(endpoint: string): boolean {
-  return AUTH_ENDPOINTS.some((authEndpoint) => endpoint.includes(authEndpoint));
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -141,7 +145,7 @@ export function getApiFieldErrors(
 
 async function fetchWithTimeout(
   url: string,
-  options: ApiClientOptions,
+  options: RequestInit & FetchOptions,
 ): Promise<Response> {
   const {
     timeout = DEFAULT_TIMEOUT,
@@ -150,67 +154,41 @@ async function fetchWithTimeout(
     ...fetchOptions
   } = options;
 
-  // These are client-only controls, not native RequestInit options.
-  delete fetchOptions.authToken;
-  delete fetchOptions.isRequestCurrent;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
     try {
-      const response = await fetch(url, {
-        ...fetchOptions,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-      return response;
+      return await fetch(url, { ...fetchOptions, signal: controller.signal });
     } catch (error) {
       lastError = error as Error;
-
       if (attempt < retries) {
         await new Promise((resolve) =>
           setTimeout(resolve, retryDelay * (attempt + 1)),
         );
       }
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
-  clearTimeout(timeoutId);
   throw lastError;
 }
 
 export interface ApiClientOptions extends FetchOptions {
-  authToken?: string;
-  /** Opt-in guard for identity-scoped requests, including auth retries. */
+  /** Opt-in guard for identity-scoped requests, including session retries. */
   isRequestCurrent?: () => boolean;
 }
 
-/**
- * Builds headers with Authorization header from Zustand store.
- * Since httpOnly cookies can't be read client-side, we inject the
- * token from the persisted Zustand store.
- */
 function buildHeaders(options: ApiClientOptions): Record<string, string> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    Accept: 'application/json',
     ...(options.headers as Record<string, string>),
+    [REQUESTED_WITH_HEADER]: REQUESTED_WITH_VALUE,
   };
-
-  // Priority 1: Explicitly provided token
-  if (options.authToken) {
-    headers['Authorization'] = `Bearer ${options.authToken}`;
-  } else {
-    // Priority 2: Read from Zustand store (persisted to localStorage)
-    const accessToken = useAuthStore.getState().accessToken;
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-  }
-
+  if (options.body !== undefined && options.body !== null)
+    headers['Content-Type'] ??= 'application/json';
   return headers;
 }
 
@@ -225,118 +203,96 @@ function sessionChanged<T>(): ApiResponse<T> {
   };
 }
 
-/**
- * Retries the original request with the new access token.
- */
-async function retryRequest<T = unknown>(
-  endpoint: string,
-  originalOptions: ApiClientOptions,
-  newToken: string,
-): Promise<ApiResponse<T>> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+const SESSION_ERROR = {
+  EXPIRED: 'Tu sesión ha expirado. Inicia sesión nuevamente.',
+  BUSY: 'Tu sesión se está renovando. Intenta de nuevo en un momento.',
+  UNAVAILABLE:
+    'No pudimos validar tu sesión en este momento. Intenta de nuevo en unos segundos.',
+} as const;
 
-  if (originalOptions.isRequestCurrent && !originalOptions.isRequestCurrent())
-    return sessionChanged<T>();
-
-  const headers = buildHeaders({
-    ...originalOptions,
-    authToken: newToken, // Override with fresh token
-  });
-
-  const response = await fetchWithTimeout(`${baseUrl}${endpoint}`, {
-    ...originalOptions,
-    headers,
-  });
-
-  if (originalOptions.isRequestCurrent && !originalOptions.isRequestCurrent())
-    return sessionChanged<T>();
-  const data = await response.json().catch(() => null);
-  if (originalOptions.isRequestCurrent && !originalOptions.isRequestCurrent())
-    return sessionChanged<T>();
-
-  if (!response.ok) {
-    return {
-      ok: false,
-      status: response.status,
-      error: responseError(data, response.status),
-    };
-  }
-
-  return {
-    ok: true,
-    status: response.status,
-    data: data as T,
-  };
+function wait(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-export async function apiClient<T = unknown>(
-  endpoint: string,
-  options: ApiClientOptions = {},
-): Promise<ApiResponse<T>> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+function withPrefix(prefix: string, endpoint: string): string {
+  return `${prefix}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+}
 
-  if (options.isRequestCurrent && !options.isRequestCurrent())
-    return sessionChanged<T>();
-  const headers = buildHeaders(options);
+interface RequestBehavior {
+  /** Fire the central session-expired handler on `401 + X-Session-Expired`. */
+  notifyExpired: boolean;
+}
+
+async function bffRequest<T>(
+  url: string,
+  options: ApiClientOptions,
+  { notifyExpired }: RequestBehavior,
+): Promise<ApiResponse<T>> {
+  const { isRequestCurrent, ...requestOptions } = options;
+  const isStale = () => Boolean(isRequestCurrent && !isRequestCurrent());
+
+  if (isStale()) return sessionChanged<T>();
+  const headers = buildHeaders(requestOptions);
 
   try {
-    const response = await fetchWithTimeout(`${baseUrl}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    for (let attempt = 0; ; attempt++) {
+      const response = await fetchWithTimeout(url, {
+        ...requestOptions,
+        headers,
+        credentials: 'same-origin',
+      });
+      if (isStale()) return sessionChanged<T>();
 
-    if (options.isRequestCurrent && !options.isRequestCurrent())
-      return sessionChanged<T>();
+      const action = classifyBffResponse(
+        response.status,
+        response.headers,
+        attempt,
+      );
+      if (action.type === BFF_ACTION.RETRY) {
+        await wait(action.delayMs);
+        if (isStale()) return sessionChanged<T>();
+        continue;
+      }
 
-    // 401 interceptor with token refresh
-    if (response.status === 401) {
-      // Skip auth endpoints to prevent infinite loops
-      if (isAuthEndpoint(endpoint)) {
+      const data = await response.json().catch(() => null);
+      if (isStale()) return sessionChanged<T>();
+
+      if (action.type === BFF_ACTION.EXPIRED) {
+        if (notifyExpired) notifySessionExpired();
         return {
           ok: false,
           status: 401,
-          error: { message: 'Unauthorized', status: 401 },
+          error: {
+            message: SESSION_ERROR.EXPIRED,
+            code: 'SESSION_EXPIRED',
+            status: 401,
+          },
         };
       }
 
-      // Attempt token refresh
-      try {
-        const newToken = await ensureValidToken();
-
-        if (options.isRequestCurrent && !options.isRequestCurrent())
-          return sessionChanged<T>();
-
-        // Retry the original request with the new token
-        return await retryRequest<T>(endpoint, options, newToken);
-      } catch {
-        // Refresh failed — redirect handled in token-refresh module
+      if (action.type === BFF_ACTION.TRANSIENT) {
+        const busy = response.status === 409;
         return {
           ok: false,
-          status: 401,
-          error: { message: 'Unauthorized — session expired', status: 401 },
+          status: response.status,
+          error: {
+            message: busy ? SESSION_ERROR.BUSY : SESSION_ERROR.UNAVAILABLE,
+            code: busy ? 'SESSION_BUSY' : 'SESSION_UNAVAILABLE',
+            status: response.status,
+          },
         };
       }
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          status: response.status,
+          error: responseError(data, response.status),
+        };
+      }
+
+      return { ok: true, status: response.status, data: data as T };
     }
-
-    const data = await response.json().catch(() => null);
-    if (options.isRequestCurrent && !options.isRequestCurrent())
-      return sessionChanged<T>();
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        status: response.status,
-        error: responseError(data, response.status),
-      };
-    }
-
-    return {
-      ok: true,
-      status: response.status,
-      data: data as T,
-    };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 
@@ -354,6 +310,29 @@ export async function apiClient<T = unknown>(
       error: { message: `Network error: ${message}`, code: 'NETWORK_ERROR' },
     };
   }
+}
+
+/** Calls the backend through the BFF: `endpoint` is relative to `/api/v1`. */
+export async function apiClient<T = unknown>(
+  endpoint: string,
+  options: ApiClientOptions = {},
+): Promise<ApiResponse<T>> {
+  return bffRequest<T>(withPrefix(BFF_BACKEND_PREFIX, endpoint), options, {
+    notifyExpired: true,
+  });
+}
+
+/**
+ * Calls a BFF auth route (`/api/auth/<endpoint>`). Session-expired answers are
+ * returned to the caller instead of triggering the global logout.
+ */
+export async function authRequest<T = unknown>(
+  endpoint: string,
+  options: ApiClientOptions = {},
+): Promise<ApiResponse<T>> {
+  return bffRequest<T>(withPrefix(BFF_AUTH_PREFIX, endpoint), options, {
+    notifyExpired: false,
+  });
 }
 
 apiClient.get = <T = unknown>(endpoint: string, options?: ApiClientOptions) =>

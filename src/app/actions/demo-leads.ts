@@ -1,5 +1,9 @@
 'use server';
 
+import { headers } from 'next/headers';
+import { backendFetch } from '@/server/auth/backend';
+import { apiBaseUrl } from '@/server/auth/config';
+import { resolveClientIp } from '@/server/auth/request-guards';
 import type { DemoLeadField } from '@/components/demo/demo-lead-schema';
 import { demoLeadSchema } from '@/components/demo/demo-lead-schema';
 
@@ -30,14 +34,13 @@ interface DemoRequestErrorResponse {
 }
 
 function buildDemoLeadsEndpoint(): string | null {
-  const baseUrl = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL;
   const path = process.env.DEMO_LEADS_API_PATH ?? '/api/v1/demo-requests';
 
-  if (!baseUrl) {
+  try {
+    return new URL(path, apiBaseUrl()).toString();
+  } catch {
     return null;
   }
-
-  return new URL(path, baseUrl).toString();
 }
 
 function extractFieldErrors(
@@ -77,8 +80,7 @@ export async function createDemoLeadAction(
   if (!endpoint) {
     return {
       success: false,
-      message:
-        'Falta configurar API_URL (recomendada) o NEXT_PUBLIC_API_URL (fallback legacy) para guardar leads de demo',
+      message: 'Falta configurar API_URL para guardar leads de demo',
     };
   }
 
@@ -93,13 +95,13 @@ export async function createDemoLeadAction(
         : {}),
     };
 
-    const response = await fetch(endpoint, {
+    const response = await backendFetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
-      cache: 'no-store',
+      clientIp: resolveClientIp(await headers()),
     });
 
     if (!response.ok) {

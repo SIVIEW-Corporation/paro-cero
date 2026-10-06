@@ -9,10 +9,11 @@ import { useAssetSession } from '@/hooks/use-asset-session';
 
 export default function AssetsPage() {
   const wo = useWorkOrdersStore((state) => state.ordenes);
-  const accessToken = useAuthStore((state) => state.accessToken);
+  // Tokens live in httpOnly cookies; a loaded user means an active session.
+  const hasSession = useAuthStore((state) => Boolean(state.user));
   const session = useAssetSession();
   const assetsQuery = useAssetsQuery();
-  const useRemoteAssets = Boolean(accessToken);
+  const useRemoteAssets = Boolean(hasSession);
   const canManageAssets = session.canManage;
 
   return (

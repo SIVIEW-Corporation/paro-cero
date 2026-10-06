@@ -39,6 +39,7 @@ Aplicación web de gestión de mantenimiento industrial (activos, planes, órden
 
 ```bash
 npm install
+cp .env.example .env.local   # API_URL y BFF_SHARED_SECRET (solo servidor)
 npm run dev
 ```
 
@@ -85,7 +86,33 @@ Rutas verificadas desde `src/app/**/page.tsx`:
 - Stores de dominio en Zustand:
   - `useWorkOrdersStore` con persistencia en `sessionStorage`.
   - `useInspeccionesStore` con persistencia en `sessionStorage`.
-  - `useNotificacionesStore` y `use-auth-store` sin middleware `persist`.
+  - `useNotificacionesStore` sin middleware `persist`.
+  - `auth-store` (`src/store/auth-store.ts`) persiste solo el usuario; nunca tokens.
+
+## Sesión y autenticación (BFF)
+
+El navegador nunca ve los tokens. Viven solo en cookies `httpOnly`
+(`__Host-access_token` / `__Host-refresh_token` en producción,
+`access_token` / `refresh_token` en desarrollo) y los route handlers de Next
+hablan con el backend:
+
+| Ruta                        | Uso                                                                 |
+| --------------------------- | ------------------------------------------------------------------- |
+| `POST /api/auth/login`      | Inicia sesión, fija cookies y responde solo `{ user }`              |
+| `POST /api/auth/logout`     | Revoca el refresh token (mejor esfuerzo) y borra cookies            |
+| `POST /api/auth/logout-all` | Cierra todas las sesiones del usuario                               |
+| `GET /api/auth/session`     | Usuario actual (`/users/me`), renovando la sesión si hace falta     |
+| `/api/backend/<ruta>`       | Reenvío autenticado a `${API_URL}/api/v1/<ruta>` (bloquea `auth/*`) |
+
+- La renovación ocurre en el servidor (proxy y route handlers) con
+  single-flight por instancia; un `409` del backend significa "ya rotado" y el
+  cliente reintenta (`X-Session-Retry`). Solo un `401` definitivo cierra la
+  sesión (`X-Session-Expired`); `429`/`5xx` responden `503` sin cerrar sesión.
+- Todas las rutas exigen `X-Requested-With: paro-cero`; los métodos que
+  modifican datos exigen `Origin` del propio sitio (o
+  `Sec-Fetch-Site: same-origin`) y cuerpo `application/json`.
+- Núcleo en `src/server/auth/*` (solo servidor) y protocolo compartido en
+  `src/lib/auth/bff-protocol.ts`. Pruebas: `npm run test:auth:unit`.
 
 ## Limitaciones conocidas
 

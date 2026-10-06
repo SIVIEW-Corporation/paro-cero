@@ -1,12 +1,21 @@
 import 'use server';
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import type { UserType } from '@/store/auth-store';
+import { backendFetch, backendUrl } from '@/server/auth/backend';
+import {
+  clearSessionCookies,
+  readAuthCookies,
+  setSessionCookies,
+} from '@/server/auth/cookies';
+import { refreshSession } from '@/server/auth/refresh';
+import { resolveClientIp } from '@/server/auth/request-guards';
+import { SESSION_FLOW, runWithSession } from '@/server/auth/session-flow';
 
 /**
  * Protected server action wrapper with role-based access control.
- * Resolves the current session from the httpOnly access cookie through the
- * backend profile endpoint.
+ * Resolves the current session from the httpOnly cookies through the backend
+ * profile endpoint, refreshing the access token when needed.
  *
  * @param schema - Zod schema for input validation
  * @param handler - Async handler function receiving (input, session)
@@ -41,39 +50,49 @@ interface Session {
   role: UserType;
 }
 
-function buildBackendEndpoint(path: string): string {
-  if (process.env.API_URL) {
-    return new URL(`/api/v1${path}`, process.env.API_URL).toString();
-  }
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1';
-  return `${baseUrl.replace(/\/$/, '')}${path}`;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-async function getSession(): Promise<Session | null> {
-  const accessToken = (await cookies()).get('access_token')?.value;
-
-  if (!accessToken) {
-    return null;
-  }
-
+/** Cookie writes are only allowed in actions/route handlers; ignore elsewhere. */
+function tryWriteCookies(write: () => void) {
   try {
-    const response = await fetch(buildBackendEndpoint('/users/me'), {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      cache: 'no-store',
+    write();
+  } catch {
+    // Called during render: the proxy rotates cookies on the next navigation.
+  }
+}
+
+async function getSession(): Promise<Session | null> {
+  const cookieStore = await cookies();
+  const { accessToken, refreshToken, remember } = readAuthCookies(cookieStore);
+  if (!accessToken && !refreshToken) return null;
+
+  const clientIp = resolveClientIp(await headers());
+  try {
+    const result = await runWithSession({
+      accessToken,
+      refreshToken,
+      nowMs: Date.now(),
+      refresh: (token) => refreshSession(token, clientIp),
+      call: (token) =>
+        backendFetch(backendUrl(['users', 'me']), {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+          clientIp,
+        }),
     });
 
-    if (!response.ok) {
+    if (result.kind === SESSION_FLOW.EXPIRED) {
+      tryWriteCookies(() => clearSessionCookies(cookieStore));
       return null;
     }
+    if (result.kind !== SESSION_FLOW.RESPONSE) return null;
+
+    const { response, tokens } = result;
+    if (tokens)
+      tryWriteCookies(() => setSessionCookies(cookieStore, tokens, remember));
+    if (!response.ok) return null;
 
     const payload: unknown = await response.json();
     if (

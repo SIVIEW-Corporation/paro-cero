@@ -193,7 +193,7 @@ function initialAssetFormForTest() {
 
 function sessionHarness() {
   let state = {
-    accessToken: 'token-a',
+    status: 'authenticated',
     user: {
       id: 'user-1',
       company_id: 'company-1',
@@ -232,11 +232,14 @@ function sessionHarness() {
   };
 }
 
-test('session keys isolate company/user/role and same-user relogin, not token refresh', () => {
+test('session keys isolate company/user/role and same-user relogin, not session revalidation', () => {
   const h = sessionHarness();
   const first = h.useAssetSession();
   assert.equal(first.canManage, true);
-  h.set({ accessToken: 'renewed-token' });
+  // Server-side token rotation is invisible to the client; a session
+  // revalidation that only touches `status` must not reset keys.
+  h.set({ status: 'checking' });
+  h.set({ status: 'authenticated' });
   assert.equal(h.useAssetSession().key, first.key);
   for (const change of [
     { company_id: 'company-2' },
@@ -253,18 +256,18 @@ test('session keys isolate company/user/role and same-user relogin, not token re
   }
   assert.equal(h.useAssetSession().canManage, false);
   const before = h.useAssetSession();
-  h.set({ accessToken: null });
-  h.set({ accessToken: 'new-login' });
+  const user = h.get().user;
+  h.set({ user: null, status: 'anonymous' });
+  h.set({ user, status: 'authenticated' });
   assert.notEqual(before.key, h.useAssetSession().key);
-  assert.equal(h.useAssetSession().key.includes('new-login'), false);
 });
 
-test('permissions require token, active user/company and admin role; SSR is stable anonymous', () => {
+test('permissions require an active user/company and admin role; SSR is stable anonymous', () => {
   const h = sessionHarness();
   for (const change of [
-    { accessToken: null },
     { user: null },
     { user: { id: 'u', role: 'admin', company_id: ' ', is_active: true } },
+    { user: { id: 'u', role: 'admin', company_id: 'c', is_active: false } },
   ]) {
     h.set(change);
     assert.equal(h.useAssetSession().canManage, false);
@@ -272,7 +275,6 @@ test('permissions require token, active user/company and admin role; SSR is stab
   h.server(true);
   const server = h.useAssetSession();
   h.set({
-    accessToken: 'token',
     user: {
       id: 'u',
       company_id: 'company',
@@ -286,35 +288,26 @@ test('permissions require token, active user/company and admin role; SSR is stab
   assert.equal(h.useAssetSession().canManage, true);
 });
 
-async function clientScenario({ switchAt, status = 401 } = {}) {
+async function clientScenario({ switchAt, status = 200 } = {}) {
   let current = switchAt !== 'before';
-  let refreshes = 0;
   const calls = [];
   const { apiClient } = load(
     'src/lib/api-client.ts',
     {
-      '@/store/auth-store': {
-        useAuthStore: { getState: () => ({ accessToken: 'token-a' }) },
-      },
-      '@/lib/token-refresh': {
-        ensureValidToken: async () => {
-          refreshes++;
-          if (switchAt === 'refresh') current = false;
-          return 'token-b';
-        },
-      },
+      '@/lib/auth/session-events': { notifySessionExpired: () => {} },
     },
     {
-      fetch: async (_url, options) => {
-        calls.push(options);
+      fetch: async (url, options) => {
+        calls.push({ url, ...options });
         assert.equal('isRequestCurrent' in options, false);
-        assert.equal('authToken' in options, false);
         const attempt = calls.length;
         if (switchAt === (attempt === 1 ? 'first-fetch' : 'retry-fetch'))
           current = false;
+        const conflict = attempt === 1 && status === 409;
         return {
-          status: attempt === 1 ? status : 200,
-          ok: attempt > 1 || status === 200,
+          status: conflict ? 409 : 200,
+          ok: !conflict,
+          headers: new Headers(conflict ? { 'x-session-retry': '1' } : {}),
           json: async () => {
             if (switchAt === (attempt === 1 ? 'first-json' : 'retry-json'))
               current = false;
@@ -322,47 +315,44 @@ async function clientScenario({ switchAt, status = 401 } = {}) {
           },
         };
       },
+      setTimeout: (fn, ms) => {
+        if (ms <= 600) fn();
+        return 0;
+      },
+      clearTimeout: () => {},
     },
   );
   const result = await apiClient('/assets/asset-1', {
     method: 'PUT',
     body: '{}',
-    authToken: 'explicit-token',
     isRequestCurrent: () => current,
   });
-  return { result, calls, refreshes };
+  return { result, calls };
 }
 
-for (const switchAt of [
-  'before',
-  'first-fetch',
-  'refresh',
-  'retry-fetch',
-  'retry-json',
+for (const [switchAt, status, expectedCalls] of [
+  ['before', 200, 0],
+  ['first-fetch', 200, 1],
+  ['first-json', 200, 1],
+  ['retry-fetch', 409, 2],
+  ['retry-json', 409, 2],
 ]) {
   test(`session guard blocks asset result/replay when identity changes at ${switchAt}`, async () => {
-    const { result, calls, refreshes } = await clientScenario({ switchAt });
+    const { result, calls } = await clientScenario({ switchAt, status });
     assert.equal(result.error.code, 'SESSION_CHANGED');
-    assert.equal(
-      calls.length,
-      switchAt === 'before' ? 0 : switchAt.startsWith('retry') ? 2 : 1,
-    );
-    if (['before', 'first-fetch'].includes(switchAt))
-      assert.equal(refreshes, 0);
+    assert.equal(calls.length, expectedCalls);
   });
 }
 
-test('guard checks initial JSON and permits same-session token refresh', async () => {
-  assert.equal(
-    (await clientScenario({ status: 200, switchAt: 'first-json' })).result.error
-      .code,
-    'SESSION_CHANGED',
-  );
-  const { result, calls, refreshes } = await clientScenario();
+test('guard permits a same-session BFF retry and never sends a bearer token', async () => {
+  const { result, calls } = await clientScenario({ status: 409 });
   assert.equal(result.ok, true);
-  assert.equal(refreshes, 1);
-  assert.equal(calls[0].headers.Authorization, 'Bearer explicit-token');
-  assert.equal(calls[1].headers.Authorization, 'Bearer token-b');
+  assert.equal(calls.length, 2);
+  for (const call of calls) {
+    assert.equal(call.url, '/api/backend/assets/asset-1');
+    assert.equal('Authorization' in call.headers, false);
+    assert.equal(call.credentials, 'same-origin');
+  }
 });
 
 test('asset service uses GET/POST/PUT/DELETE, preserves raw GET and maps 409/422', async () => {

@@ -18,9 +18,8 @@ export function getUsersSessionScope(user: User | null): UsersSessionScope {
 export function usersSessionIsCurrent(scope: UsersSessionScope): boolean {
   if (typeof window === 'undefined') return false;
 
-  const { accessToken, user } = useAuthStore.getState();
+  const { user } = useAuthStore.getState();
   return Boolean(
-    accessToken &&
     user?.is_active &&
     user.id === scope.userId &&
     (user.company_id ?? null) === scope.companyId &&

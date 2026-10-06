@@ -250,14 +250,12 @@ async function callApiClient(status, body) {
   globalThis.fetch = async () => ({
     ok: status >= 200 && status < 300,
     status,
+    headers: new Headers(),
     json: async () => body,
   });
   try {
     const client = load('src/lib/api-client.ts', {
-      '@/store/auth-store': {
-        useAuthStore: { getState: () => ({ accessToken: null }) },
-      },
-      '@/lib/token-refresh': { ensureValidToken: async () => 'token' },
+      '@/lib/auth/session-events': { notifySessionExpired: () => {} },
     });
     return { client, response: await client.apiClient('/assets/') };
   } finally {
@@ -703,7 +701,7 @@ test('query keys are scoped by session and list params', () => {
   ]);
 });
 
-test('session key changes with user, company, role, active flag and token', () => {
+test('session key changes with user, company, role and active flag only', () => {
   const { assetSessionKey } = load(
     `${moduleDir}/hooks/use-asset-session-key.ts`,
     {
@@ -715,10 +713,10 @@ test('session key changes with user, company, role, active flag and token', () =
   );
   const base = {
     user: { id: 'u1', company_id: 'c1', role: 'admin', is_active: true },
-    accessToken: 'token-a',
+    status: 'authenticated',
   };
   const key = assetSessionKey(base);
-  assert.equal(assetSessionKey({ ...base, accessToken: 'token-b' }), key);
+  assert.equal(assetSessionKey({ ...base, status: 'checking' }), key);
   for (const patch of [
     { id: 'u2' },
     { company_id: 'c2' },
@@ -730,7 +728,7 @@ test('session key changes with user, company, role, active flag and token', () =
       key,
     );
   }
-  assert.notEqual(assetSessionKey({ ...base, accessToken: null }), key);
+  assert.notEqual(assetSessionKey({ ...base, user: null }), key);
 });
 
 test('asset queries use page/size, session-scoped keys and skip invalid ids', async () => {

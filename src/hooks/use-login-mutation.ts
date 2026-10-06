@@ -1,33 +1,25 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/services/auth-service';
 import { useAuthStore } from '@/store/auth-store';
-import { setAuthCookiesAction } from '@/app/actions/auth';
+import {
+  AUTH_EVENT,
+  publishAuthEvent,
+  resetSessionExpired,
+} from '@/lib/auth/session-events';
 import type { LoginInput } from '@/lib/auth-schema';
 
 export function useLoginMutation() {
   const queryClient = useQueryClient();
   const setUser = useAuthStore((state) => state.setUser);
-  const setAccessToken = useAuthStore((state) => state.setAccessToken);
-  const setRefreshToken = useAuthStore((state) => state.setRefreshToken);
 
   return useMutation({
-    mutationFn: async (credentials: LoginInput) => {
-      const data = await authService.login(credentials);
-
-      setUser(data.user);
-      setAccessToken(data.access_token);
-      setRefreshToken(data.refresh_token);
-
-      await setAuthCookiesAction(
-        data.access_token,
-        data.refresh_token,
-        data.refresh_expires_in,
-      );
-
-      return data;
-    },
-    onSuccess: () => {
+    mutationFn: (credentials: LoginInput) => authService.login(credentials),
+    onSuccess: ({ user }) => {
+      // Drop anything cached for a previous identity before exposing the user.
       queryClient.clear();
+      setUser(user);
+      resetSessionExpired();
+      publishAuthEvent(AUTH_EVENT.LOGIN);
     },
   });
 }

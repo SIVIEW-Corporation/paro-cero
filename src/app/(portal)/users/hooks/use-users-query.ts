@@ -10,7 +10,6 @@ import {
 import { operatorsService } from '../services/operators-service';
 
 export function useOperatorsQuery(page: number, size: number = 10) {
-  const accessToken = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
   const scope = getUsersSessionScope(user);
   const canListUsers = user?.role === 'superadmin';
@@ -21,6 +20,6 @@ export function useOperatorsQuery(page: number, size: number = 10) {
       operatorsService.getOperators(page, size, {
         isRequestCurrent: () => usersSessionIsCurrent(scope),
       }),
-    enabled: Boolean(accessToken && user?.id && user.is_active && canListUsers),
+    enabled: Boolean(user?.id && user.is_active && canListUsers),
   });
 }

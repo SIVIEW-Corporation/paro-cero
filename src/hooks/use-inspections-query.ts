@@ -14,14 +14,12 @@ import {
 const inspectionsKey = ['inspections'] as const;
 
 function currentIdentity() {
-  const { user, accessToken } = useAuthStore.getState();
+  const { user } = useAuthStore.getState();
   return {
     userId: user?.id ?? '',
     companyId: user?.company_id ?? '',
     role: user?.role ?? '',
-    active: Boolean(
-      accessToken && user?.id && user.company_id && user.is_active,
-    ),
+    active: Boolean(user?.id && user.company_id && user.is_active),
   };
 }
 
@@ -54,14 +52,12 @@ function useInspectionMutation<TInput, TOutput>(
 }
 
 export function useInspectionsQuery(canRead: boolean) {
-  const { user, accessToken } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
   const identity = {
     userId: user?.id ?? '',
     companyId: user?.company_id ?? '',
     role: user?.role ?? '',
-    active: Boolean(
-      accessToken && user?.id && user.company_id && user.is_active,
-    ),
+    active: Boolean(user?.id && user.company_id && user.is_active),
   };
   return useQuery({
     queryKey: [

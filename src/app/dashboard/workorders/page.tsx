@@ -25,7 +25,8 @@ import {
 export default function WorkOrdersPage() {
   const ordenesStore = useWorkOrdersStore((state) => state.ordenes);
   const setOrdenesStore = useWorkOrdersStore((state) => state.setOrdenes);
-  const accessToken = useAuthStore((state) => state.accessToken);
+  // Tokens live in httpOnly cookies; a loaded user means an active session.
+  const hasSession = useAuthStore((state) => Boolean(state.user));
   const user = useAuthStore((state) => state.user);
   const session = useWorkOrderSession();
   const workOrdersQuery = useWorkOrdersQuery();
@@ -50,11 +51,11 @@ export default function WorkOrdersPage() {
     setOrdenesStore(nuevasOrdenes);
   };
 
-  const hasRemoteWorkOrderSession = Boolean(accessToken && session.canRead);
+  const hasRemoteWorkOrderSession = Boolean(hasSession && session.canRead);
   const usingMockFallback =
     hasRemoteWorkOrderSession && workOrdersQuery.isError;
   const useRemoteWorkOrders = hasRemoteWorkOrderSession && !usingMockFallback;
-  const authenticatedWithoutCompany = Boolean(accessToken && !session.canRead);
+  const authenticatedWithoutCompany = Boolean(hasSession && !session.canRead);
   const displayedOrders = useRemoteWorkOrders
     ? (workOrdersQuery.data?.items ?? [])
     : authenticatedWithoutCompany
@@ -70,23 +71,23 @@ export default function WorkOrdersPage() {
         : []))
     : TECNICOS;
   const permissions = getRolePermissions(user?.role);
-  const localOrRemoteSession = accessToken
+  const localOrRemoteSession = hasSession
     ? session.canRead
     : !user || Boolean(permissions?.workOrders.read);
   const canCreate = localOrRemoteSession
-    ? !accessToken || Boolean(permissions?.workOrders.create)
+    ? !hasSession || Boolean(permissions?.workOrders.create)
     : false;
   const canEdit = localOrRemoteSession
-    ? !accessToken || Boolean(permissions?.workOrders.edit)
+    ? !hasSession || Boolean(permissions?.workOrders.edit)
     : false;
   const canChangeStatus = localOrRemoteSession
-    ? !accessToken || Boolean(permissions?.workOrders.changeStatus)
+    ? !hasSession || Boolean(permissions?.workOrders.changeStatus)
     : false;
   const canManageEvidence = localOrRemoteSession
-    ? !accessToken || Boolean(permissions?.workOrders.manageEvidence)
+    ? !hasSession || Boolean(permissions?.workOrders.manageEvidence)
     : false;
   const canDelete = localOrRemoteSession
-    ? !accessToken || Boolean(permissions?.workOrders.delete)
+    ? !hasSession || Boolean(permissions?.workOrders.delete)
     : false;
 
   return (

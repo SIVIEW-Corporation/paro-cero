@@ -10,7 +10,6 @@ function identity(state: ReturnType<typeof useAuthStore.getState>) {
     state.user?.company_id,
     state.user?.role,
     state.user?.is_active,
-    Boolean(state.accessToken),
   ]);
 }
 
@@ -50,10 +49,8 @@ export function useWorkOrderSession(): WorkOrderSession {
     };
   }
 
-  const { user, accessToken } = useAuthStore.getState();
-  const activeSession = Boolean(
-    accessToken && user?.id && user.company_id && user.is_active,
-  );
+  const { user } = useAuthStore.getState();
+  const activeSession = Boolean(user?.id && user.company_id && user.is_active);
   const role = user?.role ?? '';
   const permissions = getRolePermissions(role);
 

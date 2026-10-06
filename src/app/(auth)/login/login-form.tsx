@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Mail, Lock } from 'lucide-react';
 
 import { loginSchema } from '@/lib/auth-schema';
+import { safeNextPath } from '@/lib/auth/next-path';
 import { useLoginMutation } from '@/hooks/use-login-mutation';
 import { FormField, PasswordField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
@@ -24,7 +25,8 @@ export default function LoginForm() {
       mutation.mutate(value, {
         onSuccess: () => {
           toast.success('¡Sesión iniciada!');
-          router.push('/dashboard');
+          const next = new URLSearchParams(window.location.search).get('next');
+          router.replace(safeNextPath(next) ?? '/dashboard');
         },
         onError: (error) => {
           const message =
