@@ -242,6 +242,207 @@ test('409 exposes a code field error and 422 keeps the backend detail', async ()
 });
 
 // ---------------------------------------------------------------------------
+// API client: structured 422 field errors (additive, backward compatible)
+// ---------------------------------------------------------------------------
+
+async function callApiClient(status, body) {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => body,
+  });
+  try {
+    const client = load('src/lib/api-client.ts', {
+      '@/store/auth-store': {
+        useAuthStore: { getState: () => ({ accessToken: null }) },
+      },
+      '@/lib/token-refresh': { ensureValidToken: async () => 'token' },
+    });
+    return { client, response: await client.apiClient('/assets/') };
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+const validationDetail = [
+  {
+    loc: ['body', 'code'],
+    msg: 'String should have at most 20 characters',
+    type: 'string_too_long',
+    ctx: { max_length: 20 },
+  },
+  { loc: ['body', 'name'], msg: 'Field required', type: 'missing' },
+  {
+    loc: ['query', 'page'],
+    msg: 'Input should be a valid integer',
+    type: 'int_parsing',
+  },
+  {
+    loc: ['body'],
+    msg: 'Value error, At least one asset field must be provided',
+    type: 'value_error',
+  },
+];
+
+test('apiClient keeps the joined 422 message and adds structured field errors', async () => {
+  const { client, response } = await callApiClient(422, {
+    detail: validationDetail,
+  });
+  assert.equal(response.ok, false);
+  assert.equal(response.status, 422);
+  assert.equal(response.error.status, 422);
+  assert.equal(
+    response.error.message,
+    validationDetail.map((item) => item.msg).join('; '),
+  );
+  assert.deepEqual(response.error.fieldErrors, {
+    code: ['String should have at most 20 characters'],
+    name: ['Field required'],
+  });
+  assert.deepEqual(
+    response.error.validationErrors.map(({ loc, type }) => [loc, type]),
+    validationDetail.map(({ loc, type }) => [loc, type]),
+  );
+  assert.deepEqual(response.error.validationErrors[0].ctx, { max_length: 20 });
+  assert.equal(client.hasApiFieldErrors(response.error), true);
+  assert.deepEqual(client.getApiFieldErrors(response.error).code, [
+    'String should have at most 20 characters',
+  ]);
+});
+
+test('apiClient leaves string-detail errors unchanged (no field errors)', async () => {
+  const { client, response } = await callApiClient(404, {
+    detail: 'Asset not found',
+  });
+  assert.equal(response.error.message, 'Asset not found');
+  assert.equal(response.error.status, 404);
+  assert.equal('fieldErrors' in response.error, false);
+  assert.equal('validationErrors' in response.error, false);
+  assert.equal(client.hasApiFieldErrors(response.error), false);
+  assert.deepEqual(client.getApiFieldErrors(response.error), {});
+  assert.equal(client.hasApiFieldErrors(undefined), false);
+});
+
+const failValidation = (detail) => ({
+  ok: false,
+  status: 422,
+  error: {
+    message: detail.map((item) => item.msg).join('; '),
+    status: 422,
+    validationErrors: detail,
+  },
+});
+
+test('422 field errors are translated to Spanish and keyed by asset field', async () => {
+  const detail = [
+    validationDetail[0],
+    {
+      loc: ['body', 'installed_at'],
+      msg: 'Input should be a valid datetime',
+      type: 'datetime_parsing',
+    },
+    {
+      loc: ['body', 'cost'],
+      msg: 'Input should be less than or equal to 2147483647',
+      type: 'less_than_equal',
+      ctx: { le: 2147483647 },
+    },
+    {
+      loc: ['body', 'name'],
+      msg: 'Value error, Field must not be null or blank',
+      type: 'value_error',
+    },
+    {
+      loc: ['body', 'status'],
+      msg: "Input should be 'commissioning' or 'operational'",
+      type: 'literal_error',
+    },
+  ];
+  const { assetsService } = loadService(() => failValidation(detail));
+  const error = await assetsService
+    .createAsset({ name: ' ', area: 'b', code: 'X', criticality: 'low' })
+    .catch((err) => err);
+  assert.equal(error.status, 422);
+  assert.deepEqual(error.fieldErrors, {
+    code: 'Admite máximo 20 caracteres.',
+    installed_at: 'Ingresa una fecha válida.',
+    cost: 'Debe ser menor o igual a 2147483647.',
+    name: 'Este campo no puede estar vacío.',
+    status: 'Selecciona un valor válido.',
+  });
+  // Every error matched a field: no general error details in the message.
+  assert.match(error.message, /revisa los campos/i);
+  assert.doesNotMatch(error.message, /caracteres|fecha/);
+});
+
+test('422 errors without a matching form field go to the general message', async () => {
+  const detail = [
+    validationDetail[0],
+    validationDetail[3],
+    { loc: ['body', 'company_id'], msg: 'Extra inputs', type: 'extra' },
+  ];
+  const { assetsService } = loadService(() => failValidation(detail));
+  const error = await assetsService
+    .updateAsset(ASSET_ID, { code: 'X'.repeat(30) })
+    .catch((err) => err);
+  assert.deepEqual(error.fieldErrors, {
+    code: 'Admite máximo 20 caracteres.',
+  });
+  assert.match(error.message, /inválid/i);
+  assert.match(error.message, /al menos un campo/i);
+  assert.match(error.message, /company_id: Extra inputs/);
+  assert.doesNotMatch(error.message, /caracteres/);
+});
+
+test('validation messages translate common FastAPI types with raw fallback', () => {
+  const { translateValidationIssue } = load(
+    `${moduleDir}/lib/asset-server-errors.ts`,
+  );
+  const t = (type, ctx, msg = 'raw message') =>
+    translateValidationIssue({ loc: ['body', 'x'], msg, type, ctx });
+  assert.equal(t('missing'), 'Este campo es obligatorio.');
+  assert.equal(
+    t('string_too_short', { min_length: 1 }),
+    'Debe tener al menos 1 caracteres.',
+  );
+  assert.equal(
+    t('string_too_long', { max_length: 100 }),
+    'Admite máximo 100 caracteres.',
+  );
+  assert.equal(t('int_parsing'), 'Debe ser un número entero.');
+  assert.equal(
+    t('greater_than_equal', { ge: 0 }),
+    'Debe ser mayor o igual a 0.',
+  );
+  assert.equal(t('less_than_equal', { le: 5 }), 'Debe ser menor o igual a 5.');
+  assert.equal(t('literal_error'), 'Selecciona un valor válido.');
+  assert.equal(t('enum'), 'Selecciona un valor válido.');
+  assert.equal(
+    t('value_error', undefined, 'Value error, Something custom'),
+    'Something custom',
+  );
+  assert.equal(t('some_unknown_type'), 'raw message');
+  // Missing ctx falls back to the raw message instead of "undefined".
+  assert.equal(t('string_too_long', undefined), 'raw message');
+});
+
+test('server field errors map to form field names', () => {
+  const { toAssetFormFieldErrors } = load(
+    `${moduleDir}/lib/asset-server-errors.ts`,
+  );
+  assert.deepEqual(
+    toAssetFormFieldErrors({
+      installed_at: 'fecha',
+      code: 'código',
+      cost: 'c',
+    }),
+    { installedAt: 'fecha', code: 'código', cost: 'c' },
+  );
+  assert.deepEqual(toAssetFormFieldErrors({}), {});
+});
+
+// ---------------------------------------------------------------------------
 // Zod schema
 // ---------------------------------------------------------------------------
 

@@ -8,6 +8,7 @@ import {
   type AssetUpdatePayload,
   type PaginatedAssets,
 } from '../types';
+import { splitAssetValidationErrors } from '../lib/asset-server-errors';
 
 const ERROR_MESSAGES = {
   401: 'Tu sesión expiró. Inicia sesión nuevamente.',
@@ -44,10 +45,25 @@ export function isAssetApiError(error: unknown): error is AssetApiError {
   return error instanceof AssetApiError;
 }
 
+/** 422 error: per-field messages go to `fieldErrors`, the rest to `message`. */
+function toValidationError(
+  response: ApiResponse<unknown>,
+  detail: string | undefined,
+): AssetApiError {
+  const { fieldErrors, generalErrors } = splitAssetValidationErrors(
+    response.error?.validationErrors ?? [],
+  );
+  const message =
+    generalErrors.length > 0
+      ? `Hay datos inválidos: ${generalErrors.join(' ')}`
+      : ERROR_MESSAGES[422];
+  return new AssetApiError(message, 422, fieldErrors, detail);
+}
+
 /**
  * Maps a failed API response to a user-facing Spanish error.
- * Note: `apiClient` flattens FastAPI 422 field lists into one message, so
- * per-field 422 errors are not recoverable here; 409 always maps to `code`.
+ * 422 validation issues are translated and keyed by asset field; 409 always
+ * maps to `code`.
  */
 export function toAssetApiError(
   response: ApiResponse<unknown>,
@@ -60,8 +76,9 @@ export function toAssetApiError(
     case 401:
     case 403:
     case 404:
-    case 422:
       return new AssetApiError(ERROR_MESSAGES[status], status, {}, detail);
+    case 422:
+      return toValidationError(response, detail);
     case 409:
       return new AssetApiError(
         ERROR_MESSAGES[409],

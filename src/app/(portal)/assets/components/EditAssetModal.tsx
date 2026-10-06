@@ -28,6 +28,10 @@ import {
   buildAssetUpdatePayload,
   hasAssetChanges,
 } from '../lib/asset-payload';
+import {
+  toAssetFormFieldErrors,
+  type AssetFormField,
+} from '../lib/asset-server-errors';
 import { useUpdateAssetMutation } from '../hooks/use-update-asset-mutation';
 import { isAssetApiError } from '../services/assets-service';
 import type { Asset } from '../types';
@@ -73,12 +77,13 @@ export default function EditAssetModal({
           onClose();
           return;
         }
-        const codeError = error.fieldErrors.code;
-        if (codeError) {
-          form.setFieldMeta('code', (meta) => ({
+        const serverErrors = toAssetFormFieldErrors(error.fieldErrors);
+        for (const field of Object.keys(serverErrors) as AssetFormField[]) {
+          const message = serverErrors[field];
+          form.setFieldMeta(field, (meta) => ({
             ...meta,
             isTouched: true,
-            errorMap: { ...meta.errorMap, onServer: codeError },
+            errorMap: { ...meta.errorMap, onServer: message },
           }));
         }
       }
@@ -244,6 +249,7 @@ export default function EditAssetModal({
                       id='edit-status'
                       value={field.state.value}
                       onBlur={field.handleBlur}
+                      error={firstErrorMessage(field.state.meta.errors)}
                       onChange={(status) => field.handleChange(status)}
                     />
                   )}
@@ -259,6 +265,7 @@ export default function EditAssetModal({
                       id='edit-criticality'
                       value={field.state.value}
                       onBlur={field.handleBlur}
+                      error={firstErrorMessage(field.state.meta.errors)}
                       onChange={(criticality) =>
                         field.handleChange(criticality)
                       }

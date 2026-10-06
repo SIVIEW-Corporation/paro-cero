@@ -27,6 +27,10 @@ import {
   newAssetSchema,
 } from './lib/new-asset-schema';
 import { buildAssetCreatePayload } from './lib/asset-payload';
+import {
+  toAssetFormFieldErrors,
+  type AssetFormField,
+} from './lib/asset-server-errors';
 import { isAssetApiError } from './services/assets-service';
 
 const fieldAnimation = {
@@ -56,15 +60,16 @@ export default function NewAssetForm() {
         await createAsset.mutateAsync(payload);
         form.reset();
       } catch (error) {
-        // Toast is shown by the mutation hook; surface field-level errors.
-        const codeError = isAssetApiError(error)
-          ? error.fieldErrors.code
-          : undefined;
-        if (codeError) {
-          form.setFieldMeta('code', (meta) => ({
+        // Toast (general message) is shown by the mutation hook; surface
+        // field-level server errors (409 code, 422 validation) inline.
+        if (!isAssetApiError(error)) return;
+        const serverErrors = toAssetFormFieldErrors(error.fieldErrors);
+        for (const field of Object.keys(serverErrors) as AssetFormField[]) {
+          const message = serverErrors[field];
+          form.setFieldMeta(field, (meta) => ({
             ...meta,
             isTouched: true,
-            errorMap: { ...meta.errorMap, onServer: codeError },
+            errorMap: { ...meta.errorMap, onServer: message },
           }));
         }
       }
@@ -272,6 +277,7 @@ export default function NewAssetForm() {
                     id='status'
                     value={field.state.value}
                     onBlur={field.handleBlur}
+                    error={firstErrorMessage(field.state.meta.errors)}
                     onChange={(status) => field.handleChange(status)}
                   />
                 )}
@@ -283,6 +289,7 @@ export default function NewAssetForm() {
                     id='criticality'
                     value={field.state.value}
                     onBlur={field.handleBlur}
+                    error={firstErrorMessage(field.state.meta.errors)}
                     onChange={(criticality) => field.handleChange(criticality)}
                   />
                 )}

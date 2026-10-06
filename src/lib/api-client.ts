@@ -1,10 +1,30 @@
 import { useAuthStore } from '@/store/auth-store';
 import { ensureValidToken } from '@/lib/token-refresh';
 
+/** One FastAPI/Pydantic validation issue from a `422` `detail` list. */
+export interface ApiValidationIssue {
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+  ctx?: Record<string, unknown>;
+}
+
+/** Validation messages keyed by the last `loc` segment of `body` issues. */
+export type ApiFieldErrors = Record<string, string[]>;
+
 export interface ApiError {
   message: string;
   code?: string;
   status?: number;
+  /** Present only when the backend returned a validation `detail` list. */
+  fieldErrors?: ApiFieldErrors;
+  /** Raw validation issues (any `loc`), present alongside `fieldErrors`. */
+  validationErrors?: ApiValidationIssue[];
+}
+
+export interface ApiValidationError extends ApiError {
+  fieldErrors: ApiFieldErrors;
+  validationErrors: ApiValidationIssue[];
 }
 
 export interface ApiResponse<T = unknown> {
@@ -57,6 +77,66 @@ function responseErrorMessage(data: unknown, status: number): string {
   }
 
   return `Error ${status}`;
+}
+
+function toValidationIssue(item: unknown): ApiValidationIssue | null {
+  if (!isRecord(item) || typeof item.msg !== 'string') return null;
+  const loc = Array.isArray(item.loc)
+    ? item.loc.filter(
+        (segment): segment is string | number =>
+          typeof segment === 'string' || typeof segment === 'number',
+      )
+    : [];
+  return {
+    loc,
+    msg: item.msg,
+    type: typeof item.type === 'string' ? item.type : '',
+    ...(isRecord(item.ctx) ? { ctx: item.ctx } : {}),
+  };
+}
+
+/** Adds structured validation errors when `detail` is a FastAPI issue list. */
+function validationErrorFields(
+  data: unknown,
+): Pick<ApiError, 'fieldErrors' | 'validationErrors'> {
+  if (!isRecord(data) || !Array.isArray(data.detail)) return {};
+
+  const validationErrors = data.detail
+    .map(toValidationIssue)
+    .filter((issue): issue is ApiValidationIssue => issue !== null);
+  if (validationErrors.length === 0) return {};
+
+  const fieldErrors: ApiFieldErrors = {};
+  for (const issue of validationErrors) {
+    if (issue.loc[0] !== 'body' || issue.loc.length < 2) continue;
+    const field = String(issue.loc[issue.loc.length - 1]);
+    (fieldErrors[field] ??= []).push(issue.msg);
+  }
+  return { fieldErrors, validationErrors };
+}
+
+function responseError(data: unknown, status: number): ApiError {
+  return {
+    message: responseErrorMessage(data, status),
+    code:
+      isRecord(data) && typeof data.code === 'string' ? data.code : undefined,
+    status,
+    ...validationErrorFields(data),
+  };
+}
+
+/** True when the error carries structured FastAPI validation errors. */
+export function hasApiFieldErrors(
+  error: ApiError | null | undefined,
+): error is ApiValidationError {
+  return Boolean(error?.fieldErrors && error.validationErrors);
+}
+
+/** Field errors keyed by body field name; `{}` when there are none. */
+export function getApiFieldErrors(
+  error: ApiError | null | undefined,
+): ApiFieldErrors {
+  return hasApiFieldErrors(error) ? error.fieldErrors : {};
 }
 
 async function fetchWithTimeout(
@@ -179,14 +259,7 @@ async function retryRequest<T = unknown>(
     return {
       ok: false,
       status: response.status,
-      error: {
-        message: responseErrorMessage(data, response.status),
-        code:
-          isRecord(data) && typeof data.code === 'string'
-            ? data.code
-            : undefined,
-        status: response.status,
-      },
+      error: responseError(data, response.status),
     };
   }
 
@@ -255,14 +328,7 @@ export async function apiClient<T = unknown>(
       return {
         ok: false,
         status: response.status,
-        error: {
-          message: responseErrorMessage(data, response.status),
-          code:
-            isRecord(data) && typeof data.code === 'string'
-              ? data.code
-              : undefined,
-          status: response.status,
-        },
+        error: responseError(data, response.status),
       };
     }
 

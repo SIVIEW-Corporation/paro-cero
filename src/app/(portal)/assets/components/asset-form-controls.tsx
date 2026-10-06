@@ -39,6 +39,19 @@ interface SelectProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   onBlur: () => void;
+  error?: string | null;
+}
+
+const SELECT_BOX_CLASS =
+  'custom-select-container flex items-center overflow-hidden rounded-lg border bg-white transition-all';
+const SELECT_BOX_OK_CLASS =
+  'border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 focus-within:ring-2';
+
+function FieldError({ error }: { error?: string | null }) {
+  if (!error) return null;
+  return (
+    <p className='text-shDanger-700 mt-1.5 text-xs font-medium'>{error}</p>
+  );
 }
 
 export function AssetStatusSelect({
@@ -46,14 +59,20 @@ export function AssetStatusSelect({
   value,
   onChange,
   onBlur,
+  error,
 }: SelectProps<AssetStatus>) {
   return (
     <div className='group'>
       <label htmlFor={id} className={LABEL_CLASS}>
         Estado
       </label>
-      <div className='custom-select-container border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
-        <div className={ICON_CLASS}>
+      <div
+        className={cn(
+          SELECT_BOX_CLASS,
+          error ? 'border-shDanger-500' : SELECT_BOX_OK_CLASS,
+        )}
+      >
+        <div className={cn(ICON_CLASS, error && 'text-shDanger-500')}>
           <Activity size={16} />
         </div>
         <select
@@ -64,6 +83,7 @@ export function AssetStatusSelect({
             const next = ASSET_STATUSES.find((item) => item === e.target.value);
             if (next) onChange(next);
           }}
+          aria-invalid={Boolean(error)}
           className={cn(CONTROL_CLASS, 'cursor-pointer pr-12')}
         >
           {ASSET_STATUSES.map((status) => (
@@ -73,6 +93,7 @@ export function AssetStatusSelect({
           ))}
         </select>
       </div>
+      <FieldError error={error} />
     </div>
   );
 }
@@ -82,14 +103,20 @@ export function AssetCriticalitySelect({
   value,
   onChange,
   onBlur,
+  error,
 }: SelectProps<AssetCriticality>) {
   return (
     <div className='group'>
       <label htmlFor={id} className={LABEL_CLASS}>
         Criticidad
       </label>
-      <div className='custom-select-container border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
-        <div className={ICON_CLASS}>
+      <div
+        className={cn(
+          SELECT_BOX_CLASS,
+          error ? 'border-shDanger-500' : SELECT_BOX_OK_CLASS,
+        )}
+      >
+        <div className={cn(ICON_CLASS, error && 'text-shDanger-500')}>
           <AlertTriangle size={16} />
         </div>
         <select
@@ -102,6 +129,7 @@ export function AssetCriticalitySelect({
             );
             if (next) onChange(next);
           }}
+          aria-invalid={Boolean(error)}
           className={cn(CONTROL_CLASS, 'cursor-pointer pr-12')}
         >
           {ASSET_CRITICALITIES.map((criticality) => (
@@ -111,6 +139,7 @@ export function AssetCriticalitySelect({
           ))}
         </select>
       </div>
+      <FieldError error={error} />
     </div>
   );
 }
