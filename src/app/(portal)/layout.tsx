@@ -111,7 +111,7 @@ export default function PortalLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className='auth-shell bg-app-bg text-app-text-primary w-full overflow-x-hidden'>
+    <div className='w-full overflow-x-hidden'>
       <Navbar />
       <main className='relative min-h-screen w-full overflow-hidden py-20'>
         <ParticleCanvas />

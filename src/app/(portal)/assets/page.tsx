@@ -2,42 +2,46 @@
 
 import { useAuthStore } from '@/store/auth-store';
 import { useState, useEffect } from 'react';
-import { UserRoundPlus, UsersRound } from 'lucide-react';
+import { LayersPlus, Layers } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import { AnimatePresence } from 'motion/react';
 import Image from 'next/image';
 
-import NewUserForm from './NewUserForm';
-import UsersTable from './components/UsersTable';
+import NewAssetForm from './NewAssetForm';
+import AssetsTable from './components/AssetsTable';
 import {
   SectionTabs,
   type tabInterface,
 } from '@/global-components/SectionTabs';
 
-export default function UsersPage() {
+export default function AssetsPage() {
   const user = useAuthStore((s) => s.user);
-  const isSuperadmin = user?.role === 'superadmin';
-  const [activeTab, setActiveTab] = useState('historico');
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const [activeTab, setActiveTab] = useState('all-operators');
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
-    if (isSuperadmin) {
-      setActiveTab('all-users');
+    if (!isAdmin && activeTab === 'new-operator') {
+      setActiveTab('all-operators');
     }
-  }, [isSuperadmin]);
+  }, [isAdmin, activeTab]);
 
   const tabs: tabInterface[] = [
     {
-      id: 'all-users',
-      label: 'Usuarios disponibles',
-      icon: <UsersRound size={20} />,
+      id: 'all-operators',
+      label: 'Activos disponibles',
+      icon: <Layers size={20} />,
     },
-    {
-      id: 'new-user',
-      label: 'Crear nuevo',
-      icon: <UserRoundPlus size={20} />,
-    },
+    ...(isAdmin
+      ? [
+          {
+            id: 'new-operator' as const,
+            label: 'Crear nuevo',
+            icon: <LayersPlus size={20} />,
+          },
+        ]
+      : []),
   ];
 
   if (!isHydrated) {
@@ -60,31 +64,14 @@ export default function UsersPage() {
     );
   }
 
-  // User management is intentionally restricted to the platform superuser.
-  if (!isSuperadmin) {
-    return (
-      <main className='z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
-        <div className='flex flex-col items-center justify-center py-16'>
-          <h2 className='text-shNeutral-900 text-xl font-bold'>
-            Acceso restringido
-          </h2>
-          <p className='text-shNeutral-500 mt-2 text-sm'>
-            Solo el superusuario puede gestionar usuarios.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className='z-10 container mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8'>
       <section className='mb-6 md:mb-8'>
         <h1 className='font-inter text-shNeutral-900 mb-1 text-2xl font-semibold tracking-[-0.02em] md:text-3xl'>
-          Gestionar usuarios
+          Gestión de activos
         </h1>
         <p className='text-shNeutral-500 font-inter max-w-2xl text-sm leading-6 md:text-base'>
-          Aquí podrás crear, editar y eliminar perfiles. También podrás asignar
-          roles y permisos.
+          Aquí puedes ver los assets disponibles y sus procesos relacionados.
         </p>
       </section>
 
@@ -105,17 +92,14 @@ export default function UsersPage() {
               transition={{ duration: 0.2 }}
               className='h-full w-full'
             >
-              {activeTab === 'all-users' && (
+              {activeTab === 'all-operators' && (
                 <div className='mx-auto max-w-7xl'>
-                  <UsersTable />
+                  <AssetsTable />
                 </div>
               )}
-              {activeTab === 'new-user' && (
+              {activeTab === 'new-operator' && (
                 <div className='mx-auto max-w-7xl'>
-                  <NewUserForm
-                    company_id={user?.company_id}
-                    canSelectCompany={user?.role === 'superadmin'}
-                  />
+                  <NewAssetForm company_id={user?.company_id ?? undefined} />
                 </div>
               )}
             </motion.div>

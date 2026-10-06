@@ -17,6 +17,7 @@ import {
 import * as motion from 'motion/react-client';
 import { useAuthStore, User } from '@/store/auth-store';
 import ConfirmModal from './confirm-modal';
+import EditUserModal from './EditUserModal';
 
 import formatDate from '@/utils/format-date';
 import { useOperatorsQuery } from '../hooks/use-users-query';
@@ -72,6 +73,10 @@ export default function UsersTable() {
     userId: '',
     userName: '',
   });
+  const [editModal, setEditModal] = useState<{
+    isOpen: boolean;
+    user: User | null;
+  }>({ isOpen: false, user: null });
 
   const { data, isPending, isFetching, error } = useOperatorsQuery(page, size);
   const deleteMutation = useDeleteUserMutation();
@@ -86,6 +91,10 @@ export default function UsersTable() {
 
   const handleCloseModal = () => {
     setConfirmModal({ isOpen: false, userId: '', userName: '' });
+  };
+
+  const handleCloseEditModal = () => {
+    setEditModal({ isOpen: false, user: null });
   };
 
   const handleConfirmDelete = () => {
@@ -185,6 +194,7 @@ export default function UsersTable() {
             scale='101'
             shadowSize='none'
             className='size-8 rounded-lg p-0'
+            onClick={() => setEditModal({ isOpen: true, user: row.original })}
           />
           <Button
             type='button'
@@ -242,7 +252,7 @@ export default function UsersTable() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className='border-shNeutral-200/80 overflow-hidden rounded-2xl border bg-white shadow-[0_2px_8px_rgb(15_23_42_/_0.06),0_8px_24px_rgb(15_23_42_/_0.04)]'
+        className='border-shNeutral-200/80 somecard overflow-hidden rounded-2xl border bg-white'
       >
         <div className='overflow-x-auto'>
           <table className='w-full min-w-[760px] border-collapse text-left'>
@@ -376,6 +386,16 @@ export default function UsersTable() {
         onConfirm={handleConfirmDelete}
         isPending={deleteMutation.isPending}
       />
+
+      {/* Edit User Modal */}
+      {editModal.user && (
+        <EditUserModal
+          key={editModal.user.id}
+          isOpen={editModal.isOpen}
+          user={editModal.user}
+          onClose={handleCloseEditModal}
+        />
+      )}
     </div>
   );
 }
