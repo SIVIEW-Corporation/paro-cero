@@ -9,6 +9,7 @@ import {
   Shield,
   Image,
   Save,
+  TriangleAlert,
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import { useForm } from '@tanstack/react-form';
@@ -18,7 +19,12 @@ import { FormField, PasswordField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
 import type { User as UserType } from '@/store/auth-store';
 import { getRoleLabel } from '@/features/technician/access';
-import { editUserSchema } from '../lib/edit-user-schema';
+import {
+  ROLE_CHANGE_WARNING,
+  buildEditUserValues,
+  editUserSchema,
+  hasRoleChanged,
+} from '../lib/edit-user-schema';
 import {
   EDITABLE_ROLES,
   isEditableRole,
@@ -40,9 +46,9 @@ export default function EditUserModal({
 }: EditUserModalProps) {
   const updateUser = useUpdateUserMutation();
 
-  // Only Operador/Visor can be reassigned here; any other role (Supervisor or
-  // an unrecognized one) is shown read-only and never sent back to the API.
-  const isPrivilegedRole = !isEditableRole(user.role);
+  // Supervisor, Operador and Visor can be reassigned in any direction; any
+  // other role (superadmin or unrecognized) is read-only and never sent back.
+  const isRoleLocked = !isEditableRole(user.role);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -57,9 +63,8 @@ export default function EditUserModal({
       password: '',
     },
     onSubmit: async ({ value }) => {
-      // Privileged roles are locked in the UI; never send them back to the API.
-      const { role, ...rest } = value;
-      const values = isPrivilegedRole ? rest : { ...rest, role };
+      // Role is sent only when it changes (the API then revokes sessions).
+      const values = buildEditUserValues(value, user.role);
       await updateUser.mutateAsync({ id: user.id, values });
       onClose();
     },
@@ -174,21 +179,20 @@ export default function EditUserModal({
                               () => e.target.value as EditableRole,
                             )
                           }
-                          disabled={isPrivilegedRole}
+                          disabled={isRoleLocked}
                           className={cn(
                             'text-shNeutral-900 placeholder:text-shNeutral-500 flex-1 appearance-none border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none!',
-                            isPrivilegedRole &&
+                            isRoleLocked &&
                               'text-shNeutral-500 cursor-not-allowed',
                           )}
                         >
-                          {(isPrivilegedRole
-                            ? [user.role]
-                            : EDITABLE_ROLES
-                          ).map((value) => (
-                            <option key={value} value={value}>
-                              {getRoleLabel(value)}
-                            </option>
-                          ))}
+                          {(isRoleLocked ? [user.role] : EDITABLE_ROLES).map(
+                            (value) => (
+                              <option key={value} value={value}>
+                                {getRoleLabel(value)}
+                              </option>
+                            ),
+                          )}
                         </select>
                         <div className='text-shNeutral-600 flex w-12 shrink-0 items-center justify-center'>
                           <svg
@@ -206,6 +210,19 @@ export default function EditUserModal({
                           </svg>
                         </div>
                       </div>
+                      {hasRoleChanged(user.role, field.state.value) && (
+                        <p
+                          role='status'
+                          className='bg-shDanger-50 border-shDanger-200 text-shDanger-700 mt-2 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs font-medium'
+                        >
+                          <TriangleAlert
+                            size={14}
+                            className='mt-0.5 shrink-0'
+                            aria-hidden='true'
+                          />
+                          {ROLE_CHANGE_WARNING}
+                        </p>
+                      )}
                     </div>
                   )}
                 />

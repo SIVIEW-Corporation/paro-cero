@@ -15,8 +15,15 @@ export const CREATABLE_ROLE_LABELS: Record<CreatableRole, string> = {
   viewer: ROLE_LABELS.viewer,
 };
 
-/** Roles that can be reassigned from the edit modal (admin stays locked). */
-export const EDITABLE_ROLES = [APP_ROLES.OPERATOR, APP_ROLES.VIEWER] as const;
+/**
+ * Roles the superadmin can reassign from the edit modal, in any direction.
+ * `superadmin` is never offered; unrecognized roles stay read-only.
+ */
+export const EDITABLE_ROLES = [
+  APP_ROLES.ADMIN,
+  APP_ROLES.OPERATOR,
+  APP_ROLES.VIEWER,
+] as const;
 
 export type EditableRole = (typeof EDITABLE_ROLES)[number];
 

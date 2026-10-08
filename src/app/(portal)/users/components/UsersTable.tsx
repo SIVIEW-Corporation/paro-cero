@@ -14,7 +14,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
+  Search,
+  Shield,
   Trash2,
+  X,
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import { useAuthStore, User } from '@/store/auth-store';
@@ -23,6 +26,7 @@ import {
   getRoleLabel,
   type AppRole,
 } from '@/features/technician/access';
+import { cn } from '@/lib/utils';
 import ConfirmModal from './confirm-modal';
 import EditUserModal from './EditUserModal';
 
@@ -34,6 +38,21 @@ import {
   getCompanyName,
   toCompanyFilter,
 } from '../lib/users-company-filter';
+import {
+  EMPTY_USERS_LIST_FILTERS,
+  INITIAL_USERS_LIST_STATE,
+  ROLE_FILTER_OPTIONS,
+  USERS_SEARCH_DEBOUNCE_MS,
+  USERS_SEARCH_MAX_LENGTH,
+  applyUsersListFilter,
+  getUsersEmptyState,
+  hasActiveUsersListFilters,
+  normalizeUsersSearch,
+  toRoleFilter,
+  type UsersListFilters,
+  type UsersListState,
+} from '../lib/users-list-filters';
+import { createDebouncer } from '../lib/debounce';
 import { useDeleteUserMutation } from '../hooks/use-delete-user-mutation';
 import Button from '@/global-components/Button';
 
@@ -66,6 +85,15 @@ const roleBadgeStyles: Record<AppRole, RoleBadgeStyle> = {
   },
 };
 
+const filterFieldClass =
+  'border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2';
+const filterIconClass =
+  'text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-11 shrink-0 items-center justify-center transition-colors';
+const filterLabelClass =
+  'text-shNeutral-700 group-focus-within:text-shPrimary-700 text-xs font-medium transition-colors duration-300';
+const filterSelectClass =
+  'text-shNeutral-900 flex-1 cursor-pointer appearance-none border-0! bg-transparent! py-2.5 pr-4 text-sm ring-0! outline-none! disabled:cursor-not-allowed disabled:opacity-60';
+
 interface ConfirmModalState {
   isOpen: boolean;
   userId: string;
@@ -73,8 +101,14 @@ interface ConfirmModalState {
 }
 
 export default function UsersTable() {
-  const [page, setPage] = useState(1);
-  const [companyFilter, setCompanyFilter] = useState<string | null>(null);
+  const [listState, setListState] = useState<UsersListState>(
+    INITIAL_USERS_LIST_STATE,
+  );
+  const [searchInput, setSearchInput] = useState('');
+  const [searchDebouncer] = useState(() =>
+    createDebouncer(USERS_SEARCH_DEBOUNCE_MS),
+  );
+  const { page, ...filters } = listState;
   const size = 10;
   const sessionKey = useAuthStore(
     (state) =>
@@ -90,24 +124,55 @@ export default function UsersTable() {
     user: User | null;
   }>({ isOpen: false, user: null });
 
-  const { data, isPending, isFetching, error } = useOperatorsQuery(
-    page,
-    size,
-    companyFilter,
-  );
+  const { data, isPending, isFetching, isPlaceholderData, error } =
+    useOperatorsQuery(page, size, filters);
   const companiesQuery = useCompaniesQuery(true, { includeInactive: true });
   const companies = companiesQuery.data?.items;
   const companyOptions = getCompanyFilterOptions(companies);
   const deleteMutation = useDeleteUserMutation();
 
+  const hasFilters = hasActiveUsersListFilters(filters);
+  const canClearFilters =
+    hasFilters || normalizeUsersSearch(searchInput) !== null;
+  const emptyState = getUsersEmptyState(hasFilters);
+
   useEffect(() => {
-    setPage(1);
-    setCompanyFilter(null);
-  }, [sessionKey]);
+    searchDebouncer.cancel();
+    setListState(INITIAL_USERS_LIST_STATE);
+    setSearchInput('');
+  }, [sessionKey, searchDebouncer]);
+
+  useEffect(() => () => searchDebouncer.cancel(), [searchDebouncer]);
+
+  // Every effective filter change resets to page 1 (see applyUsersListFilter).
+  const updateFilters = (patch: Partial<UsersListFilters>) => {
+    setListState((prev) => applyUsersListFilter(prev, patch));
+  };
 
   const handleCompanyFilterChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    setCompanyFilter(toCompanyFilter(event.target.value));
-    setPage(1);
+    updateFilters({ companyId: toCompanyFilter(event.target.value) });
+  };
+
+  const handleRoleFilterChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    updateFilters({ role: toRoleFilter(event.target.value) });
+  };
+
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSearchInput(value);
+    searchDebouncer.run(() =>
+      updateFilters({ search: normalizeUsersSearch(value) }),
+    );
+  };
+
+  const handleClearFilters = () => {
+    searchDebouncer.cancel();
+    setSearchInput('');
+    updateFilters(EMPTY_USERS_LIST_FILTERS);
+  };
+
+  const goToPage = (nextPage: number) => {
+    setListState((prev) => ({ ...prev, page: nextPage }));
   };
 
   const handleDeleteClick = (userId: string, userName: string) => {
@@ -286,32 +351,92 @@ export default function UsersTable() {
       {/* Decorative orb */}
       <div className='bg-shAccent-500/5 pointer-events-none absolute -top-12 -right-12 h-64 w-64 rounded-full blur-3xl' />
 
-      <div className='group relative z-10 flex flex-col gap-1.5 sm:max-w-xs'>
-        <label
-          htmlFor='users-company-filter'
-          className='text-shNeutral-700 group-focus-within:text-shPrimary-700 text-xs font-medium transition-colors duration-300'
-        >
-          Filtrar por empresa
-        </label>
-        <div className='border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
-          <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-11 shrink-0 items-center justify-center transition-colors'>
-            <Building2 size={16} />
+      <section
+        aria-label='Filtros de usuarios'
+        className='relative z-10 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end'
+      >
+        <div className='group flex flex-1 flex-col gap-1.5 lg:min-w-[260px]'>
+          <label htmlFor='users-search' className={filterLabelClass}>
+            Buscar
+          </label>
+          <div className={filterFieldClass}>
+            <div className={filterIconClass}>
+              <Search size={16} />
+            </div>
+            <input
+              id='users-search'
+              type='search'
+              value={searchInput}
+              onChange={handleSearchChange}
+              maxLength={USERS_SEARCH_MAX_LENGTH}
+              placeholder='Buscar por nombre o email'
+              autoComplete='off'
+              className='text-shNeutral-900 placeholder:text-shNeutral-500 flex-1 border-0! bg-transparent! py-2.5 pr-4 text-sm ring-0! outline-none!'
+            />
           </div>
-          <select
-            id='users-company-filter'
-            value={companyFilter ?? ''}
-            onChange={handleCompanyFilterChange}
-            disabled={companiesQuery.isPending || companiesQuery.isError}
-            className='text-shNeutral-900 flex-1 cursor-pointer appearance-none border-0! bg-transparent! py-2.5 pr-4 text-sm ring-0! outline-none! disabled:cursor-not-allowed disabled:opacity-60'
-          >
-            {companyOptions.map((option) => (
-              <option key={option.value || 'all'} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
         </div>
-      </div>
+
+        <div className='group flex flex-col gap-1.5 lg:w-64'>
+          <label htmlFor='users-company-filter' className={filterLabelClass}>
+            Filtrar por empresa
+          </label>
+          <div className={filterFieldClass}>
+            <div className={filterIconClass}>
+              <Building2 size={16} />
+            </div>
+            <select
+              id='users-company-filter'
+              value={filters.companyId ?? ''}
+              onChange={handleCompanyFilterChange}
+              disabled={companiesQuery.isPending || companiesQuery.isError}
+              className={filterSelectClass}
+            >
+              {companyOptions.map((option) => (
+                <option key={option.value || 'all'} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className='group flex flex-col gap-1.5 lg:w-56'>
+          <label htmlFor='users-role-filter' className={filterLabelClass}>
+            Filtrar por rol
+          </label>
+          <div className={filterFieldClass}>
+            <div className={filterIconClass}>
+              <Shield size={16} />
+            </div>
+            <select
+              id='users-role-filter'
+              value={filters.role ?? ''}
+              onChange={handleRoleFilterChange}
+              className={filterSelectClass}
+            >
+              {ROLE_FILTER_OPTIONS.map((option) => (
+                <option key={option.value || 'all'} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {canClearFilters && (
+          <Button
+            type='button'
+            onClick={handleClearFilters}
+            intent='neutral'
+            variant='ghost'
+            icon={<X size={16} />}
+            shadowSize='none'
+            className='h-[42px] rounded-lg px-3 text-sm'
+          >
+            Limpiar filtros
+          </Button>
+        )}
+      </section>
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -338,7 +463,12 @@ export default function UsersTable() {
                 </tr>
               ))}
             </thead>
-            <tbody className='bg-white'>
+            <tbody
+              className={cn(
+                'bg-white transition-opacity',
+                isPlaceholderData && isFetching && 'opacity-60',
+              )}
+            >
               {isPending
                 ? [...Array(5)].map((_, i) => (
                     <motion.tr
@@ -393,10 +523,10 @@ export default function UsersTable() {
               <AlertCircle size={32} className='text-shNeutral-400' />
             </div>
             <p className='text-shNeutral-900 mb-1 text-base font-bold'>
-              No se encontraron usuarios
+              {emptyState.title}
             </p>
             <p className='text-shNeutral-500 text-sm'>
-              Crea un nuevo usuario para comenzar.
+              {emptyState.description}
             </p>
           </motion.div>
         )}
@@ -415,7 +545,7 @@ export default function UsersTable() {
           <div className='flex items-center gap-1 sm:gap-2 md:gap-3'>
             <Button
               type='button'
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => goToPage(Math.max(1, currentPage - 1))}
               disabled={isFetching || currentPage <= 1}
               aria-label='Página anterior'
               title='Página Anterior'
@@ -428,7 +558,7 @@ export default function UsersTable() {
             />
             <Button
               type='button'
-              onClick={() => setPage((p) => Math.min(pages, p + 1))}
+              onClick={() => goToPage(Math.min(pages, currentPage + 1))}
               disabled={isFetching || currentPage >= pages}
               aria-label='Página siguiente'
               title='Página Siguiente'

@@ -554,16 +554,59 @@ test('only superadmin can create users: Supervisor, Operador and Visor', () => {
   assert.equal(canCreateRole('admin', 'operator'), false);
 });
 
-test('only operator and viewer roles are editable from the edit modal', () => {
+test('admin, operator and viewer roles are editable; others stay locked', () => {
   const { EDITABLE_ROLES, isEditableRole } = load(
     `${moduleDir}/lib/user-role-options.ts`,
   );
-  assert.deepEqual([...EDITABLE_ROLES], ['operator', 'viewer']);
-  assert.equal(isEditableRole('operator'), true);
-  assert.equal(isEditableRole('viewer'), true);
-  for (const role of ['admin', 'superadmin', 'jefe', 'tecnico', '', null]) {
+  assert.deepEqual([...EDITABLE_ROLES], ['admin', 'operator', 'viewer']);
+  for (const role of ['admin', 'operator', 'viewer']) {
+    assert.equal(isEditableRole(role), true, role);
+  }
+  for (const role of ['superadmin', 'jefe', 'tecnico', '', null, undefined]) {
     assert.equal(isEditableRole(role), false, String(role));
   }
+});
+
+test('role change is detected only for editable roles that actually change', () => {
+  const { hasRoleChanged, ROLE_CHANGE_WARNING } = load(
+    `${moduleDir}/lib/edit-user-schema.ts`,
+  );
+  assert.equal(
+    ROLE_CHANGE_WARNING,
+    'Al cambiar el rol se cerrarán las sesiones activas del usuario',
+  );
+  assert.equal(hasRoleChanged('admin', 'operator'), true);
+  assert.equal(hasRoleChanged('viewer', 'admin'), true);
+  assert.equal(hasRoleChanged('operator', 'viewer'), true);
+  assert.equal(hasRoleChanged('operator', 'operator'), false);
+  assert.equal(hasRoleChanged('superadmin', 'admin'), false);
+  assert.equal(hasRoleChanged('jefe', 'operator'), false);
+  assert.equal(hasRoleChanged('admin', 'superadmin'), false);
+});
+
+test('edit payload sends role only when an editable role changes', () => {
+  const { buildEditUserValues } = load(`${moduleDir}/lib/edit-user-schema.ts`);
+  const base = { email: 'a@b.mx', fullName: 'Ana', area: '', password: '' };
+  assert.deepEqual(
+    buildEditUserValues({ ...base, role: 'operator' }, 'admin'),
+    { ...base, role: 'operator' },
+  );
+  assert.deepEqual(buildEditUserValues({ ...base, role: 'admin' }, 'viewer'), {
+    ...base,
+    role: 'admin',
+  });
+  assert.deepEqual(
+    buildEditUserValues({ ...base, role: 'admin' }, 'admin'),
+    base,
+  );
+  assert.deepEqual(
+    buildEditUserValues({ ...base, role: 'admin' }, 'superadmin'),
+    base,
+  );
+  assert.deepEqual(
+    buildEditUserValues({ ...base, role: 'operator' }, 'jefe'),
+    base,
+  );
 });
 
 test('companies tab is visible only to superadmin', () => {
@@ -628,22 +671,57 @@ test('getOperators sends company_id only when a company is selected', async () =
   assert.equal(unfiltered.searchParams.has('company_id'), false);
 });
 
-test('users list query key includes the company filter', () => {
+test('users list query key includes every filter', () => {
   const { usersQueryKeys } = load(`${moduleDir}/lib/users-query-keys.ts`);
   const scope = { userId: 'u1', companyId: null, role: 'superadmin' };
-  const all = usersQueryKeys.list(scope, 1, 10, null);
-  const filtered = usersQueryKeys.list(scope, 1, 10, COMPANY_ID);
+  const all = usersQueryKeys.list(scope, 1, 10);
+  const filters = { companyId: COMPANY_ID, role: 'viewer', search: 'ana' };
+  const filtered = usersQueryKeys.list(scope, 1, 10, filters);
   assert.notDeepEqual(all, filtered);
-  assert.deepEqual(filtered.at(-1), {
+  assert.deepEqual(all.at(-1), {
     page: 1,
     size: 10,
-    companyId: COMPANY_ID,
+    companyId: null,
+    role: null,
+    search: null,
   });
-  assert.deepEqual(all.at(-1), { page: 1, size: 10, companyId: null });
+  assert.deepEqual(filtered.at(-1), { page: 1, size: 10, ...filters });
+  for (const patch of [
+    { companyId: 'other' },
+    { role: 'admin' },
+    { search: 'luis' },
+  ]) {
+    assert.notDeepEqual(
+      usersQueryKeys.list(scope, 1, 10, { ...filters, ...patch }),
+      filtered,
+      JSON.stringify(patch),
+    );
+  }
   const prefix = usersQueryKeys.listScope(scope);
   for (const key of [all, filtered]) {
     assert.deepEqual(key.slice(0, prefix.length), [...prefix]);
   }
+});
+
+test('previous users page is kept only within the same session scope', () => {
+  const { usersQueryKeys, keepPreviousUsersPage } = load(
+    `${moduleDir}/lib/users-query-keys.ts`,
+  );
+  const scope = { userId: 'u1', companyId: null, role: 'superadmin' };
+  const page = { items: [{ id: 'x' }], total: 1, page: 1, size: 10, pages: 1 };
+  const keep = keepPreviousUsersPage(scope);
+  assert.equal(
+    keep(page, { queryKey: usersQueryKeys.list(scope, 2, 10) }),
+    page,
+  );
+  assert.equal(
+    keep(page, {
+      queryKey: usersQueryKeys.list({ ...scope, userId: 'u2' }, 1, 10),
+    }),
+    undefined,
+  );
+  assert.equal(keep(page, undefined), undefined);
+  assert.equal(keep(undefined, undefined), undefined);
 });
 
 test('company filter options include all companies and mark inactive ones', () => {
@@ -678,4 +756,164 @@ test('company name resolves from the companies list with a dash fallback', () =>
   assert.equal(getCompanyName(companies, 'missing'), '—');
   assert.equal(getCompanyName(companies, null), '—');
   assert.equal(getCompanyName(undefined, 'c1'), '—');
+});
+
+// ---------------------------------------------------------------------------
+// Users list role filter and search (superadmin)
+// ---------------------------------------------------------------------------
+
+test('users list query sends role and search only when set', () => {
+  const { buildUsersListQuery } = load(
+    `${moduleDir}/services/operators-service.ts`,
+  );
+  const parse = (query) => new URLSearchParams(query);
+
+  const full = parse(
+    buildUsersListQuery(3, 10, {
+      companyId: COMPANY_ID,
+      role: 'operator',
+      search: '  Ana López  ',
+    }),
+  );
+  assert.equal(full.get('page'), '3');
+  assert.equal(full.get('size'), '10');
+  assert.equal(full.get('company_id'), COMPANY_ID);
+  assert.equal(full.get('role'), 'operator');
+  assert.equal(full.get('search'), 'Ana López');
+
+  for (const filters of [
+    {},
+    { role: null, search: null },
+    { search: '' },
+    { search: '   ' },
+  ]) {
+    const params = parse(buildUsersListQuery(1, 10, filters));
+    assert.equal(params.has('role'), false, JSON.stringify(filters));
+    assert.equal(params.has('search'), false, JSON.stringify(filters));
+    assert.equal(params.has('company_id'), false, JSON.stringify(filters));
+  }
+
+  const long = parse(buildUsersListQuery(1, 10, { search: 'a'.repeat(150) }));
+  assert.equal(long.get('search'), 'a'.repeat(100));
+});
+
+test('getOperators combines company, role and search filters', async () => {
+  const { module, calls } = mockApiClient(() =>
+    ok({ items: [], total: 0, page: 1, size: 10, pages: 0 }),
+  );
+  const { operatorsService } = load(
+    `${moduleDir}/services/operators-service.ts`,
+    { '@/lib/api-client': module },
+  );
+  await operatorsService.getOperators(1, 10, {
+    companyId: COMPANY_ID,
+    role: 'viewer',
+    search: 'acme.mx',
+  });
+  const url = new URL(calls[0].url, 'http://local');
+  assert.equal(url.pathname, '/users/');
+  assert.equal(url.searchParams.get('company_id'), COMPANY_ID);
+  assert.equal(url.searchParams.get('role'), 'viewer');
+  assert.equal(url.searchParams.get('search'), 'acme.mx');
+});
+
+test('role filter options are all roles plus Supervisor, Operador and Visor', () => {
+  const { ROLE_FILTER_OPTIONS, toRoleFilter } = load(
+    `${moduleDir}/lib/users-list-filters.ts`,
+  );
+  assert.deepEqual(ROLE_FILTER_OPTIONS, [
+    { value: '', label: 'Todos los roles' },
+    { value: 'admin', label: 'Supervisor' },
+    { value: 'operator', label: 'Operador' },
+    { value: 'viewer', label: 'Visor' },
+  ]);
+  assert.equal(toRoleFilter(''), null);
+  assert.equal(toRoleFilter('admin'), 'admin');
+  assert.equal(toRoleFilter('operator'), 'operator');
+  assert.equal(toRoleFilter('viewer'), 'viewer');
+  for (const role of ['superadmin', 'jefe', 'bogus']) {
+    assert.equal(toRoleFilter(role), null, role);
+  }
+});
+
+test('search is trimmed, capped at 100 chars and omitted when empty', () => {
+  const { normalizeUsersSearch, USERS_SEARCH_MAX_LENGTH } = load(
+    `${moduleDir}/lib/users-list-filters.ts`,
+  );
+  assert.equal(USERS_SEARCH_MAX_LENGTH, 100);
+  assert.equal(normalizeUsersSearch('  ana  '), 'ana');
+  assert.equal(normalizeUsersSearch('a'), 'a');
+  assert.equal(normalizeUsersSearch(''), null);
+  assert.equal(normalizeUsersSearch('    '), null);
+  assert.equal(normalizeUsersSearch(null), null);
+  assert.equal(normalizeUsersSearch(undefined), null);
+  assert.equal(normalizeUsersSearch(` ${'b'.repeat(120)} `), 'b'.repeat(100));
+});
+
+test('changing any filter resets to page 1; unchanged filters keep state', () => {
+  const { applyUsersListFilter, INITIAL_USERS_LIST_STATE } = load(
+    `${moduleDir}/lib/users-list-filters.ts`,
+  );
+  assert.deepEqual(INITIAL_USERS_LIST_STATE, {
+    page: 1,
+    companyId: null,
+    role: null,
+    search: null,
+  });
+  const onPage3 = { ...INITIAL_USERS_LIST_STATE, page: 3, role: 'admin' };
+  for (const patch of [
+    { companyId: COMPANY_ID },
+    { role: 'viewer' },
+    { role: null },
+    { search: 'ana' },
+  ]) {
+    const next = applyUsersListFilter(onPage3, patch);
+    assert.equal(next.page, 1, JSON.stringify(patch));
+    assert.deepEqual(next, { ...onPage3, ...patch, page: 1 });
+  }
+  assert.equal(applyUsersListFilter(onPage3, { role: 'admin' }), onPage3);
+  assert.equal(applyUsersListFilter(onPage3, {}), onPage3);
+});
+
+test('active filters are detected from company, role or search', () => {
+  const { hasActiveUsersListFilters, getUsersEmptyState } = load(
+    `${moduleDir}/lib/users-list-filters.ts`,
+  );
+  const none = { companyId: null, role: null, search: null };
+  assert.equal(hasActiveUsersListFilters(none), false);
+  assert.equal(hasActiveUsersListFilters({ ...none, companyId: 'c1' }), true);
+  assert.equal(hasActiveUsersListFilters({ ...none, role: 'viewer' }), true);
+  assert.equal(hasActiveUsersListFilters({ ...none, search: 'ana' }), true);
+  assert.equal(
+    getUsersEmptyState(true).title,
+    'No hay usuarios que coincidan con los filtros',
+  );
+  assert.equal(getUsersEmptyState(false).title, 'No se encontraron usuarios');
+  assert.equal(
+    getUsersEmptyState(false).description,
+    'Crea un nuevo usuario para comenzar.',
+  );
+});
+
+test('debouncer runs only the last scheduled callback after the delay', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const { createDebouncer } = load(`${moduleDir}/lib/debounce.ts`);
+  const { USERS_SEARCH_DEBOUNCE_MS } = load(
+    `${moduleDir}/lib/users-list-filters.ts`,
+  );
+  assert.equal(USERS_SEARCH_DEBOUNCE_MS, 300);
+  const debouncer = createDebouncer(USERS_SEARCH_DEBOUNCE_MS);
+  const seen = [];
+  debouncer.run(() => seen.push('a'));
+  t.mock.timers.tick(200);
+  debouncer.run(() => seen.push('ab'));
+  t.mock.timers.tick(299);
+  assert.deepEqual(seen, []);
+  t.mock.timers.tick(1);
+  assert.deepEqual(seen, ['ab']);
+
+  debouncer.run(() => seen.push('cancelled'));
+  debouncer.cancel();
+  t.mock.timers.tick(1000);
+  assert.deepEqual(seen, ['ab']);
 });

@@ -4,6 +4,10 @@ import type { NewUserSchema } from '../lib/new-user-schema';
 import type { EditUserSchema } from '../lib/edit-user-schema';
 import type { User } from '@/store/auth-store';
 import { APP_ROLES } from '@/features/technician/access';
+import {
+  normalizeUsersSearch,
+  type UsersListFilters as UsersListFilterValues,
+} from '../lib/users-list-filters';
 
 type SessionRequestOptions = Pick<ApiClientOptions, 'isRequestCurrent'>;
 
@@ -15,21 +19,26 @@ export interface PaginatedUsersResponse {
   pages: number;
 }
 
-export interface UsersListFilters {
-  companyId?: string | null;
-}
+export type UsersListFilters = Partial<UsersListFilterValues>;
 
-/** Query string for `GET /users/`; `company_id` only when a company is set. */
+/**
+ * Query string for `GET /users/`. Filters combine with AND on the server and
+ * are only sent when set: `search` is trimmed (max 100 chars) and omitted when
+ * blank.
+ */
 export function buildUsersListQuery(
   page: number,
   size: number,
-  { companyId }: UsersListFilters = {},
+  { companyId, role, search }: UsersListFilters = {},
 ): string {
   const params = new URLSearchParams();
   params.set('page', String(page));
   params.set('size', String(size));
   params.set('include_inactive', 'false');
   if (companyId) params.set('company_id', companyId);
+  if (role) params.set('role', role);
+  const normalizedSearch = normalizeUsersSearch(search);
+  if (normalizedSearch) params.set('search', normalizedSearch);
   return params.toString();
 }
 
@@ -117,8 +126,8 @@ export const operatorsService = {
   },
 
   /**
-   * Paginated active users (superadmin only). `filters.companyId` narrows the
-   * list to one company; null/undefined lists every company.
+   * Paginated active company users (superadmin only). `filters` narrow the
+   * list by company, role and name/email search; unset filters are omitted.
    */
   getOperators: async (
     page: number,

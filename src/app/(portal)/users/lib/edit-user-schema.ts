@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CREATABLE_ROLES } from './user-role-options';
+import { CREATABLE_ROLES, isEditableRole } from './user-role-options';
 
 export const editUserSchema = z.object({
   email: z.email('Email inválido').or(z.literal('')).optional(),
@@ -35,3 +35,30 @@ export const editUserSchema = z.object({
 });
 
 export type EditUserSchema = z.infer<typeof editUserSchema>;
+
+export const ROLE_CHANGE_WARNING =
+  'Al cambiar el rol se cerrarán las sesiones activas del usuario';
+
+/** True when an editable role is being changed to another editable role. */
+export function hasRoleChanged(
+  originalRole: string | null | undefined,
+  nextRole: string | null | undefined,
+): boolean {
+  return (
+    isEditableRole(originalRole) &&
+    isEditableRole(nextRole) &&
+    originalRole !== nextRole
+  );
+}
+
+/**
+ * Edit payload: `role` is sent only when it actually changes (a role change
+ * revokes the user's sessions); locked roles are never sent back.
+ */
+export function buildEditUserValues(
+  values: EditUserSchema,
+  originalRole: string | null | undefined,
+): EditUserSchema {
+  const { role, ...rest } = values;
+  return hasRoleChanged(originalRole, role) ? { ...rest, role } : rest;
+}
