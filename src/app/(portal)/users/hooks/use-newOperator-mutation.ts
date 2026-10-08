@@ -16,7 +16,7 @@ export function useCreateUserMutation() {
 
   return useMutation({
     mutationFn: async (values: NewUserSchema) => {
-      const result = await operatorsService.createOperator(values, {
+      const result = await operatorsService.createUser(values, {
         isRequestCurrent: () => usersSessionIsCurrent(scope),
       });
       return result;

@@ -2,13 +2,21 @@
 
 import { useAuthStore } from '@/store/auth-store';
 import { useState, useEffect } from 'react';
-import { UserRoundPlus, UsersRound } from 'lucide-react';
+import { Building2, UserRoundPlus, UsersRound } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import { AnimatePresence } from 'motion/react';
 import Image from 'next/image';
 
 import NewUserForm from './NewUserForm';
 import UsersTable from './components/UsersTable';
+import CompaniesTab from './components/companies/CompaniesTab';
+import {
+  canManageCompanies,
+  getUsersTabIds,
+  resolveUsersTab,
+  USERS_TABS,
+  type UsersTabId,
+} from './lib/users-tabs';
 import {
   SectionTabs,
   type tabInterface,
@@ -27,18 +35,28 @@ export default function UsersPage() {
     }
   }, [isSuperadmin]);
 
-  const tabs: tabInterface[] = [
-    {
-      id: 'all-users',
+  const tabDefinitions: Record<UsersTabId, tabInterface> = {
+    [USERS_TABS.ALL_USERS]: {
+      id: USERS_TABS.ALL_USERS,
       label: 'Usuarios disponibles',
       icon: <UsersRound size={20} />,
     },
-    {
-      id: 'new-user',
+    [USERS_TABS.NEW_USER]: {
+      id: USERS_TABS.NEW_USER,
       label: 'Crear nuevo',
       icon: <UserRoundPlus size={20} />,
     },
-  ];
+    [USERS_TABS.COMPANIES]: {
+      id: USERS_TABS.COMPANIES,
+      label: 'Empresas',
+      icon: <Building2 size={20} />,
+    },
+  };
+  const tabs = getUsersTabIds(user?.role).map((id) => tabDefinitions[id]);
+  // Never render a tab the current role cannot see, even if it was forced.
+  const currentTab = resolveUsersTab(user?.role, activeTab);
+  const showCompanies =
+    currentTab === USERS_TABS.COMPANIES && canManageCompanies(user?.role);
 
   if (!isHydrated) {
     return (
@@ -90,7 +108,7 @@ export default function UsersPage() {
 
       <SectionTabs
         tabs={tabs}
-        activeTab={activeTab}
+        activeTab={currentTab}
         setActiveTab={setActiveTab}
       />
 
@@ -98,24 +116,26 @@ export default function UsersPage() {
         <div className='relative h-full w-full'>
           <AnimatePresence mode='wait'>
             <motion.div
-              key={activeTab}
+              key={currentTab}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 15 }}
               transition={{ duration: 0.2 }}
               className='h-full w-full'
             >
-              {activeTab === 'all-users' && (
+              {currentTab === USERS_TABS.ALL_USERS && (
                 <div className='mx-auto max-w-7xl'>
                   <UsersTable />
                 </div>
               )}
-              {activeTab === 'new-user' && (
+              {currentTab === USERS_TABS.NEW_USER && (
                 <div className='mx-auto max-w-7xl'>
-                  <NewUserForm
-                    company_id={user?.company_id}
-                    canSelectCompany={user?.role === 'superadmin'}
-                  />
+                  <NewUserForm currentRole={user?.role} />
+                </div>
+              )}
+              {showCompanies && (
+                <div className='mx-auto max-w-7xl'>
+                  <CompaniesTab />
                 </div>
               )}
             </motion.div>

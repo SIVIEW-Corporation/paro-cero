@@ -9,6 +9,7 @@ import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import {
   canVisitDashboard,
+  getRoleLabel,
   isTechnicianRole,
 } from '@/features/technician/access';
 // Store & Hooks
@@ -28,22 +29,6 @@ function getUserInitials(user: { full_name: string }): string {
   }
   const lastWord = words[words.length - 1];
   return (words[0][0] + lastWord[0]).toUpperCase();
-}
-
-/**
- * Get role display label in Spanish
- */
-function getRoleLabel(role: string): string {
-  const labels: Record<string, string> = {
-    admin: 'Administrador',
-    jefe: 'Jefe de mantenimiento',
-    supervisor: 'Jefe de mantenimiento',
-    tecnico: 'Técnico',
-    operator: 'Técnico',
-    viewer: 'Visor',
-    superadmin: 'Super Administrador',
-  };
-  return labels[role] || role;
 }
 
 export default function Navbar() {

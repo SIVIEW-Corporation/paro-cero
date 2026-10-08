@@ -4,7 +4,14 @@ import { useForm } from '@tanstack/react-form';
 import { useCreateUserMutation } from '@/app/(portal)/users/hooks/use-newOperator-mutation';
 import { useCompaniesQuery } from '@/app/(portal)/users/hooks/use-companies-query';
 import { newUserSchema } from './lib/new-user-schema';
+import {
+  CREATABLE_ROLE_LABELS,
+  canCreateRole,
+  getCreatableRoles,
+  type CreatableRole,
+} from './lib/user-role-options';
 import * as motion from 'motion/react-client';
+import { toast } from 'sonner';
 import {
   Mail,
   User,
@@ -19,8 +26,8 @@ import { FormField, PasswordField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
 
 interface NewUserFormProps {
-  company_id?: string | null;
-  canSelectCompany?: boolean;
+  /** Role of the signed-in user; decides which roles can be created. */
+  currentRole?: string | null;
 }
 
 const fieldAnimation = {
@@ -32,24 +39,26 @@ const fieldAnimation = {
   }),
 };
 
-export default function NewUserForm({
-  company_id,
-  canSelectCompany = false,
-}: NewUserFormProps) {
+export default function NewUserForm({ currentRole }: NewUserFormProps) {
+  const roleOptions = getCreatableRoles(currentRole);
   const createUser = useCreateUserMutation();
-  const companiesQuery = useCompaniesQuery(canSelectCompany);
+  const companiesQuery = useCompaniesQuery(roleOptions.length > 0);
 
   const form = useForm({
     defaultValues: {
       email: '',
       password: '',
       fullName: '',
-      role: 'operator' as 'jefe' | 'operator' | 'viewer',
-      companyId: company_id || '',
+      role: 'operator' as CreatableRole,
+      companyId: '',
       area: '',
       jobTitle: '',
     },
     onSubmit: async ({ value }) => {
+      if (!canCreateRole(currentRole, value.role)) {
+        toast.error('No tienes permiso para crear usuarios con ese rol.');
+        return;
+      }
       try {
         await createUser.mutateAsync(value);
         form.reset();
@@ -104,92 +113,79 @@ export default function NewUserForm({
           }}
           className='space-y-5'
         >
-          {/* Company scope is fixed for admins and explicit for superadmins. */}
-          {canSelectCompany ? (
-            <form.Field
-              name='companyId'
-              validators={{
-                onChange: newUserSchema.shape.companyId,
-              }}
-              children={(field) => {
-                const hasError = field.state.meta.errors.length > 0;
-                const companies = companiesQuery.data?.items ?? [];
+          {/* The superadmin always picks the company of the new user. */}
+          <form.Field
+            name='companyId'
+            validators={{
+              onChange: newUserSchema.shape.companyId,
+            }}
+            children={(field) => {
+              const hasError = field.state.meta.errors.length > 0;
+              const companies = companiesQuery.data?.items ?? [];
 
-                return (
-                  <div className='group'>
-                    <label
-                      htmlFor='companyId'
-                      className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
-                    >
-                      Empresa
-                    </label>
-                    <div
-                      className={cn(
-                        'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
-                        hasError
-                          ? 'border-shDanger-500'
-                          : 'border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 focus-within:ring-2',
-                      )}
-                    >
-                      <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
-                        <Building2 size={16} />
-                      </div>
-                      <select
-                        id='companyId'
-                        name={field.name}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        disabled={
-                          companiesQuery.isPending || companiesQuery.isError
-                        }
-                        className='text-shNeutral-900 flex-1 appearance-none border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none! disabled:cursor-not-allowed disabled:opacity-60'
-                      >
-                        <option value=''>Seleccioná una empresa</option>
-                        {companies.map((company) => (
-                          <option key={company.id} value={company.id}>
-                            {company.name}
-                          </option>
-                        ))}
-                      </select>
+              return (
+                <div className='group'>
+                  <label
+                    htmlFor='companyId'
+                    className='text-shNeutral-700 group-focus-within:text-shPrimary-700 mb-1.5 block text-xs font-medium transition-colors duration-300'
+                  >
+                    Empresa
+                  </label>
+                  <div
+                    className={cn(
+                      'flex items-center overflow-hidden rounded-lg border bg-white transition-all',
+                      hasError
+                        ? 'border-shDanger-500'
+                        : 'border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 focus-within:ring-2',
+                    )}
+                  >
+                    <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-12 shrink-0 items-center justify-center transition-colors'>
+                      <Building2 size={16} />
                     </div>
-                    {companiesQuery.isPending && (
-                      <p className='text-shNeutral-500 mt-1.5 text-xs'>
-                        Cargando empresas disponibles...
-                      </p>
-                    )}
-                    {companiesQuery.isError && (
-                      <p className='text-shDanger-700 mt-1.5 text-xs font-medium'>
-                        No se pudieron cargar las empresas. Intenta nuevamente.
-                      </p>
-                    )}
-                    {hasError && (
-                      <p className='text-shDanger-700 mt-1.5 text-xs font-medium'>
-                        Seleccioná una empresa para continuar.
-                      </p>
-                    )}
+                    <select
+                      id='companyId'
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) =>
+                        field.handleChange(event.target.value)
+                      }
+                      disabled={
+                        companiesQuery.isPending || companiesQuery.isError
+                      }
+                      className='text-shNeutral-900 flex-1 appearance-none border-0! bg-transparent! py-2.5 pr-4 ring-0! outline-none! disabled:cursor-not-allowed disabled:opacity-60'
+                    >
+                      <option value=''>Seleccioná una empresa</option>
+                      {companies.map((company) => (
+                        <option key={company.id} value={company.id}>
+                          {company.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                );
-              }}
-            />
-          ) : (
-            <form.Field
-              name='companyId'
-              validators={{
-                onChange: newUserSchema.shape.companyId,
-              }}
-              children={(field) => (
-                <input
-                  type='hidden'
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-              )}
-            />
-          )}
+                  {companiesQuery.isPending && (
+                    <p className='text-shNeutral-500 mt-1.5 text-xs'>
+                      Cargando empresas disponibles...
+                    </p>
+                  )}
+                  {companiesQuery.isError && (
+                    <p className='text-shDanger-700 mt-1.5 text-xs font-medium'>
+                      No se pudieron cargar las empresas. Intenta nuevamente.
+                    </p>
+                  )}
+                  {hasError && (
+                    <p className='text-shDanger-700 mt-1.5 text-xs font-medium'>
+                      Seleccioná una empresa para continuar.
+                    </p>
+                  )}
+                  <p className='text-shNeutral-500 mt-1.5 text-xs'>
+                    El usuario quedará asignado a esta empresa. Solo se muestran
+                    empresas activas.
+                  </p>
+                </div>
+              );
+            }}
+          />
 
           {/* Row 1: Email + Password */}
           <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
@@ -288,15 +284,16 @@ export default function NewUserForm({
                         onBlur={field.handleBlur}
                         onChange={(e) =>
                           field.handleChange(
-                            () =>
-                              e.target.value as 'jefe' | 'operator' | 'viewer',
+                            () => e.target.value as CreatableRole,
                           )
                         }
                         className='text-shNeutral-900 border-shNeutral-100! bg-shNeutral-50! flex-1 cursor-pointer appearance-none rounded-none! border-0! border-l! py-2.5 pr-12 pl-2 shadow-inner! ring-0! outline-none!'
                       >
-                        <option value='jefe'>Jefe de mantenimiento</option>
-                        <option value='operator'>Operador</option>
-                        <option value='viewer'>Visor</option>
+                        {roleOptions.map((role) => (
+                          <option key={role} value={role}>
+                            {CREATABLE_ROLE_LABELS[role]}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>

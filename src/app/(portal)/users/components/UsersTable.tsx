@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -9,6 +10,7 @@ import {
 } from '@tanstack/react-table';
 import {
   AlertCircle,
+  Building2,
   ChevronLeft,
   ChevronRight,
   Pencil,
@@ -16,38 +18,47 @@ import {
 } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import { useAuthStore, User } from '@/store/auth-store';
+import {
+  getAppRole,
+  getRoleLabel,
+  type AppRole,
+} from '@/features/technician/access';
 import ConfirmModal from './confirm-modal';
 import EditUserModal from './EditUserModal';
 
 import formatDate from '@/utils/format-date';
 import { useOperatorsQuery } from '../hooks/use-users-query';
+import { useCompaniesQuery } from '../hooks/use-companies-query';
+import {
+  getCompanyFilterOptions,
+  getCompanyName,
+  toCompanyFilter,
+} from '../lib/users-company-filter';
 import { useDeleteUserMutation } from '../hooks/use-delete-user-mutation';
 import Button from '@/global-components/Button';
 
-const roleBadgeStyles: Record<
-  string,
-  { bg: string; text: string; border: string }
-> = {
-  operator: {
-    bg: 'bg-shNeutral-50',
-    text: 'text-shNeutral-700',
-    border: 'border-shNeutral-200',
-  },
-  admin: {
-    bg: 'bg-shPrimary-50',
-    text: 'text-shPrimary-700',
-    border: 'border-shPrimary-200',
-  },
-  jefe: {
-    bg: 'bg-shAccent-50',
-    text: 'text-shAccent-800',
-    border: 'border-shAccent-200',
-  },
-  supervisor: {
-    bg: 'bg-shAccent-50',
-    text: 'text-shAccent-800',
-    border: 'border-shAccent-200',
-  },
+interface RoleBadgeStyle {
+  bg: string;
+  text: string;
+  border: string;
+}
+
+const neutralBadge: RoleBadgeStyle = {
+  bg: 'bg-shNeutral-50',
+  text: 'text-shNeutral-700',
+  border: 'border-shNeutral-200',
+};
+
+const managerBadge: RoleBadgeStyle = {
+  bg: 'bg-shPrimary-50',
+  text: 'text-shPrimary-700',
+  border: 'border-shPrimary-200',
+};
+
+const roleBadgeStyles: Record<AppRole, RoleBadgeStyle> = {
+  superadmin: managerBadge,
+  admin: managerBadge,
+  operator: neutralBadge,
   viewer: {
     bg: 'bg-shSuccess-50',
     text: 'text-shSuccess-700',
@@ -63,6 +74,7 @@ interface ConfirmModalState {
 
 export default function UsersTable() {
   const [page, setPage] = useState(1);
+  const [companyFilter, setCompanyFilter] = useState<string | null>(null);
   const size = 10;
   const sessionKey = useAuthStore(
     (state) =>
@@ -78,12 +90,25 @@ export default function UsersTable() {
     user: User | null;
   }>({ isOpen: false, user: null });
 
-  const { data, isPending, isFetching, error } = useOperatorsQuery(page, size);
+  const { data, isPending, isFetching, error } = useOperatorsQuery(
+    page,
+    size,
+    companyFilter,
+  );
+  const companiesQuery = useCompaniesQuery(true, { includeInactive: true });
+  const companies = companiesQuery.data?.items;
+  const companyOptions = getCompanyFilterOptions(companies);
   const deleteMutation = useDeleteUserMutation();
 
   useEffect(() => {
     setPage(1);
+    setCompanyFilter(null);
   }, [sessionKey]);
+
+  const handleCompanyFilterChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    setCompanyFilter(toCompanyFilter(event.target.value));
+    setPage(1);
+  };
 
   const handleDeleteClick = (userId: string, userName: string) => {
     setConfirmModal({ isOpen: true, userId, userName });
@@ -128,6 +153,21 @@ export default function UsersTable() {
       },
     },
     {
+      accessorKey: 'company_id',
+      header: 'Empresa',
+      cell: ({ row }) => {
+        const companyName = getCompanyName(companies, row.original.company_id);
+        return (
+          <span
+            title={companyName}
+            className='text-shNeutral-700 block max-w-[180px] truncate text-xs font-medium sm:text-sm lg:text-base'
+          >
+            {companyName}
+          </span>
+        );
+      },
+    },
+    {
       accessorKey: 'area',
       header: 'Area',
       cell: ({ row }) => {
@@ -147,17 +187,15 @@ export default function UsersTable() {
       header: 'Rol',
       cell: ({ row }) => {
         const role = row.original.role;
-        const style = roleBadgeStyles[role] ?? {
-          bg: 'bg-shNeutral-50',
-          text: 'text-shNeutral-700',
-          border: 'border-shNeutral-200',
-        };
+        const appRole = getAppRole(role);
+        const style = appRole ? roleBadgeStyles[appRole] : neutralBadge;
+        const label = getRoleLabel(role);
         return (
           <span
-            title={role}
+            title={label}
             className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${style.bg} ${style.text} ${style.border}`}
           >
-            {role}
+            {label}
           </span>
         );
       },
@@ -248,6 +286,33 @@ export default function UsersTable() {
       {/* Decorative orb */}
       <div className='bg-shAccent-500/5 pointer-events-none absolute -top-12 -right-12 h-64 w-64 rounded-full blur-3xl' />
 
+      <div className='group relative z-10 flex flex-col gap-1.5 sm:max-w-xs'>
+        <label
+          htmlFor='users-company-filter'
+          className='text-shNeutral-700 group-focus-within:text-shPrimary-700 text-xs font-medium transition-colors duration-300'
+        >
+          Filtrar por empresa
+        </label>
+        <div className='border-shNeutral-200 focus-within:border-shPrimary-500 focus-within:ring-shPrimary-500/15 flex items-center overflow-hidden rounded-lg border bg-white transition-all focus-within:ring-2'>
+          <div className='text-shNeutral-600 group-focus-within:text-shPrimary-700 flex w-11 shrink-0 items-center justify-center transition-colors'>
+            <Building2 size={16} />
+          </div>
+          <select
+            id='users-company-filter'
+            value={companyFilter ?? ''}
+            onChange={handleCompanyFilterChange}
+            disabled={companiesQuery.isPending || companiesQuery.isError}
+            className='text-shNeutral-900 flex-1 cursor-pointer appearance-none border-0! bg-transparent! py-2.5 pr-4 text-sm ring-0! outline-none! disabled:cursor-not-allowed disabled:opacity-60'
+          >
+            {companyOptions.map((option) => (
+              <option key={option.value || 'all'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -255,7 +320,7 @@ export default function UsersTable() {
         className='border-shNeutral-200/80 somecard overflow-hidden rounded-2xl border bg-white'
       >
         <div className='overflow-x-auto'>
-          <table className='w-full min-w-[760px] border-collapse text-left'>
+          <table className='w-full min-w-[900px] border-collapse text-left'>
             <thead className='bg-shPrimary-900'>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
@@ -283,7 +348,7 @@ export default function UsersTable() {
                       transition={{ delay: 0.1 + i * 0.03 }}
                       className='border-shNeutral-100 bg-shNeutral-50 animate-pulse border-b last:border-b-0'
                     >
-                      {[...Array(4)].map((_, j) => (
+                      {columns.map((_, j) => (
                         <td key={j} className='px-4 py-5 md:px-6'>
                           <div className='bg-shNeutral-100 h-4 rounded-md' />
                         </td>

@@ -34,7 +34,7 @@ export default function DashboardAccess({ children }: { children: ReactNode }) {
       </h1>
       <p className='text-app-text-secondary text-sm'>
         {isTechnicianRole(user?.role)
-          ? 'Planeación, horarios y edición de órdenes son funciones del jefe. Consultá tu OT desde el detalle de la tarea.'
+          ? 'Planeación y horarios son funciones del supervisor. Consultá tu OT desde el detalle de la tarea.'
           : 'Se requiere una sesión activa con el perfil correspondiente.'}
       </p>
       <Link

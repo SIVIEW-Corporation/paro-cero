@@ -108,7 +108,7 @@ function AddOwnTaskDialog({
       return;
     }
     toast.success(
-      'Tarea agregada. El jefe conserva el control de la planeación.',
+      'Tarea agregada. El supervisor conserva el control de la planeación.',
     );
     onClose();
   };
@@ -122,7 +122,7 @@ function AddOwnTaskDialog({
           </h2>
           <p className='text-app-text-secondary mt-1 text-sm'>
             Podés agregar trabajo propio, pero no borrar ni cancelar tareas
-            asignadas por el jefe.
+            asignadas por el supervisor.
           </p>
         </div>
         <form onSubmit={submit} className='space-y-4'>
@@ -620,7 +620,7 @@ export default function TechnicianScreen({
         />
       </section>
       <p className='text-app-text-secondary text-xs'>
-        Podés iniciar y completar tus tareas. El jefe administra horarios,
+        Podés iniciar y completar tus tareas. El supervisor administra horarios,
         reasignaciones y cancelaciones. Completar una tarea no cierra la OT.
       </p>
       {showAddTask && canAddOwnTask && (

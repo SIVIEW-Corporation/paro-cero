@@ -2,7 +2,10 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth-store';
-import { isTechnicianRole } from '@/features/technician/access';
+import {
+  getRolePermissions,
+  isAssignableRole,
+} from '@/features/technician/access';
 import { techniciansService } from '@/services/technicians-service';
 
 export interface TechnicianOption {
@@ -34,9 +37,16 @@ export function useTechniciansQuery() {
       }),
     select: (data): TechnicianOption[] =>
       data.items
-        .filter((item) => item.is_active && isTechnicianRole(item.role))
+        // Backend returns assignable users (Supervisor + Operador); keep both.
+        .filter((item) => item.is_active && isAssignableRole(item.role))
         .map((item) => ({ id: item.id, nombre: item.full_name })),
-    enabled: Boolean(user?.id && user.company_id && user.is_active),
+    // `GET /users/technicians` is limited to Supervisor/Superadmin.
+    enabled: Boolean(
+      user?.id &&
+      user.company_id &&
+      user.is_active &&
+      getRolePermissions(user.role)?.technicians,
+    ),
     staleTime: 5 * 60 * 1000,
   });
 }

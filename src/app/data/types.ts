@@ -1,3 +1,5 @@
+import type { AppRole } from '@/features/technician/access';
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIPOS PRINCIPALES - APEX Maintenance
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -54,7 +56,7 @@ export interface Usuario {
   empresaId: string;
   email: string;
   nombre: string;
-  rol: 'admin' | 'supervisor' | 'tecnico';
+  rol: AppRole;
   activo: boolean;
   createdAt: Date;
 }

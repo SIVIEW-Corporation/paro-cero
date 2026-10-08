@@ -1,14 +1,11 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-// User role: superadmin, admin/jefe, operator, or viewer
+// User role: superadmin, admin ("Supervisor"), operator or viewer.
 
 export const USER_TYPES = {
   SA: 'superadmin',
   ADMIN: 'admin',
-  JEFE: 'jefe',
-  SUPERVISOR: 'supervisor',
-  TECHNICIAN: 'tecnico',
   OPERATOR: 'operator',
   VIEWER: 'viewer',
 } as const;

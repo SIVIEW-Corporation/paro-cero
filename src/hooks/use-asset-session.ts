@@ -42,7 +42,10 @@ export function useAssetSession(): AssetSession {
   const { user } = useAuthStore.getState();
   const permissions = getRolePermissions(user?.role);
   const canRead = Boolean(
-    user?.id?.trim() && user.company_id?.trim() && user.is_active,
+    user?.id?.trim() &&
+    user.company_id?.trim() &&
+    user.is_active &&
+    permissions?.assets.read,
   );
 
   return {

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CREATABLE_ROLES } from './user-role-options';
 
 export const editUserSchema = z.object({
   email: z.email('Email inválido').or(z.literal('')).optional(),
@@ -8,7 +9,7 @@ export const editUserSchema = z.object({
     .max(60, 'Nombre muy largo')
     .or(z.literal(''))
     .optional(),
-  role: z.enum(['admin', 'supervisor', 'operator', 'viewer']).optional(),
+  role: z.enum(CREATABLE_ROLES).optional(),
   area: z
     .string()
     .min(1, 'Área requerida')

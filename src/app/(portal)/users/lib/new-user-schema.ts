@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CREATABLE_ROLES } from './user-role-options';
 
 export const newUserSchema = z.object({
   email: z.email('Email inválido'),
@@ -13,7 +14,9 @@ export const newUserSchema = z.object({
     .string()
     .min(1, 'Nombre completo requerido')
     .max(60, 'Nombre muy largo'),
-  role: z.enum(['jefe', 'operator', 'viewer']),
+  // Never includes `superadmin`; only the superadmin can create users and
+  // must always pick the target company (see `getCreatableRoles`).
+  role: z.enum(CREATABLE_ROLES),
   companyId: z.uuid('ID de empresa inválido'),
   area: z.string().min(1, 'Area requerida').max(40, 'Area muy larga'),
   jobTitle: z

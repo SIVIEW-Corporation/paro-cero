@@ -3,15 +3,22 @@
 
 export const APP_ROLES = {
   SUPERADMIN: 'superadmin',
+  /** Company manager; shown in the UI as "Supervisor". */
   ADMIN: 'admin',
-  JEFE: 'jefe',
-  SUPERVISOR: 'supervisor',
   OPERATOR: 'operator',
-  TECNICO: 'tecnico',
   VIEWER: 'viewer',
 } as const;
 
 export type AppRole = (typeof APP_ROLES)[keyof typeof APP_ROLES];
+
+export const ROLE_LABELS: Record<AppRole, string> = {
+  superadmin: 'Superadmin',
+  admin: 'Supervisor',
+  operator: 'Operador',
+  viewer: 'Visor',
+};
+
+const UNKNOWN_ROLE_LABEL = 'Rol no reconocido';
 
 interface AssetPermissions {
   read: boolean;
@@ -58,6 +65,8 @@ interface NotificationPermissions {
 
 export interface RolePermissions {
   users: boolean;
+  /** List the company's technicians (`GET /users/technicians`). */
+  technicians: boolean;
   assets: AssetPermissions;
   plans: PlanPermissions;
   workOrders: WorkOrderPermissions;
@@ -79,8 +88,10 @@ export interface DemoTechnician {
   nombre: string;
 }
 
+/** Company manager (admin, "Supervisor"): full operation, no user management. */
 const managerPermissions: RolePermissions = {
   users: false,
+  technicians: true,
   assets: { read: true, manage: true },
   plans: { read: true, manage: true, execute: true },
   workOrders: {
@@ -104,62 +115,21 @@ const managerPermissions: RolePermissions = {
   reports: true,
 };
 
-/** Backend only lets admin/superadmin create, update or delete assets. */
-const supervisorPermissions: RolePermissions = {
-  ...managerPermissions,
-  assets: { read: true, manage: false },
-};
-
-const ROLE_ALIASES: Record<string, AppRole> = {
-  [APP_ROLES.SUPERADMIN]: APP_ROLES.SUPERADMIN,
-  [APP_ROLES.ADMIN]: APP_ROLES.ADMIN,
-  [APP_ROLES.JEFE]: APP_ROLES.JEFE,
-  [APP_ROLES.SUPERVISOR]: APP_ROLES.JEFE,
-  [APP_ROLES.OPERATOR]: APP_ROLES.OPERATOR,
-  [APP_ROLES.TECNICO]: APP_ROLES.OPERATOR,
-  [APP_ROLES.VIEWER]: APP_ROLES.VIEWER,
-};
-
 const ROLE_PERMISSIONS: Record<AppRole, RolePermissions> = {
   superadmin: { ...managerPermissions, users: true },
   admin: managerPermissions,
-  jefe: supervisorPermissions,
-  supervisor: supervisorPermissions,
   operator: {
     users: false,
+    technicians: false,
     assets: { read: true, manage: false },
     plans: { read: true, manage: false, execute: true },
     workOrders: {
       read: true,
       create: true,
-      edit: false,
+      edit: true,
       changeStatus: true,
       delete: false,
-      manageEvidence: false,
-    },
-    planning: { read: false, manage: false },
-    tasks: { read: true, add: true },
-    inspections: {
-      read: true,
-      manage: false,
-      execute: true,
-      registerFinding: true,
-      createWorkOrder: true,
-    },
-    notifications: { read: true, markRead: true },
-    reports: true,
-  },
-  tecnico: {
-    users: false,
-    assets: { read: true, manage: false },
-    plans: { read: true, manage: false, execute: true },
-    workOrders: {
-      read: true,
-      create: true,
-      edit: false,
-      changeStatus: true,
-      delete: false,
-      manageEvidence: false,
+      manageEvidence: true,
     },
     planning: { read: false, manage: false },
     tasks: { read: true, add: true },
@@ -175,6 +145,7 @@ const ROLE_PERMISSIONS: Record<AppRole, RolePermissions> = {
   },
   viewer: {
     users: false,
+    technicians: false,
     assets: { read: true, manage: false },
     plans: { read: true, manage: false, execute: false },
     workOrders: {
@@ -199,8 +170,22 @@ const ROLE_PERMISSIONS: Record<AppRole, RolePermissions> = {
   },
 };
 
+const KNOWN_ROLES: ReadonlySet<string> = new Set(Object.values(APP_ROLES));
+
+/**
+ * Exact match against the four product roles. Legacy (`jefe`, `supervisor`,
+ * `tecnico`) or unknown values resolve to `null`, which grants no permission:
+ * an unexpected role must never gain access by guessing.
+ */
 export function getAppRole(role: string | null | undefined): AppRole | null {
-  return role ? (ROLE_ALIASES[role] ?? null) : null;
+  return typeof role === 'string' && KNOWN_ROLES.has(role)
+    ? (role as AppRole)
+    : null;
+}
+
+export function getRoleLabel(role: string | null | undefined): string {
+  const appRole = getAppRole(role);
+  return appRole ? ROLE_LABELS[appRole] : UNKNOWN_ROLE_LABEL;
 }
 
 export function getRolePermissions(
@@ -210,8 +195,15 @@ export function getRolePermissions(
   return appRole ? ROLE_PERMISSIONS[appRole] : null;
 }
 
+/** Operators are the field technicians that own a personal task agenda. */
 export function isTechnicianRole(role: string | null | undefined): boolean {
-  return role === APP_ROLES.OPERATOR || role === APP_ROLES.TECNICO;
+  return getAppRole(role) === APP_ROLES.OPERATOR;
+}
+
+/** Supervisors and operators can be assigned to work orders. */
+export function isAssignableRole(role: string | null | undefined): boolean {
+  const appRole = getAppRole(role);
+  return appRole === APP_ROLES.ADMIN || appRole === APP_ROLES.OPERATOR;
 }
 
 export function isPlanningManager(role: string | null | undefined): boolean {

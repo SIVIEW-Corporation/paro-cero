@@ -17,7 +17,14 @@ import { cn } from '@/lib/utils';
 import { FormField, PasswordField } from '@/global-components/FormField';
 import Button from '@/global-components/Button';
 import type { User as UserType } from '@/store/auth-store';
+import { getRoleLabel } from '@/features/technician/access';
 import { editUserSchema } from '../lib/edit-user-schema';
+import {
+  EDITABLE_ROLES,
+  isEditableRole,
+  type CreatableRole,
+  type EditableRole,
+} from '../lib/user-role-options';
 import { useUpdateUserMutation } from '../hooks/use-update-user-mutation';
 
 interface EditUserModalProps {
@@ -26,26 +33,6 @@ interface EditUserModalProps {
   onClose: () => void;
 }
 
-const ROLES = {
-  ADMIN: 'admin',
-  SUPERVISOR: 'supervisor',
-  OPERATOR: 'operator',
-  VIEWER: 'viewer',
-} as const;
-
-type Role = (typeof ROLES)[keyof typeof ROLES];
-
-const ALL_ROLE_LABELS: Record<Role, string> = {
-  admin: 'Admin',
-  supervisor: 'Supervisor',
-  operator: 'Operador',
-  viewer: 'Visor',
-};
-
-/** Roles que un usuario con permisos puede asignar desde el formulario de edición.
- *  admin/supervisor están excluidos — su rol no se puede modificar desde acá. */
-const EDITABLE_ROLES: Role[] = [ROLES.OPERATOR, ROLES.VIEWER];
-
 export default function EditUserModal({
   isOpen,
   user,
@@ -53,8 +40,9 @@ export default function EditUserModal({
 }: EditUserModalProps) {
   const updateUser = useUpdateUserMutation();
 
-  const isPrivilegedRole =
-    user.role === ROLES.ADMIN || user.role === ROLES.SUPERVISOR;
+  // Only Operador/Visor can be reassigned here; any other role (Supervisor or
+  // an unrecognized one) is shown read-only and never sent back to the API.
+  const isPrivilegedRole = !isEditableRole(user.role);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -62,7 +50,7 @@ export default function EditUserModal({
     defaultValues: {
       email: user.email ?? '',
       fullName: user.full_name ?? '',
-      role: (user.role as Role) ?? ROLES.OPERATOR,
+      role: user.role as CreatableRole,
       area: user.area ?? '',
       jobTitle: user.job_title ?? '',
       profileImage: user.profile_image ?? '',
@@ -182,7 +170,9 @@ export default function EditUserModal({
                           value={field.state.value}
                           onBlur={field.handleBlur}
                           onChange={(e) =>
-                            field.handleChange(() => e.target.value as Role)
+                            field.handleChange(
+                              () => e.target.value as EditableRole,
+                            )
                           }
                           disabled={isPrivilegedRole}
                           className={cn(
@@ -192,11 +182,11 @@ export default function EditUserModal({
                           )}
                         >
                           {(isPrivilegedRole
-                            ? (Object.keys(ALL_ROLE_LABELS) as Role[])
+                            ? [user.role]
                             : EDITABLE_ROLES
                           ).map((value) => (
                             <option key={value} value={value}>
-                              {ALL_ROLE_LABELS[value]}
+                              {getRoleLabel(value)}
                             </option>
                           ))}
                         </select>

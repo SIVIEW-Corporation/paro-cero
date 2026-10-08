@@ -28,11 +28,11 @@ El token se obtiene mediante `POST /api/v1/auth/login`.
 
 ## Roles y permisos
 
-| Rol                                                                           | Listar / Ver    | Crear | Editar | Eliminar |
-| :---------------------------------------------------------------------------- | :-------------- | :---- | :----- | :------- |
-| **superadmin**                                                                | ✅ (su empresa) | ✅    | ✅     | ✅       |
-| **admin**                                                                     | ✅ (su empresa) | ✅    | ✅     | ✅       |
-| Cualquier otro rol (`supervisor`, `operator`, `viewer`, `jefe`, `tecnico`, …) | ✅ (su empresa) | ❌    | ❌     | ❌       |
+| Rol                                         | Listar / Ver    | Crear | Editar | Eliminar |
+| :------------------------------------------ | :-------------- | :---- | :----- | :------- |
+| **superadmin**                              | ✅ (su empresa) | ✅    | ✅     | ✅       |
+| **admin** (Supervisor)                      | ✅ (su empresa) | ✅    | ✅     | ✅       |
+| **operator** (Operador), **viewer** (Visor) | ✅ (su empresa) | ❌    | ❌     | ❌       |
 
 - Todas las operaciones están limitadas a la empresa (`company_id`) del usuario autenticado, **incluido `superadmin`**. No existe acceso global a otras empresas desde este módulo.
 - Si el usuario no pertenece a ninguna empresa (`company_id` nulo), todos los endpoints responden `403` con `detail: "El usuario no pertenece a una empresa"`, sin importar el rol.

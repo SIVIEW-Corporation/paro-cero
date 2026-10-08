@@ -153,7 +153,7 @@ export default function PlanningScreen({
       <div className='border-app-border-soft bg-app-surface-subtle text-app-text-secondary flex flex-wrap items-center justify-between gap-2 rounded-xl border px-4 py-3 text-xs'>
         <p>
           <strong className='text-app-text-primary'>
-            Modo demo · Jefe de mantenimiento
+            Modo demo · Supervisor
           </strong>{' '}
           — Datos de prueba guardados solo en este navegador. No se comparten
           entre usuarios.

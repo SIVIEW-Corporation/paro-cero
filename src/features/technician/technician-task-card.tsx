@@ -173,7 +173,7 @@ export default function TechnicianTaskCard({
           <p className='text-app-text-secondary max-w-sm text-xs'>
             {otherInProgress && task.status === ASSIGNMENT_STATUS.PENDING
               ? 'Completá tu tarea en proceso antes de iniciar otra.'
-              : 'El jefe administra los horarios; vos registrás el avance.'}
+              : 'El supervisor administra los horarios; vos registrás el avance.'}
           </p>
           {task.status === ASSIGNMENT_STATUS.PENDING ? (
             <ActionButton

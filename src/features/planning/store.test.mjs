@@ -174,7 +174,7 @@ test('otra pestaña no sobrescribe un estado nuevo con una vista vieja', async (
     'pendiente',
   );
 });
-test('edición del jefe no revierte progreso ni elimina historial', async () => {
+test('edición del supervisor no revierte progreso ni elimina historial', async () => {
   resetStorage();
   const store = await createStore();
   store.getState().initialize();
@@ -187,7 +187,7 @@ test('edición del jefe no revierte progreso ni elimina historial', async () => 
   next.assignments.shift();
   assert.match(store.getState().commit(next, 'Eliminar'), /historial/);
 });
-test('cancelación del jefe conserva tarea con estado y técnico no la inicia', async () => {
+test('cancelación del supervisor conserva tarea con estado y técnico no la inicia', async () => {
   resetStorage();
   const store = await createStore();
   store.getState().initialize();

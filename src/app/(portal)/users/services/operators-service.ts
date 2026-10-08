@@ -3,6 +3,7 @@ import type { ApiClientOptions } from '@/lib/api-client';
 import type { NewUserSchema } from '../lib/new-user-schema';
 import type { EditUserSchema } from '../lib/edit-user-schema';
 import type { User } from '@/store/auth-store';
+import { APP_ROLES } from '@/features/technician/access';
 
 type SessionRequestOptions = Pick<ApiClientOptions, 'isRequestCurrent'>;
 
@@ -14,48 +15,119 @@ export interface PaginatedUsersResponse {
   pages: number;
 }
 
+export interface UsersListFilters {
+  companyId?: string | null;
+}
+
+/** Query string for `GET /users/`; `company_id` only when a company is set. */
+export function buildUsersListQuery(
+  page: number,
+  size: number,
+  { companyId }: UsersListFilters = {},
+): string {
+  const params = new URLSearchParams();
+  params.set('page', String(page));
+  params.set('size', String(size));
+  params.set('include_inactive', 'false');
+  if (companyId) params.set('company_id', companyId);
+  return params.toString();
+}
+
+/** Transforms camelCase form values to the snake_case API body. */
+export function buildNewUserBody(values: NewUserSchema) {
+  return {
+    email: values.email,
+    password: values.password,
+    full_name: values.fullName,
+    role: values.role,
+    company_id: values.companyId,
+    area: values.area,
+    job_title: values.jobTitle,
+  };
+}
+
+/** The superadmin always creates users for an explicitly selected company. */
+function assertCompanySelected(values: NewUserSchema): void {
+  if (!values.companyId) {
+    throw new Error('Selecciona una empresa para el usuario.');
+  }
+}
+
+async function postNewUser(
+  endpoint: string,
+  body: ReturnType<typeof buildNewUserBody>,
+  options: SessionRequestOptions,
+): Promise<User> {
+  const response = await apiClient.post<User>(endpoint, body, options);
+
+  if (!response.ok) {
+    throw new Error(response.error?.message || 'Error al crear usuario');
+  }
+
+  return response.data as User;
+}
+
 export const operatorsService = {
   /**
-   * Create a jefe, operator or viewer user through the legacy API endpoint.
-   * Transforms camelCase fields to snake_case for API compatibility.
+   * Create a user, routing by role: Supervisor (`admin`) through the admin
+   * endpoint; Operador and Visor through the operator-viewer endpoint. Any
+   * other role is rejected locally and never reaches the API.
    */
+  createUser: (
+    values: NewUserSchema,
+    options: SessionRequestOptions = {},
+  ): Promise<User> => {
+    if (values.role === APP_ROLES.ADMIN)
+      return operatorsService.createAdmin(values, options);
+    if (values.role === APP_ROLES.OPERATOR || values.role === APP_ROLES.VIEWER)
+      return operatorsService.createOperator(values, options);
+    return Promise.reject(new Error('Rol de usuario no permitido.'));
+  },
+
+  /** Create a Supervisor (`admin`) for the selected company. */
+  createAdmin: async (
+    values: NewUserSchema,
+    options: SessionRequestOptions = {},
+  ): Promise<User> => {
+    assertCompanySelected(values);
+    return postNewUser(
+      '/users/admin',
+      { ...buildNewUserBody(values), role: APP_ROLES.ADMIN },
+      options,
+    );
+  },
+
+  /** Create an Operador or Visor for the selected company. */
   createOperator: async (
     values: NewUserSchema,
     options: SessionRequestOptions = {},
   ): Promise<User> => {
-    // Transform camelCase to snake_case for API
-    const body = {
-      email: values.email,
-      password: values.password,
-      full_name: values.fullName,
-      // The API currently names the manager role `supervisor`; the UI exposes
-      // the business-facing name `jefe`.
-      role: values.role === 'jefe' ? 'supervisor' : values.role,
-      company_id: values.companyId,
-      area: values.area,
-      job_title: values.jobTitle,
-    };
-
-    const response = await apiClient.post<User>(
+    if (
+      values.role !== APP_ROLES.OPERATOR &&
+      values.role !== APP_ROLES.VIEWER
+    ) {
+      throw new Error('Solo se crean operadores o visores con este flujo.');
+    }
+    assertCompanySelected(values);
+    return postNewUser(
       '/users/operator-viewer',
-      body,
+      buildNewUserBody(values),
       options,
     );
-
-    if (!response.ok) {
-      throw new Error(response.error?.message || 'Error al crear usuario');
-    }
-
-    return response.data as User;
   },
 
+  /**
+   * Paginated active users (superadmin only). `filters.companyId` narrows the
+   * list to one company; null/undefined lists every company.
+   */
   getOperators: async (
     page: number,
     size: number,
+    filters: UsersListFilters = {},
     options: SessionRequestOptions = {},
   ): Promise<PaginatedUsersResponse> => {
     const response = await apiClient.get<PaginatedUsersResponse>(
-      `/users/?page=${page}&size=${size}&include_inactive=false`,
+      `/users/?${buildUsersListQuery(page, size, filters)}`,
       options,
     );
 

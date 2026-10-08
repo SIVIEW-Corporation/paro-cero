@@ -214,7 +214,7 @@ export const usePlanningStore = create<PlanningStore>((set, get) => {
         });
       }
     },
-    commit: (next, action, actor = 'Jefe · demo') => {
+    commit: (next, action, actor = 'Supervisor · demo') => {
       const current = get().data;
       if (!current) return 'La agenda todavía no se cargó.';
       // Planning edits cannot revert execution reported by the technician.

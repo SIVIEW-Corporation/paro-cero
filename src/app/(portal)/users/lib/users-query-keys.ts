@@ -29,8 +29,13 @@ export function usersSessionIsCurrent(scope: UsersSessionScope): boolean {
 
 export const usersQueryKeys = {
   all: ['users'] as const,
-  list: (scope: UsersSessionScope, page: number, size: number) =>
-    [...usersQueryKeys.all, 'list', scope, { page, size }] as const,
+  list: (
+    scope: UsersSessionScope,
+    page: number,
+    size: number,
+    companyId: string | null = null,
+  ) =>
+    [...usersQueryKeys.all, 'list', scope, { page, size, companyId }] as const,
   listScope: (scope: UsersSessionScope) =>
     [...usersQueryKeys.all, 'list', scope] as const,
 };

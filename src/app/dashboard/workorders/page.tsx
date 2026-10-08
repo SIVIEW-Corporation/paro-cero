@@ -12,7 +12,10 @@ import { useAssetsQuery } from '@/hooks/use-assets-query';
 import { useWorkOrderSession } from '@/hooks/use-work-order-session';
 import { useWorkOrdersQuery } from '@/hooks/use-work-orders-query';
 import { useTechniciansQuery } from '@/hooks/use-technicians-query';
-import { getRolePermissions } from '@/features/technician/access';
+import {
+  getRolePermissions,
+  isTechnicianRole,
+} from '@/features/technician/access';
 import {
   useAddWorkOrderEvidenceMutation,
   useChangeWorkOrderStatusMutation,
@@ -66,7 +69,7 @@ export default function WorkOrdersPage() {
     : ASSETS;
   const availableTechnicians = useRemoteWorkOrders
     ? (techniciansQuery.data ??
-      (user && user.role && ['operator', 'tecnico'].includes(user.role)
+      (user && isTechnicianRole(user.role)
         ? [{ id: user.id, nombre: user.full_name }]
         : []))
     : TECNICOS;
